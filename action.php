@@ -74,6 +74,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         $mpdf->defaultfooterfontsize = 8;	/* in pts */
         $mpdf->defaultfooterfontstyle = '';	/* blank, B, I, or BI */
         $mpdf->defaultfooterline = 1; 	/* 1 to include line below header/above footer */
+        
+        $mpdf->basepathIsLocal = 1;
       
         $html = '<html><head>';
         $html = $html . "<style>
@@ -223,6 +225,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
       // Customized to strip all span tags so that the wiki <code> SQL would display properly
 
       $html = str_replace('href="/','href="http://'.$_SERVER['HTTP_HOST'].'/',$html);
+
+      global $conf;
+      $html = str_replace('src="/_media/','src="'.$conf['mediadir'].'/',$html);
 
       return $html;
     }
