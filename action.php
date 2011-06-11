@@ -11,8 +11,6 @@
 if (!defined('DOKU_INC')) die();
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 
-require_once (DOKU_PLUGIN . 'action.php');
-
 class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
@@ -38,7 +36,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $event->preventDefault();
 
         // initialize PDF library
-        require_once(dirname(__FILE__)."/DokuPDF.php");
+        require_once(dirname(__FILE__)."/DokuPDF.class.php");
         $mpdf = new DokuPDF();
 
         // some default settings
@@ -87,10 +85,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         $mpdf->WriteHTML($html);
 
-
+        $title = $_GET['pdfbook_title'];
+        if(!$title) $title = noNS($ID);
         $output = 'I';
         if($this->getConf('output') == 'file') $output = 'D';
-        $mpdf->Output(urlencode($pdftitle).'.pdf', $output);
+        $mpdf->Output(urlencode($title).'.pdf', $output);
 
         exit();
     }
@@ -166,7 +165,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // Customized to strip all span tags so that the wiki <code> SQL would display properly
         $norender = explode(',',$this->getConf('norender'));
         $this->strip_only($html, $norender);
-#FIXME why??      $html = $this->strip_htmlencodedchars($html);
+        $this->strip_htmlencodedchars($html);
 
         $html = str_replace('href="/','href="http://'.$_SERVER['HTTP_HOST'].'/',$html);
 
