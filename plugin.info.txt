@@ -1,0 +1,8 @@
+base    dw2pdf
+author  Luigi Micco
+email   l.micco@tiscali.it
+date    2011-06-11
+name    Dw2Pdf plugin
+desc    DokuWiki to PDF converter
+url     http://www.dokuwiki.org/plugin:dw2pdf
+
