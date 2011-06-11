@@ -84,7 +84,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $this->arrangeHtml($html, $this->getConf("norender"));
 
         $mpdf->WriteHTML($html);
-
         $title = $_GET['pdfbook_title'];
         if(!$title) $title = noNS($ID);
         $output = 'I';
@@ -209,12 +208,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Replace &#039; &quot; &gt; &lt; &amp;
      *
      * @fixme do we really need this? wouldn't this break things?
+     * @fixme and if we really need it, do correct numeric decoding
      */
     protected function strip_htmlencodedchars(&$str) {
+        $str = htmlspecialchars_decode($str);
         $str = str_replace('&#039;', '\'', $str);
-        $str = str_replace('&quot;', '"', $str);
-        $str = str_replace('&gt;', '>', $str);
-        $str = str_replace('&lt;', '<', $str);
-        $str = str_replace('&amp;', '&', $str);
     }
 }

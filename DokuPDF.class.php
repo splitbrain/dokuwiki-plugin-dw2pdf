@@ -14,7 +14,7 @@ class DokuPDF extends mpdf {
         $this->ignore_invalid_utf8 = true;
 
         // allimage sources are local (see _getImage)
-        $this->basepathIsLocal;
+        $this->basepathIsLocal = 1;
     }
 
 
@@ -27,23 +27,23 @@ class DokuPDF extends mpdf {
      * takes care of checking image ACls.
      */
     function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false){
-        global $conf;
-
         list($ext,$mime) = mimetype($file);
         if(substr($mime,0,6) == 'image/'){
             // build regex to parse URL back to media info
             $re = preg_quote(ml('xxx123yyy'),'/');
-            $re = str_replace('xxx123yyy','([^&?]*)',$re);
+            $re = str_replace('xxx123yyy','([^&\?]*)',$re);
 
-            if(preg_match('/^https?:\/\//',$file)){ // fixed external URLs
-                $local = media_get_from_URL($file,$ext,$conf['cachetime']);
-            }elseif(preg_match("/$re/",$file,$m)){  // media files
+
+            if(preg_match("/$re/",$file,$m) ||
+               preg_match('/[&\?]media=([^&\?]*)/',$file,$m)){
                 $media = rawurldecode($m[1]);
-                if(preg_match('/[?&]w=(\d+)/',$file, $m)) $w = $m[1];
-                if(preg_match('/[?&]h=(\d+)/',$file, $m)) $h = $m[1];
 
-                if(preg_match('/^https?:\/\//',$file)){
-                    $local = media_get_from_URL($media,$ext,$conf['cachetime']);
+                if(preg_match('/[\?&]w=(\d+)/',$file, $m)) $w = $m[1];
+                if(preg_match('/[\?&]h=(\d+)/',$file, $m)) $h = $m[1];
+
+                if(preg_match('/^https?:\/\//',$media)){
+                    $local = media_get_from_URL($media,$ext,-1);
+                    if(!$local) $local = $media; // let mpdf try again
                 }else{
                     $media = cleanID($media);
                     //check permissions (namespace only)
@@ -55,16 +55,17 @@ class DokuPDF extends mpdf {
 
                 //handle image resizing/cropping
                 if($w){
-                    if($w){
+                    if($h){
                         $local = media_crop_image($local,$ext,$w,$h);
                     }else{
                         $local = media_resize_image($local,$ext,$w,$h);
                     }
                 }
+            }elseif(preg_match('/^https?:\/\//',$file)){ // fixed external URLs
+                $local = media_get_from_URL($file,$ext,$conf['cachetime']);
             }
 
             if($local){
-                $file = $local;
                 $orig_srcpath = $local;
             }
         }
