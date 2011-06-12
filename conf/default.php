@@ -1,10 +1,4 @@
 <?php
-
-//check if we are running within the DokuWiki environment
-if (!defined("DOKU_INC")){
-    die();
-}
-
 $conf['output']         = 'file';
 
 $conf['norender']         = 'span,acronym';
@@ -17,5 +11,4 @@ $conf['header_even']    = 'Last update: @UPDATE@|@ID@|@PAGEURL@';
 $conf["maxbookmarks"]           = 5; 
 
 $conf["addcitation"]            = true; 
-$conf["loadusercss"]            = false; //TRUE: dw2pdf/user/user.css will be loaded
 

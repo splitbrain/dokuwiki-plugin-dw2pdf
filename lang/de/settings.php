@@ -3,7 +3,7 @@
  * German language file
  *
  */
- 
+
 // fuer die Plugin-Konfiguration
 
 $lang['output']       = "So wird die Datei ausgegeben";
@@ -20,6 +20,4 @@ $lang['header_even']    = 'Kopfzeile auf geraden Seiten';
 $lang['maxbookmarks'] = 'Bis zu welcher Tiefe werden Lesezeichen angezeigt? (0=keine, 5=alle)';
 
 $lang['addcitation']       = "auf letzter Seite Kasten mit Angaben zur Quelle ausgeben?";
-$lang['loadusercss']       = "User.css aus 'dw2pdf/user/user.css' laden?";
 
-// vim:ts=4:sw=4:et:enc=utf-8:

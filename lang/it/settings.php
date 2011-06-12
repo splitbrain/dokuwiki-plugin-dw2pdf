@@ -3,7 +3,7 @@
  * Italian language file
  *
  */
- 
+
 // for the configuration manager
 
 $lang['output']       = "Modalit&agrave; di output";
@@ -20,6 +20,4 @@ $lang['header_even']    = 'Intestazione pagine pari';
 $lang["maxbookmarks"]   = 'Numero massimo di livelli da mostrare nei segnalibri<br>(0=nessuno, 5=tutti)';
 
 $lang['addcitation']       = "Aggiungi riquadro citazione sull'ultima pagina?";
-$lang['loadusercss']       = "Utilizza 'dw2pdf/user/user.css'?";
 
-// vim:ts=4:sw=4:et:enc=utf-8:

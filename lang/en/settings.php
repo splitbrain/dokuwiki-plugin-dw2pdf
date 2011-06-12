@@ -3,7 +3,7 @@
  * English language file
  *
  */
- 
+
 // for the configuration manager
 
 $lang['output']       = "Output mode";
@@ -20,6 +20,4 @@ $lang['header_even']    = 'Header on even pages';
 $lang["maxbookmarks"]   = 'Max levels to show into bookmarks<br>(0=nothing, 5=all)';
 
 $lang['addcitation']       = "Add citation box on last page?";
-$lang['loadusercss']       = "Load 'dw2pdf/user/user.css'?";
 
-// vim:ts=4:sw=4:et:enc=utf-8:
