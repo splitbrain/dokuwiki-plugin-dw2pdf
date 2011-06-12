@@ -4,7 +4,7 @@
   *
   * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
   * @author     Luigi Micco <l.micco@tiscali.it>
-  * @author     Andreas Gohr <gohr@cosmocode.de>
+  * @author     Andreas Gohr <andi@splitbrain.org>
   */
 
 // must be run within Dokuwiki

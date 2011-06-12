@@ -1,4 +1,12 @@
 <?php
+/**
+ * Wrapper around the mpdf library class
+ *
+ * This class overrides some functions to make mpdf make use of DokuWiki'
+ * standard tools instead of its own.
+ *
+ * @author Andreas Gohr <andi@splitbrain.org>
+ */
 
 if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir']);
 if(!defined('_MPDF_TTFONTDATAPATH')) define('_MPDF_TTFONTDATAPATH',$conf['cachedir'].'/mpdf_ttf/');
