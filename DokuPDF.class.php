@@ -22,10 +22,15 @@ class DokuPDF extends mpdf {
         $this->SetAutoFont(AUTOFONT_ALL);
         $this->ignore_invalid_utf8 = true;
 
-        // allimage sources are local (see _getImage)
-        $this->basepathIsLocal = 1;
     }
 
+    /**
+     * Decode all paths, since DokuWiki uses XHTML compliant URLs
+     */
+    function GetFullPath(&$path,$basepath=''){
+        $path = htmlspecialchars_decode($path);
+        parent::GetFullPath($path, $basepath);
+    }
 
     /**
      * Override the mpdf _getImage function
@@ -75,6 +80,7 @@ class DokuPDF extends mpdf {
             }
 
             if($local){
+                $file = $local;
                 $orig_srcpath = $local;
             }
         }

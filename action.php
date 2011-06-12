@@ -88,8 +88,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         $this->arrangeHtml($html, $this->getConf("norender"));
-
         $mpdf->WriteHTML($html);
+
         $title = $_GET['pdfbook_title'];
         if(!$title) $title = noNS($ID);
         $output = 'I';
