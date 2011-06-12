@@ -108,8 +108,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
         if(!$title) $title = noNS($ID);
 
-        $iddata = p_get_metadata($ID,'date');
-
         // prepare replacements
         $replace = array(
                 '@ID@'      => $ID,
@@ -118,8 +116,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@TITLE@'   => $title,
                 '@WIKI@'    => $conf['title'],
                 '@WIKIURL@' => DOKU_URL,
-                '@UPDATE@'  => dformat($iddata['modified']),
-                '@PAGEURL@' => wl($ID,array('rev'=>$REV), true, "&"),
+                '@UPDATE@'  => dformat(filemtime(wikiFN($ID,$REV))),
+                '@PAGEURL@' => wl($ID,($REV)?array('rev'=>$REV):false, true, "&"),
                 '@DATE@'    => dformat(time()),
         );
 
