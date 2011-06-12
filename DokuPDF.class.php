@@ -1,12 +1,13 @@
 <?php
 
+if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir']);
+if(!defined('_MPDF_TTFONTDATAPATH')) define('_MPDF_TTFONTDATAPATH',$conf['cachedir'].'/mpdf_ttf/');
 require_once(dirname(__FILE__)."/mpdf/mpdf.php");
 
 class DokuPDF extends mpdf {
 
     function __construct(){
-        global $conf;
-        if(!defined('_MPDF_TEMP_PATH')) define("_MPDF_TEMP_PATH", $conf['tmpdir']);
+        io_mkdir_p(_MPDF_TTFONTDATAPATH);
 
         // we're always UTF-8
         parent::__construct('UTF-8-s');
