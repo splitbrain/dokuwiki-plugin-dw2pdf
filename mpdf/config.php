@@ -1,10 +1,45 @@
 <?php
 
+// FONTS
+// Set maximum size of TTF font file to allow non-subsets - in kB
+// Used to avoid e.g. Arial Unicode MS (perhaps used for substituteCharsMB) to ever be fully embedded
+// NB Free serif is 1.5MB, most files are <= 600kB (most 200-400KB)
+$this->maxTTFFilesize = 2000;
+
+// this value determines whether to subset or not
+// 0 - 100 = percent characters
+// i.e. if ==40, mPDF will embed whole font if >40% characters in that font
+// or embed subset if <40% characters
+// 0 will force whole file to be embedded (NO subsetting)
+// 100 will force always to subset
+// This value is overridden if you set new mPDF('s)
+// and/or Can set at runtime
+$this->percentSubset = 30;
+
+$this->useAdobeCJK = false;		// Uses Adobe CJK fonts for CJK languages
+			// default TRUE; only set false if you have defined some available fonts that support CJK
+			// If true this will not stop use of other CJK fonts if specified by font-family:
+			// and vice versa i.e. only dictates behaviour when specified by lang="" incl. AutoFont()
+
+// Checks and reports on errors when parsing TTF files - adds significantly to processing time
+$this->debugfonts = false;
+
+// Small Caps
+$this->smCapsScale = 0.75;	// Factor of 1 to scale capital letters
+$this->smCapsStretch = 110;	// % to stretch small caps horizontally (i.e. 100 = no stretch)
+
+
 // PAGING
 $this->mirrorMargins = 0;			// alias = $useOddEven
 $this->restoreBlockPagebreaks = false;
 $this->forcePortraitMargins = false;
 $this->displayDefaultOrientation = false;
+$this->printers_info = false; 		// Adds date and page info for printer when using @page and "marks:crop;" mPDF 5.0.006
+$this->bleedMargin = 5;		// mPDF 5.0.047
+$this->crossMarkMargin = 5;	// Distance of cross mark from margin in mm	// mPDF 5.0.047
+$this->cropMarkMargin = 8;	// Distance of crop mark from margin in mm	// mPDF 5.0.047
+$this->cropMarkLength = 18;	// Default length in mm of crop line	// mPDF 5.0.047
+$this->nonPrintMargin = 8;	// Non-printable border at edge of paper sheet in mm	// mPDF 5.0.047
 
 
 // PAGE NUMBERING
@@ -19,25 +54,26 @@ $this->nbpgSuffix;
 // Allows automatic character set conversion if "charset=xxx" detected in html header (WriteHTML() )
 $this->allow_charset_conversion = true;
 $this->biDirectional=false;			// automatically determine BIDI text in LTR page
-// If using a CJK codepage with only CJK/ASCII or embedded characters, this will prevent loading of Unicode fonts - makes smaller files
-$this->use_CJK_only = false;
 $this->autoFontGroupSize = 2;			// 1: individual words are spanned; 2: words+; 3: as big chunks as possible.
 $this->useLang = true;				// Default changed in mPDF 4.0
-$this->disableMultilingualJustify = true;	// Disables If more than one language on a line using different text-justification
-							// e.g. Chinese (character) and RTL (word)
-$this->useSubstitutionsMB = false;		// mPDF 4.2 Substitute missing characters in UTF-8(multibyte) documents - from core fonts
-$this->falseBoldWeight = 5;			// mPDF 4.2 Weight for bold text when using an artificial (outline) bold; value 0 (off) - 10 (rec. max)
 
+$this->useSubstitutions = false;		// Substitute missing characters in UTF-8(multibyte) documents - from other fonts
+							// This was useSusbstitutionsMB()
+$this->falseBoldWeight = 5;			// Weight for bold text when using an artificial (outline) bold; value 0 (off) - 10 (rec. max)
 
 // CONFIGURATION
-// This will force all fonts to be substituted with Arial(Helvetica) Times or Courier when using codepage win-1252 - makes smaller files
-$this->useOnlyCoreFonts = false;		// alias = $use_embeddedfonts_1252
 $this->allow_output_buffering = false;
 
-$this->enableImports = false;			// mPDF 4.2.006 Adding mPDFI
+$this->enableImports = false;			// Adding mPDFI
 
-$this->collapseBlockMargins = true; 	// mPDF 4.2 Allows top and bottom margins to collapse between block elements
-$this->progressBar = 0;				// mPDF 4.2 Shows progress-bars whilst generating file 0 off, 1 simple, 2 advanced
+$this->collapseBlockMargins = true; 	// Allows top and bottom margins to collapse between block elements
+$this->progressBar = 0;				// Shows progress-bars whilst generating file 0 off, 1 simple, 2 advanced
+$this->progbar_heading = 'mPDF file progress';
+$this->progbar_altHTML = '';			// Should include <html> and <body> but NOT end tags
+							// Can incude <head> and link to stylesheet etc.
+							// e.g. '<html><body><p><img src="loading.gif" /> Creating PDF file. Please wait...</p>';
+
+$this->dpi = 96;					// To interpret "px" pixel values in HTML/CSS (see img_dpi below)
 
 // Automatically correct for tags where HTML specifies optional end tags e.g. P,LI,DD,TD
 // If you are confident input html is valid XHTML, turning this off may make it more reliable(?)
@@ -46,12 +82,30 @@ $this->ignore_invalid_utf8 = false;
 $this->text_input_as_HTML = false; 		// Converts all entities in Text inputs to UTF-8 before encoding
 $this->useGraphs = false;
 
-// PDFA1-b Compliant files
-$this->PDFA = false;				// mPDF 4.2.018 true=Forces compliance with PDFA-1b spec
-$this->PDFAauto = false;			// mPDF 4.2.018 Overrides warnings making changes when possible to force PDFA1-b compliance
 
-$this->ICCProfile = '';				// mPDF 4.2.018  Colour profile OutputIntent for defaultRGB colorSpace 
+
+// COLORSPACE
+// mPDF 5.0.051
+// 1 - allow GRAYSCALE only [convert CMYK/RGB->gray]
+// 2 - allow RGB / SPOT COLOR / Grayscale [convert CMYK->RGB]
+// 3 - allow CMYK / SPOT COLOR / Grayscale [convert RGB->CMYK]
+$this->restrictColorSpace = 0;
+
+// PDFX/1-a Compliant files
+$this->PDFX = false;				// true=Forces compliance with PDFX-1a spec
+							// Cannot be used with $this->restrictColorSpace (i.e. no RGB)
+$this->PDFXauto = false;			// Overrides warnings making changes when possible to force PDFX1-a compliance
+
+
+// PDFA1-b Compliant files
+$this->PDFA = false;				// true=Forces compliance with PDFA-1b spec
+							// Can use with $this->restrictColorSpace=3 (for a CMYK file)
+							// Any other settings, uses RGB profile
+$this->PDFAauto = false;			// Overrides warnings making changes when possible to force PDFA1-b compliance
+
+$this->ICCProfile = '';				// Colour profile OutputIntent
 							// sRGB_IEC61966-2-1 (=default if blank and PDFA),  or other added .icc profile
+							// Must be CMYK for PDFX, or appropriate type for PDFA(RGB or CMYK)
 
 
 // mPDF 4.2 - When writing a block element with position:fixed and overflow:auto, mPDF scales it down to fit in the space
@@ -82,8 +136,8 @@ $this->annotOpacity = 0.5;	// default opacity for Annotations
 $this->anchor2Bookmark = 0;	// makes <a name=""> into a bookmark as well as internal link target; 1 = just name; 2 = name (p.34)
 
 // CSS & STYLES
-$this->CSSselectMedia='print';		// mPDF 4.3.001  screen, print, or any other CSS @media type (not "all")
-// $this->disablePrintCSS depracated	// mPDF 4.3.001  
+$this->CSSselectMedia='print';		// screen, print, or any other CSS @media type (not "all")
+// $this->disablePrintCSS depracated	// 
 $this->rtlCSS = 2; 	// RTL: 0 overrides defaultCSS; 1 overrides stylesheets; 2 overrides inline styles - TEXT-ALIGN left => right etc.
 				// when directionality is set to rtl
 
@@ -108,22 +162,29 @@ $this->autoMarginPadding = 2;		// distance in mm used as padding if 'stretch' mo
 
 
 // TABLES
-$this->simpleTables = false; // mPDF 4.2.017 Forces all cells to have same border, background etc. Improves performance
-$this->packTableData = false; // mPDF 4.3.009 Reduce memory usage processing tables (but with increased processing time)
+$this->simpleTables = false; // Forces all cells to have same border, background etc. Improves performance
+$this->packTableData = false; // Reduce memory usage processing tables (but with increased processing time)
 $this->ignore_table_percents = false;
 $this->ignore_table_widths = false;
 $this->keep_table_proportions = false;	// If table width set > page width, force resizing but keep relative sizes
 							// Also forces respect of cell widths set by %
 $this->shrink_tables_to_fit = 1.4;	// automatically reduce fontsize in table if words would have to split ( not in CJK)
 						// 0 or false to disable; value (if set) gives maximum factor to reduce fontsize
+
+$this->tableMinSizePriority = false;	// If page-break-inside:avoid but cannot fit on full page without 
+							// exceeding autosize; setting this value to true will force respsect for
+							// autosize, and disable the page-break-inside:avoid
+
 $this->use_kwt = false;
+$this->iterationCounter = false;		// Set to TRUE to use table Head iteration counter
 
 // IMAGES
 $this->img_dpi = 96;	// Default dpi to output images if size not defined
-
+				// See also above "dpi"
 
 // TEXT SPACING & JUSTIFICATION
-$this->justifyB4br = false;	// mPDF 4.3.003  In justified text, <BR> does not cause the preceding text to be justified in browsers
+$this->useKerning = false;		// mPDF 5.1  True to use kerning
+$this->justifyB4br = false;	//In justified text, <BR> does not cause the preceding text to be justified in browsers
 					// Change to true to force justification (as in MS Word)
 
 $this->tabSpaces = 8;	// Number of spaces to replace for a TAB in <pre> sections
@@ -134,7 +195,7 @@ $this->jSmaxChar = 2;	// Maximum spacing to allocate to character spacing. (0 = 
 $this->jSmaxCharLast = 1;	// Maximum character spacing allowed (carried over) when finishing a last line
 $this->jSmaxWordLast = 2;	// Maximum word spacing allowed (carried over) when finishing a last line
 $this->orphansAllowed = 5;		// No of SUP or SUB characters to include on line to avoid leaving e.g. end of line//<sup>32</sup>
-$this->normalLineheight = 1.33;	// mPDF 4.2 - Value used for line-height when CSS specified as 'normal' (default)
+$this->normalLineheight = 1.33;	// Value used for line-height when CSS specified as 'normal' (default)
 
 
 // HYPHENATION
@@ -159,7 +220,7 @@ $this->list_number_suffix = '.';	// Content to follow a numbered list marker e.g
 
 
 // WATERMARKS
-$this->watermarkImgBehind = true;	// mPDF 4.3.018
+$this->watermarkImgBehind = false;
 $this->showWatermarkText = 0;	// alias = $TopicIsUnvalidated
 $this->showWatermarkImage = 0;
 $this->watermarkText = '';	// alias = $UnvalidatedText
@@ -167,7 +228,10 @@ $this->watermarkImage = '';
 $this->watermark_font = '';
 $this->watermarkTextAlpha = 0.2;
 $this->watermarkImageAlpha = 0.2;
-
+$this->watermarkImgAlphaBlend = 'Normal';
+	// Accepts any PDF spec. value: Normal, Multiply, Screen, Overlay, Darken, Lighten, ColorDodge, ColorBurn, 
+	// HardLight, SoftLight, Difference, Exclusion
+	// "Multiply" works well for watermark image on top
 
 // BORDERS
 $this->autoPadding = false; // Automatically increases padding in block elements with border-radius set - if required
@@ -187,7 +251,7 @@ $this->defaultCSS = array(
 	'BODY' => array(
 		'FONT-FAMILY' => 'serif',
 		'FONT-SIZE' => '11pt',
-		'TEXT-ALIGN' => 'left',
+	/*	'TEXT-ALIGN' => 'left',	Removed mPDF 5.0 */
 		'TEXT-INDENT' => '0pt',	/* Moved from mPDF 4.0 */
 		'LINE-HEIGHT' => 'normal', /* mPDF 4.2 changed from 1.33 */
 		'MARGIN-COLLAPSE' => 'collapse', /* Custom property to collapse top/bottom margins at top/bottom of page - ignored in tables/lists */
@@ -343,7 +407,7 @@ $this->defaultCSS = array(
 		'BORDER-COLLAPSE' => 'separate',
 		'BORDER-SPACING' => '2px',
 		'EMPTY-CELLS' => 'show',
-		'TEXT-ALIGN' => 'left',
+	/*	'TEXT-ALIGN' => 'left',		Removed mPDF 5.0.054 */
 		'LINE-HEIGHT' => '1.2',
 		'VERTICAL-ALIGN' => 'middle',
 	),
@@ -401,14 +465,17 @@ $this->default_lineheight_correction=1.2;	// Value 1 sets lineheight=fontsize he
 $this->fontsizes = array('XX-SMALL'=>0.7, 'X-SMALL'=>0.77, 'SMALL'=>0.86, 'MEDIUM'=>1, 'LARGE'=>1.2, 'X-LARGE'=>1.5, 'XX-LARGE'=>2);
 
 // CHARACTER PATTERN MATCHES TO DETECT LANGUAGES
-// pattern used to detect RTL characters -> force RTL
-$this->pregRTLchars = "\x{0590}-\x{06FF}\x{0750}-\x{077F}\x{FB00}-\x{FDFD}\x{FE70}-\x{FEFF}";	
+	// pattern used to detect RTL characters -> force RTL
+	$this->pregRTLchars = "\x{0590}-\x{06FF}\x{0700}-\x{083E}\x{FB00}-\x{FDFD}\x{FE70}-\x{FEFF}";	
+	// mPDF 5 Now includes Syriac, Thaana, N'Ko and Samaritan
 
 	// CJK Chars which require changing and are distinctive of specific charset
-	$this->pregUHCchars = "\x{3130}-\x{318F}\x{AC00}-\x{D7AF}";	
+	$this->pregUHCchars = "\x{1100}-\x{11FF}\x{3130}-\x{318F}\x{AC00}-\x{D7AF}";	  // mPDF 5.0 Added 1100-11FF
 	$this->pregSJISchars = "\x{3040}-\x{309F}\x{30A0}-\x{30FF}\x{3190}-\x{319F}\x{31F0}-\x{31FF}";	
-	// Chars which distinguish CJK but not between different 	// mPDF 3.0 widen Plane 3
-	$this->pregCJKchars = "\x{2E80}-\x{A4CF}\x{A800}-\x{D7AF}\x{F900}-\x{FAFF}\x{FF00}-\x{FFEF}\x{20000}-\x{2FA1F}";
+
+	// Chars which distinguish CJK but not between different 	// mPDF 3.0 widen Plane 2  // mPDF 5.0 Added FE30-FE6F,1100-11FF
+	$this->pregCJKchars = "\x{1100}-\x{11FF}\x{2E80}-\x{A4CF}\x{A800}-\x{D7AF}\x{F900}-\x{FAFF}\x{FE30}-\x{FE6F}\x{FF00}-\x{FFEF}\x{20000}-\x{2FA1F}";
+
 	// ASCII Chars which shouldn't break string
 	// Use for very specific words
 	$this->pregASCIIchars1 = "\x{0021}-\x{002E}\x{0030}-\x{003B}?";	// no [SPACE]
@@ -420,7 +487,7 @@ $this->pregRTLchars = "\x{0590}-\x{06FF}\x{0750}-\x{077F}\x{FB00}-\x{FDFD}\x{FE7
 	$this->pregVIETchars = "\x{01A0}\x{01A1}\x{01AF}\x{01B0}\x{1EA0}-\x{1EF1}";	
 	// Vietnamese -  Chars which shouldn't break string 
 	$this->pregVIETPluschars = "\x{0000}-\x{003B}\x{003F}-\x{00FF}\x{0300}-\x{036F}\x{0102}\x{0103}\x{0110}\x{0111}\x{0128}\x{0129}\x{0168}\x{0169}\x{1EF1}-\x{1EF9}";	// omits < >
-	$this->pregHEBchars = "\x{0590}-\x{05FF}\x{FB00}-\x{FB49}";	// Hebrew
+
 	// Arabic
 	$this->pregARABICchars = "\x{0600}-\x{06FF}\x{0750}-\x{077F}\x{FB50}-\x{FDFD}\x{FE70}-\x{FEFF}";
 	// Characters of Urdu, Pashto, Sindhi (but NOT arabic or persian/farsi) [not covered by DejavuSans font]
@@ -440,7 +507,7 @@ $this->pregRTLchars = "\x{0590}-\x{06FF}\x{0750}-\x{077F}\x{FB00}-\x{FDFD}\x{FE7
 	$this->pregMLchars = "\x{0D00}-\x{0D7F}";	// Malayalam 
 	$this->pregSHchars = "\x{0D80}-\x{0DFF}";	// Sinhala 
 
-	$this->pregINDextra = "\x{200B}-\x{200D}\x{0964}\x{0965}\x{0020}-\x{0022}\x{0024}-\x{002E}\x{003A}-\x{003F}\x{005B}-\x{0060}\x{007B}-\x{007E}-\x{00A0}";
+	$this->pregINDextra = "\x{200B}-\x{200D}\x{0964}\x{0965}\x{0020}-\x{0022}\x{0024}-\x{002E}\x{003A}-\x{003F}\x{005B}-\x{0060}\x{007B}-\x{007E}\x{00A0}";	// mPDF 5.0 (omit -)
 	// 200B-D=Zero-width joiners; 0964,0965=Generic Indic punctuation; NBSP & general punctuation (excludes # and / so can use in autoFont() )
 
 $this->allowedCSStags = 'DIV|P|H1|H2|H3|H4|H5|H6|FORM|IMG|A|BODY|TABLE|HR|THEAD|TFOOT|TBODY|TH|TR|TD|UL|OL|LI|PRE|BLOCKQUOTE|ADDRESS|DL|DT|DD';

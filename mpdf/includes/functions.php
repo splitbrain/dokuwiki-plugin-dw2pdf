@@ -1,7 +1,6 @@
 <?php
 
 
-// mPDF 4.2.006 - from mPDFI
 function _strspn($str1, $str2, $start=null, $length=null) {
 	$numargs = func_num_args();
 	if ($numargs == 2) {
@@ -16,7 +15,6 @@ function _strspn($str1, $str2, $start=null, $length=null) {
 }
 
 
-// mPDF 4.2.006 - from mPDFI
 function _strcspn($str1, $str2, $start=null, $length=null) {
 	$numargs = func_num_args();
 	if ($numargs == 2) {
@@ -30,7 +28,6 @@ function _strcspn($str1, $str2, $start=null, $length=null) {
 	}
 }
 
-// mPDF 4.2.006 - from mPDFI
 function _fgets (&$h, $force=false) {
 	$startpos = ftell($h);
 	$s = fgets($h, 1024);
@@ -49,10 +46,15 @@ if(!function_exists('str_ireplace')) {
 	return preg_replace("/".$search."/i", $replace, $subject); 
   }
 }
+if(!function_exists('htmlspecialchars_decode')) {
+	function htmlspecialchars_decode ($str) {
+		return strtr($str, array_flip(get_html_translation_table(HTML_SPECIALCHARS)));
+	}
+}
 
 function PreparePreText($text,$ff='//FF//') {
-	$text = str_ireplace('<pre',"<||@mpdf@||pre",$text);
-	$text = str_ireplace('</pre',"<||@mpdf@||/pre",$text);
+	// mPDF 5.0.053
+	$text = htmlspecialchars($text);
 	if ($ff) { $text = str_replace($ff,'</pre><formfeed /><pre>',$text); }
 	return ('<pre>'.$text.'</pre>');
 }
@@ -71,18 +73,17 @@ if(!function_exists('code2utf')){
   function code2utf($num,$lo=true){
 	//Returns the utf string corresponding to the unicode value
 	//added notes - http://uk.php.net/utf8_encode
-	// NB this code initially had 1024 (->2048) and 38000 (-> 65536)
 	if ($num<128) {
 		if ($lo) return chr($num);
 		else return '&#'.$num.';';	// i.e. no change
 	}
 	if ($num<2048) return chr(($num>>6)+192).chr(($num&63)+128);
 	if ($num<65536) return chr(($num>>12)+224).chr((($num>>6)&63)+128).chr(($num&63)+128);
-	// mPDF 3.0
 	if ($num<2097152) return chr(($num>>18)+240).chr((($num>>12)&63)+128).chr((($num>>6)&63)+128) .chr(($num&63)+128);
 	return '?';
   }
 }
+
 
 if(!function_exists('codeHex2utf')){ 
   function codeHex2utf($hex,$lo=true){

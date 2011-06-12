@@ -1,9 +1,10 @@
 <?php
 
-if (!defined('_TTF_FONT_NORMAL')) { define("_TTF_FONT_NORMAL", 'arial.ttf'); }
-if (!defined('_TTF_FONT_BOLD')) { define("_TTF_FONT_BOLD", 'arialbd.ttf'); }
-if (!defined('_TTF_FONT_ITALIC')) { define("_TTF_FONT_ITALIC", 'ariali.ttf'); }
-if (!defined('_TTF_FONT_BOLDITALIC')) { define("_TTF_FONT_BOLDITALIC", 'arialbi.ttf'); }
+
+// mPDF 4.5.009
+define("FF_USERFONT", 15);	// See jpgraph_ttf.inc.php for font IDs
+global $JpgUseSVGFormat;
+$JpgUseSVGFormat = true;
 
 //======================================================================================================
 // DELETE OLD GRAPH FILES FIRST - Housekeeping
@@ -12,7 +13,7 @@ if (!defined('_TTF_FONT_BOLDITALIC')) { define("_TTF_FONT_BOLDITALIC", 'arialbi.
 	if ($handle = opendir(_MPDF_PATH.'graph_cache')) {
 	   while (false !== ($file = readdir($handle))) { 
 		if (((filemtime(_MPDF_PATH.'graph_cache/'.$file)+$interval) < time()) && ($file != "..") && ($file != ".")) { 
-			unlink(_MPDF_PATH.'graph_cache/'.$file); 
+			@unlink(_MPDF_PATH.'graph_cache/'.$file); 	// mPDF 4.0
 		}
 	   }
 	   closedir($handle); 
@@ -80,7 +81,15 @@ function print_graph($g,$pgwidth) {
 	if (!$dpi || $dpi < 50 || $dpi > 2400) { $dpi = 150; } 	// Default dpi 150
 	$k = (0.2645/25.4 * $dpi); 
 
-	$img_type = 'png'; 	// Can use jpeg or gif (gif is very slow)
+	// mPDF 4.5.009
+	global $JpgUseSVGFormat;
+	if (isset($JpgUseSVGFormat) && $JpgUseSVGFormat) {
+		$img_type = 'svg';
+		$k = 1;	// Overrides as Vector scale does not need DPI
+	}
+	else {
+		$img_type = 'png';
+	}
 
 	if (isset($g['attr']['TITLE']) && $g['attr']['TITLE']) { $title = $g['attr']['TITLE']; }
 
@@ -238,10 +247,9 @@ function print_graph($g,$pgwidth) {
 		$graph = new Graph(($w*$k),($h*$k));
 	}
 
-	$graph->SetUserFont(_TTF_FONT_NORMAL,_TTF_FONT_BOLD,_TTF_FONT_ITALIC,_TTF_FONT_BOLDITALIC);
-
-	$graph->img->SetImgFormat($img_type) ;
-	if (strtoupper($img_type)=='JPEG') { $graph->img->SetQuality(90); }
+// mPDF 4.5.009
+//	$graph->img->SetImgFormat($img_type) ;
+//	if (strtoupper($img_type)=='JPEG') { $graph->img->SetQuality(90); }
 	if ($antialias) { $graph->img->SetAntiAliasing(); }
 	$graph->SetShadow(true, 2*$k); 
 	$graph->SetMarginColor("white");
