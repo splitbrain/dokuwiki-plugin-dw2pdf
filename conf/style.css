@@ -6,6 +6,10 @@
  * are not overwritten by updates
  */
 
+body {
+    font-family: sans-serif;
+}
+
 table {
     border: 1px solid #808080;
     border-collapse: collapse;
