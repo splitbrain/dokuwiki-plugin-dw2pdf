@@ -168,7 +168,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // Customized to strip all span tags so that the wiki <code> SQL would display properly
         $norender = explode(',',$this->getConf('norender'));
         $this->strip_only($html, $norender);
-        $this->strip_htmlencodedchars($html);
     }
 
     /**
@@ -203,16 +202,5 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             if(end($tags) == '') array_pop($tags);
         }
         foreach($tags as $tag) $str = preg_replace('#</?'.$tag.'[^>]*>#is', '', $str);
-    }
-
-    /**
-     * Replace &#039; &quot; &gt; &lt; &amp;
-     *
-     * @fixme do we really need this? wouldn't this break things?
-     * @fixme and if we really need it, do correct numeric decoding
-     */
-    protected function strip_htmlencodedchars(&$str) {
-        $str = htmlspecialchars_decode($str);
-        $str = str_replace('&#039;', '\'', $str);
     }
 }
