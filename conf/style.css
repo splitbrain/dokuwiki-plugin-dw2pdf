@@ -17,3 +17,11 @@ table {
 td, th {
     border: 1px solid #808080;
 }
+
+em.u {
+    font-style: normal;
+    text-decoration: underline;
+}
+em em.u {
+    font-style: italic;
+}
