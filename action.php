@@ -39,6 +39,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         require_once(dirname(__FILE__)."/DokuPDF.class.php");
         $mpdf = new DokuPDF();
 
+        // let mpdf fix local links
+        $self = parse_url(DOKU_URL);
+        $url  = $self['scheme'].'://'.$self['host'];
+        if($self['port']) $url .= ':'.$port;
+        $mpdf->setBasePath($url);
+
         // some default settings
         $mpdf->mirrorMargins          = 1;  // Use different Odd/Even headers and footers and mirror margins
         $mpdf->defaultheaderfontsize  = 8;  // in pts
@@ -163,9 +169,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $norender = explode(',',$this->getConf('norender'));
         $this->strip_only($html, $norender);
         $this->strip_htmlencodedchars($html);
-
-        $html = str_replace('href="/','href="http://'.$_SERVER['HTTP_HOST'].'/',$html);
-
     }
 
     /**
