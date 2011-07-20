@@ -206,7 +206,7 @@ $mpdf=new mPDF('-s','A4','','',32,25,27,25,16,13);
 
 $mpdf->SetDisplayMode('fullpage');
 
-$mpdf->useSubstitutionsMB = true;
+//$mpdf->useSubstitutionsMB = true;
 
 $mpdf->WriteHTML($html);
 

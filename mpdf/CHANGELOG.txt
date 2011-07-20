@@ -1,4 +1,192 @@
 ===========================
+mPDF v5.3   (21/07/2011)
+===========================
+
+New Features
+------------
+- Active forms (see on-line manual for details)
+- 128-bit encryption (optional) with additional user-permissions (see on-line manual)
+
+PLEASE READ - Change in Font management
+---------------------------------------
+The font name imported from the font and included by mPDF in the PDF file was stripping any '-' in the name.
+This is the PostScript name which is utilised by some PostScript programmes.
+mPDF has been changed to leave the PostScript font name unchanged. In 99% cases no difference will be noted, but
+you MUST delete all the temporary font data files cached in the  /ttfontdata/ folder for this to be effective.
+
+
+Minor changes
+-------------
+If @page CSS is used to select a first page with settings different from the default, mPDF did create a blank page
+	then pagebreak to the new @page settings - this has been changed so it now will start with the new page settings.
+
+New function added: DeletePages($start_page, $end_page=-1)  e.g. $mpdf->DeletePages(1);
+	Can be used just before calling Output()
+
+compress.php utility extended to exclude active forms and images-svg
+
+
+Bug fixes
+---------
+- list-style-type: (custom version, user-defined bullet) colour change not working if colour is set on the list item line
+- background-image: SVG or WMF images as background-images in tables/tr/cells not working
+- font-weight: bold font not always reset after inline <b>...</b> thus miscalculating width
+- forms (inactive) in 'c' core fonts using unicode characters 127-255 incorrect display in input text and button text
+- form elements (inactive) if in-line with mixed size fonts, error in vertical positioning of text related to box
+- ToC: wrapped lines in ToC not retaining formatting e.g. bold style
+- HTMLHeaders: using setAutoTopMargin="pad"; not correctly setting top margin for first page
+- output headers changed: Content-length not used if server uses output compression
+- embedded font subsets from fonts which contain non-BMP plane 0 characters (incl. e.g. dejavusanscondensed)
+	- causing Adobe Reader to create a CJK encoded font subset internally when loading interactive Forms
+	- Changed so unsets the flag in the subset font to show no non-BMP characters.
+
+
+Configurable variables added (see config.php file):
+--------------------------------------------------
+All for Active Forms:
+$this->useActiveForms
+$this->formExportType
+$this->formSubmitNoValueFields
+$this->formSelectDefaultOption
+$this->form_border_color
+$this->form_background_color
+$this->form_border_width
+$this->form_border_style
+$this->form_button_border_color
+$this->form_button_background_color
+$this->form_button_border_width
+$this->form_button_border_style
+$this->form_radio_color
+$this->form_radio_background_color
+
+PLUS: see additional values added to $this->allowedCSStags close to bottom of file - required for Active forms
+
+
+Updated files
+-------------
+mpdf.php
+config.php  (NB as well as form stuff at top, 5.2.07 $this->allowedCSStags close to bottom of file)
+compress.php
+classes/ttfontsuni.php
+examples/example57...
+examples/formsubmit.php
+
+
+
+===========================
+mPDF v5.2   (18/06/2011)
+===========================
+
+New Features
+------------------
+Improvements in font handling resulting in clearer display of fonts on screen, and improved compatibility with PostScript drivers
+	(e.g. use with GSView/GhostScript, see below)
+
+CJK line-breaking implemented (roughly) according to rules. Configurable variables allow control of behaviour (except in tables).
+
+Viewer preferences: added options for initial 2 page display where you can specify whether
+	1st page is on left or right (cf. SetDisplayMode).
+
+Custom list-style-type for a list (ul,ol) or a list-item (li) in which you can determine the character and colour of the bullet:
+	list-style-type: U+263Argb(255,0,0); - where U+263A is the Unicode HEX value of the character you want for the bullet 
+	- character MUST be included in the font used for that list item. rgb() bit is optional
+
+
+Bug fixes
+---------
+- Fonts: embedding a BMP TTC font (e.g. Cambria) as a full font caused error
+- Table: If cell width set by CSS as %, and page-break-inside avoid requires a new page, was losing the sizing
+- Table: table borders CSS parsing error; if border-width, border-style, border-color set, not inherited correctly
+- Table: Table background image or gradient not working in HTMLHeader/Footer
+- Table: background color set on table (anywhere) will overwrite image/gradient
+- Table Background image/gradient: If left/right margin is set on table, gradient/image set on table is too wide
+- Table: rotated table - height (after first page does not correctly allow for thead i.e. too much)
+- Table: blank <tr></tr> causes error
+- Table/Letter-spacing: If letter-spacing set inside table, not calculating table width correctly, and if oversized, freezes
+- ToC: ToC at top of page (non-mirrored or already ODD) did not reset page_number if told
+- Character subsititutions: characters missed if first element in a $html code e.g. WriteHTML('Not in a tag &#10003;');
+- Kerning: kerning info: if reading font file for first time (or if not cached in ttfontdata/) did not register kerning info
+- Textarea: multiple new lines run into only one newline
+- QRCode - colors wrong because QRcode class only accepts RGB input (hardcoded now to always give black on white)
+- QRCode always producing "Your message here"
+- Columns: if transforming height of column, not always closing transform Q
+- CakePHP compatibility
+- compress.php - error due to markup comments in mpdf.php script file
+
+Backwards compatibility
+-----------------------
+Changes in mPDF 5.2 are backwards compatible with version 5.1
+Your document fonts may appear slightly different in the PDF viewer because of the changes to embedded font subsets (cf.)
+The new Indic fonts may result in a change in spacing (due to the different character width of the space character from the original font)
+
+PostScript e.g. GSView/GhostScript
+----------------------------------
+A number of errors have been reported when opening mPDF-created PDF files with a PostScript programme. Some of the errors were due to mPDF, 
+but others were due to peculiarities of GSView/GhostScript.
+- Diacritic Characters were not displayed when embedding a font subset
+- Fonts containing SIP/SMP characters (supplementary Unicode planes) caused errors
+- Error with text justification (word-spacing) when embedding a full font can occur in some fonts*
+The first 2 problems should now be fixed in v5.2
+*The error with text justification can be optionally fixed by setting the configurable variable in config.php:
+	$this->repackageTTF = true;
+	When mPDF embeds a full font, it simply embeds the whole original TTF file into the PDF document. For some fonts (containing
+	a GSUB table) this was causing problems. $this->repackageTTF forces mPDF to repackage the original TTF file excluding some of
+	the tables like GSUB.
+(See ADDITIONAL INFO FONTS.txt in downloaded files)
+
+
+Font appearance in PDF viewer
+-----------------------------
+Font subsetting has been improved to include additional information in the embedded file. Overall the effects are of greater clarity
+when viewing the document on a screen (it will not affect print output), but the changes are dependent on:
+- the original TTF font i.e. the options that the font's author has built into the file
+- the PDF viewer i.e. whether the programme chooses to use the available information
+- the resolution (zoom) of the page you are viewing
+(See ADDITIONAL INFO FONTS.txt in downloaded files)
+
+
+Indic fonts
+-----------
+A new set of Indic fonts (ind_xx_1_001) is distributed with version 5.2 containing the additional font information as described above.
+In addition, some changes have been made to the ASCII characters in the font from the files previously distributed:
+The original files (Raghu font files) do not contain the characters a-z and A-Z. When the first version indic files were created for mPDF,
+ALL of the ASCII characters (32-127) were inserted/overwritten from DejaVuSansCondensed to make the font more usable.
+In the latest version, only the missing characters are taken from DejaVuSansCondensed, leaving punctuation and numerals from the original
+fonts. This also means that the space character has a different width, and this will cause slight changes to the word spacing in documents.
+(See ADDITIONAL INFO FONTS.txt in downloaded files)
+
+
+CJK line-breaking (text wrapping)
+---------------------------------
+CJK (chinese-japanese-korean) text often contains no spaces. mPDF previously has wrapped text whenever a character reached the end of 
+the line. mPDF version 5.2 attempts to follow the line-breaking rules described for each of the languages. Configurable variables 
+allow some control over this behaviour, especially whether to squeeze a character into the space available at the end of a line, or
+whether to allow it to overflow the right margin.
+
+
+Configurable variables (see config.php file):
+----------------------
+Control wrapping of CJK text:
+	$this->allowCJKorphans = true;	// FALSE=always wrap to next line; TRUE=squeeze or overflow
+	$this->allowCJKoverflow = false; // FALSE=squeeze; TRUE=overflow (only selected)
+When Embedding full TTF font files, remakes the font file using only core tables
+May improve function with PostScript printers
+	$this->repackageTTF = false; 
+
+Updated files
+-------------
+mpdf.php
+compress.php
+utils/font_dump.php
+classes/ttfontsuni.php
+config.php (3 new variables - see above)
+
+All ttfonts/ind_*
+New set of Indic fonts for PostScript compatibilty - and clearer font display 
+
+
+
+===========================
 mPDF v5.1   (27/02/2011)
 ===========================
 

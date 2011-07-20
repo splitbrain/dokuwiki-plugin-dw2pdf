@@ -90,6 +90,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         $this->arrangeHtml($html, $this->getConf("norender"));
+	if(isset($_GET['watermarkText'])){
+		$mpdf->SetWatermarkText($_GET['watermarkText']);
+		//$mpdf->watermark_font = 'DejaVuSansCondensed';
+		$mpdf->showWatermarkText = true;
+	} 
         $mpdf->WriteHTML($html);
 
         $title = $_GET['pdfbook_title'];

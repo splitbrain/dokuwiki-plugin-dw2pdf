@@ -6,7 +6,6 @@ include("../mpdf.php");
 $mpdf=new mPDF(''); 
 
 $mpdf->useKerning=true;
-$mpdf->kerning=false;
 
 $mpdf->restrictColorSpace=3; 	// forces everything to convert to CMYK colors
 

@@ -1,19 +1,3 @@
-General
-=======
-mPDF 5.x has improved font handling making it a lot easier to use any (TrueType) fonts you want,
-without having to prepare extra font files.
-
-
-Users of mPDF 4.x and before
-============================
-mPDF 5.x now works with TrueType .ttf font-files directly, and can embed subsets of fonts
-in TrueType form. There is no longer any need to use pre-prepared font files in different
-codepages (win-1251, iso-8859-2 etc.).
-
-Once the new system for using fonts is set up correctly, most of your scripts should work as before.
-Nevertheless I strongly suggest testing mPDF 5.0 without deleting your previous set-up.
-
-
 Installation
 ============
     * Download the .zip file and unzip it
@@ -86,17 +70,6 @@ mPDF should be able to read most TrueType Unicode font files with a .ttf extensi
 Truetype fonts with .ttf extension that are OpenType also work OK.
 TrueType collections (.ttc) will also work if they contain TrueType Unicode fonts.
 
-Users of mPDF 4.x and before
-----------------------------
-In mPDF 5.x Arial, Helvetica, Times and Courier are treated like any other font.
-
-Unlike mPDF <= 4.x the whole CSS font string is parsed e.g.
-style="font-family:'Arial Unicode MS', 'Lucida Grande', Helvetica;"
-mPDF 4.x only took the first word of the first font i.e. Arial
-mPDF 5.x will match the whole of 'Arial Unicode MS', and if this is not found will look for 'Lucida Grande'
-or Helvetica
-
-For further information on fonts, see the separate FontInfo.txt file
 
 Character substitution
 ----------------------
@@ -115,15 +88,13 @@ When useSubstitutions is true, mPDF will try to find substitutions for any missi
 1) firstly looks if the character is available in the inbuilt Symbols or ZapfDingbats fonts;
 2) [If defined] looks in each of the the font(s) set by $this->backupSubsFont array
 
-NB useSubstitutionsMB is depracated (but will still work as an alias for useSubstitutions).
-NNB There is an increase in processing time when using substitutions, and even more so if
+NB There is an increase in processing time when using substitutions, and even more so if
 a backupSubsFont is defined.
 
 Controlling mPDF mode
 =====================
-The first parameter of new mPDF('') now works as follows:
-new mPDF('c') - forces mPDF to only use the built-in [C]ore Adobe fonts (Helvetica, Times etc)
-	This was previously set using $this->useOnlyCoreFonts (depracated)
+The first parameter of new mPDF('') works as follows:
+new mPDF('c') - forces mPDF to only use the built-in [c]ore Adobe fonts (Helvetica, Times etc)
 
 new mPDF('') - default - font subsetting behaviour is determined by the configurable variables
 	$this->maxTTFFilesize and $this->percentSubset (see below)
@@ -157,48 +128,15 @@ new mPDF('de') - as German is a Western European langauge, it is suitable to use
 	Using 'de' alone will do nothing, but if you use ('de-x'), this will use core fonts.
 new mPDF('th') - many fonts do not contain the characters necessary for Thai script. The value $unifonts 
 	defines a restricted list of fonts available for mPDF to use.
-new mPDF('hi') - As Hindi is a cursive script, $spacing="W" will force any spacing used to justify text
-	to affect word spacing, not character spacing.
 
-NB <html dir="rtl"> or <body dir="rtl"> are now both supported.
-
-Previous users: "codepages"
----------------------------
-The old "codepages" are ignored:
-new mPDF('win-1251') or new mPDF('utf-8') is now treated as new mPDF('')
-new mPDF('win-1251-s') is now treated as new mPDF('s')
+NB <html dir="rtl"> or <body dir="rtl"> are supported.
 
 
 
 Configuration variables changed
 ===============================
-Most configuration variables are unchanged, and are documented in the on-line manual (http://mpdf1.com/manual/).
+Configuration variables are documented in the on-line manual (http://mpdf1.com/manual/).
 
-Removed (now ignored/inactive)
-------------------------------
-$this->useOnlyCoreFonts (previous alias $use_embeddedfonts_1252)
-$this->use_CJK_only 
-
-Added (config.php)
-------------------
-$this->useAdobeCJK - forces all CJK text to use Adobe's CJK language font pack.
-$this->debugfonts - set this to true to reveal error messages if having trouble with fonts
-
-
-// This value determines whether to subset or not
-// mPDF will embed the whole font if >x% characters in that font have been used
-// or embed subset if <x% characters
-// Set to 0 will force whole file to always be embedded
-// Set to 100 will force mPDF to always subset
-$this->percentSubset = 30;
-
-
-// Set maximum size of TTF font file to allow non-subsets - in kB
-// Used to avoid large files like Arial Unicode MS ever being fully embedded
-// This takes precedence over the value of $this->percentSubset
-$this->maxTTFFilesize = 2000;
-
-NB $this->useSubstitutionsMB is depracated (but will still work as an alias for useSubstitutions).
 
 Font folders
 ============
@@ -208,9 +146,3 @@ you can define the 2 constants in your script before including the mpdf.php scri
 define('_MPDF_TTFONTPATH','your_path/ttfonts/'); 		
 define('_MPDF_TTFONTDATAPATH','your_path/ttfontdata/'); 	// should be writeable
 
-
-
-======================================================================
-For more information on fonts, especially Arabic, CJK and Indic fonts,
-see FONT INFO.txt
-======================================================================

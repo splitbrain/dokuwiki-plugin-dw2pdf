@@ -1,6 +1,35 @@
 <?php
 
-// FONTS
+// mPDF 5.3
+// ACTIVE FORMS
+$this->useActiveForms = false;
+$this->formExportType = 'xfdf'; // 'xfdf' or 'html'
+$this->formSubmitNoValueFields = true;	// Whether to include blank fields when submitting data
+$this->formSelectDefaultOption = true;	// for Select drop down box; if no option is explicitly maked as selected,
+						// this determines whether to select 1st option (as per browser)
+						// - affects whether "required" attribute is relevant
+$this->formUseZapD = true;		// Determine whether to use ZapfDingbat icons for radio/checkboxes
+
+/* Form Styles */
+// These can alternatively use a 4 number string to represent CMYK colours
+$this->form_border_color = '0.6 0.6 0.72'; 		// RGB
+$this->form_background_color = '0.975 0.975 0.975'; 	// RGB
+$this->form_border_width = '1';		// 0 doesn't seem to work as it should
+$this->form_border_style = 'S';		// B - Bevelled; D - Double
+$this->form_button_border_color = '0.2 0.2 0.55'; 
+$this->form_button_background_color = '0.941 0.941 0.941';
+$this->form_button_border_width = '1';
+$this->form_button_border_style = 'S';
+$this->form_radio_color = '0.0 0.0 0.4'; 	// radio and checkbox
+$this->form_radio_background_color = '0.9 0.9 0.9'; 
+
+
+// When embedding full TTF font files, remakes the font file using only core tables
+// May improve function with some PostScript printers (GhostScript/GSView)
+// Does not work with TTC font collections
+// Slightly smaller file; increased processing time
+$this->repackageTTF = false; 
+
 // Set maximum size of TTF font file to allow non-subsets - in kB
 // Used to avoid e.g. Arial Unicode MS (perhaps used for substituteCharsMB) to ever be fully embedded
 // NB Free serif is 1.5MB, most files are <= 600kB (most 200-400KB)
@@ -198,6 +227,11 @@ $this->orphansAllowed = 5;		// No of SUP or SUB characters to include on line to
 $this->normalLineheight = 1.33;	// Value used for line-height when CSS specified as 'normal' (default)
 
 
+// CJK Line-breaking
+$this->allowCJKorphans = true;	// FALSE=always wrap to next line; TRUE=squeeze or overflow
+$this->allowCJKoverflow = false;	// FALSE=squeeze; TRUE=overflow (only some characters, and disabled in tables)
+
+
 // HYPHENATION
 $this->hyphenate = false;
 $this->hyphenateTables = false;
@@ -239,11 +273,6 @@ $this->autoPadding = false; // Automatically increases padding in block elements
 // FORMS
 $this->textarea_lineheight = 1.25;
 
-// NOT USED???
-$this->formBgColor = 'white';
-$this->formBgColorSmall = '#DDDDFF';	// Color used for background of form fields if reduced in size (so border disappears)
-
-
 //////////////////////////////////////////////
 
 // Default values if no style sheet offered	(cf. http://www.w3.org/TR/CSS21/sample.html)
@@ -251,13 +280,11 @@ $this->defaultCSS = array(
 	'BODY' => array(
 		'FONT-FAMILY' => 'serif',
 		'FONT-SIZE' => '11pt',
-	/*	'TEXT-ALIGN' => 'left',	Removed mPDF 5.0 */
-		'TEXT-INDENT' => '0pt',	/* Moved from mPDF 4.0 */
-		'LINE-HEIGHT' => 'normal', /* mPDF 4.2 changed from 1.33 */
+		'TEXT-INDENT' => '0pt',
+		'LINE-HEIGHT' => 'normal',
 		'MARGIN-COLLAPSE' => 'collapse', /* Custom property to collapse top/bottom margins at top/bottom of page - ignored in tables/lists */
 	),
 	'P' => array(
-	/*	'TEXT-ALIGN' => 'left',	Removed mPDF 4.0 */
 		'MARGIN' => '1.12em 0',
 	),
 	'H1' => array(
@@ -407,7 +434,6 @@ $this->defaultCSS = array(
 		'BORDER-COLLAPSE' => 'separate',
 		'BORDER-SPACING' => '2px',
 		'EMPTY-CELLS' => 'show',
-	/*	'TEXT-ALIGN' => 'left',		Removed mPDF 5.0.054 */
 		'LINE-HEIGHT' => '1.2',
 		'VERTICAL-ALIGN' => 'middle',
 	),
@@ -430,8 +456,8 @@ $this->defaultCSS = array(
 		'PADDING-BOTTOM' => '0.1em',
 	),
 	'IMG' => array(
-		'MARGIN' => '0',			/* mPDF 4.2 changed */
-		'VERTICAL-ALIGN' => 'baseline', /* mPDF 4.2 changed */
+		'MARGIN' => '0',
+		'VERTICAL-ALIGN' => 'baseline',
 	),
 	'INPUT' => array(
 		'FONT-FAMILY' => 'sans-serif',
@@ -446,7 +472,7 @@ $this->defaultCSS = array(
 	'TEXTAREA' => array(
 		'FONT-FAMILY' => 'monospace',
 		'FONT-SIZE' => '0.9em',
-		'VERTICAL-ALIGN' => 'text-bottom', /* mPDF 4.2 changed */
+		'VERTICAL-ALIGN' => 'text-bottom',
 	),
 );
 
@@ -454,7 +480,7 @@ $this->defaultCSS = array(
 //////////////////////////////////////////////////
 // VALUES ONLY LIKELY TO BE CHANGED BY DEVELOPERS
 //////////////////////////////////////////////////
-$this->pdf_version = '1.4';	// mPDF 4.2.018  Previously set as 1.5
+$this->pdf_version = '1.4';	// Previously set as 1.5
 
 // Hyphenation
 $this->SHYlanguages = array('en','de','es','fi','fr','it','nl','pl','ru','sv');	// existing defined patterns
@@ -475,6 +501,16 @@ $this->fontsizes = array('XX-SMALL'=>0.7, 'X-SMALL'=>0.77, 'SMALL'=>0.86, 'MEDIU
 
 	// Chars which distinguish CJK but not between different 	// mPDF 3.0 widen Plane 2  // mPDF 5.0 Added FE30-FE6F,1100-11FF
 	$this->pregCJKchars = "\x{1100}-\x{11FF}\x{2E80}-\x{A4CF}\x{A800}-\x{D7AF}\x{F900}-\x{FAFF}\x{FE30}-\x{FE6F}\x{FF00}-\x{FFEF}\x{20000}-\x{2FA1F}";
+
+	// For CJK Line-breaking
+	//Leading characters - Not allowed at end of line
+	$this->CJKleading = "\$\(\*\[\{\x{00a3}\x{00a5}\x{00ab}\x{00b7}\x{2018}\x{201c}\x{2035}\x{3005}\x{3007}\x{3008}\x{300a}\x{300c}\x{300e}\x{3010}\x{3014}\x{3016}\x{3018}\x{301d}\x{fe34}\x{fe57}\x{fe59}\x{fe5b}\x{ff04}\x{ff08}\x{ff0e}\x{ff3b}\x{ff5b}\x{ff5f}\x{ffe1}\x{ffe5}\x{ffe6}";
+	// Following characters - Not allowed at start
+	$this->CJKfollowing = "!%\),\.:;>\?\]\}\x{00a2}\x{00a8}\x{00b0}\x{00b7}\x{00bb}\x{02c7}\x{02c9}\x{2010}\x{2013}-\x{2016}\x{2019}\x{201d}-\x{201f}\x{2020}-\x{2022}\x{2025}\x{2027}\x{203a}\x{203c}\x{2047}-\x{2049}\x{2103}\x{2236}\x{2574}\x{3001}-\x{3003}\x{3005}\x{3006}\x{3009}\x{300b}\x{300d}\x{300f}\x{3011}\x{3015}\x{3017}\x{3019}\x{301c}\x{301e}\x{301f}\x{303b}\x{3041}\x{3043}\x{3045}\x{3047}\x{3049}\x{3063}\x{3083}\x{3085}\x{3087}\x{308e}\x{3095}\x{3096}\x{30a0}\x{30a1}\x{30a3}\x{30a5}\x{30a7}\x{30a9}\x{30c3}\x{30e3}\x{30e5}\x{30e7}\x{30ee}\x{30f5}\x{30f6}\x{30fb}-\x{30fe}\x{31f0}-\x{31ff}\x{fe30}-\x{fe33}\x{fe50}-\x{fe56}\x{fe58}\x{fe5a}\x{fe5c}\x{ff01}\x{ff02}\x{ff05}\x{ff07}\x{ff09}\x{ff0c}\x{ff0e}\x{ff1a}\x{ff1b}\x{ff1f}\x{ff3d}\x{ff40}\x{ff5c}-\x{ff5e}\x{ff60}\x{ff64}";
+	// Characters which are allowed to overflow the right margin
+	$this->CJKoverflow = "\.,\x{ff61}\x{ff64}\x{3001}\x{3002}\x{ff0c}\x{ff0e}";
+
+
 
 	// ASCII Chars which shouldn't break string
 	// Use for very specific words
@@ -512,8 +548,10 @@ $this->fontsizes = array('XX-SMALL'=>0.7, 'X-SMALL'=>0.77, 'SMALL'=>0.86, 'MEDIU
 
 $this->allowedCSStags = 'DIV|P|H1|H2|H3|H4|H5|H6|FORM|IMG|A|BODY|TABLE|HR|THEAD|TFOOT|TBODY|TH|TR|TD|UL|OL|LI|PRE|BLOCKQUOTE|ADDRESS|DL|DT|DD';
 
-// mPDF 4.0
 $this->allowedCSStags .= '|SPAN|TT|I|B|BIG|SMALL|EM|STRONG|DFN|CODE|SAMP|KBD|VAR|CITE|ABBR|ACRONYM|STRIKE|S|U|DEL|INS|Q|FONT';
+
+// mPDF 5.3
+$this->allowedCSStags .= '|SELECT|INPUT|TEXTAREA';
 
 $this->outerblocktags = array('DIV','FORM','CENTER','DL');
 $this->innerblocktags = array('P','BLOCKQUOTE','ADDRESS','PRE','H1','H2','H3','H4','H5','H6','DT','DD');
