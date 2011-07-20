@@ -12,8 +12,10 @@ $lang['output_o_file']       = "File to download";
 
 $lang['norender']       = "Tags will no render on PDF";
 
+$lang['html_footer']    = 'HTML tags in footer?';
 $lang['footer_odd']     = 'Footer on odd pages';
 $lang['footer_even']    = 'Footer on even pages';
+$lang['html_header']    = 'HTML tags in header?';
 $lang['header_odd']     = 'Header on odd pages';
 $lang['header_even']    = 'Header on even pages';
 
