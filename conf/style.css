@@ -18,6 +18,10 @@ td, th {
     border: 1px solid #808080;
 }
 
+pre {
+    background-color: #eeeeee;
+}
+
 em.u {
     font-style: normal;
     text-decoration: underline;
@@ -34,3 +38,14 @@ img.mediaright {
     float: right;
 }
 
+.rightalign {
+    text-align: right;
+}
+
+.centeralign {
+    text-align: center;
+}
+
+.leftalign {
+    text-align: left;
+}
