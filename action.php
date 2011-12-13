@@ -78,7 +78,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         for($n=0; $n<$cnt; $n++){
             $page = $list[$n];
 
-            $html .= p_wiki_xhtml($page,$REV,false);
+            $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
             if($this->getConf('addcitation')){
                 $html .= $this->citation($page);
             }
@@ -146,19 +146,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Fix up the HTML a bit
      *
-     * FIXME This is far from perfect and will modify things within code and
-     * nowiki blocks. It would probably be a good idea to use a real HTML
-     * parser or our own renderer instead of modifying the HTML at all.
+     * FIXME This is far from perfect and most of it should be moved to
+     * our own renderer instead of modifying the HTML at all.
      */
     protected function arrangeHtml(&$html, $norendertags = '' ) {
-        // add bookmark links
-        $bmlevel = $this->getConf('maxbookmarks');
-        if($bmlevel > 0) {
-            $html = preg_replace("/\<a name=(.+?)\>(.+?)\<\/a\>/s",'$2',$html);
-            for ($j = 1; $j<=$bmlevel; $j++) {
-                $html = preg_replace("/\<h".$j."\>(.+?)\<\/h".$j."\>/s",'<h'.$j.'>$1<bookmark content="$1" level="'.($j-1).'"/></h'.$j.'>',$html);
-            }
-        }
 
         // insert a pagebreak for support of WRAP and PAGEBREAK plugins
         $html = str_replace('<br style="page-break-after:always;">','<pagebreak />',$html);
