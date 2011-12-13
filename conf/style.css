@@ -25,3 +25,12 @@ em.u {
 em em.u {
     font-style: italic;
 }
+
+img.medialeft {
+    float: left;
+}
+
+img.mediaright {
+    float: right;
+}
+
