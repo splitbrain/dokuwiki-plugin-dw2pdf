@@ -34,11 +34,9 @@ $mpdf->StartProgressBarOutput(2);
 
 $mpdf->SetDisplayMode('fullpage');
 
-$mpdf->useSubstitutions = true;
+$mpdf->useSubstitutions = false;
 $mpdf->debug = true;
 $mpdf->simpleTables = true;
-// force fonts to be embedded whole i.e. NOT susbet
-$mpdf->percentSubset = 0;
 
 //==============================================================
 //==============================================================

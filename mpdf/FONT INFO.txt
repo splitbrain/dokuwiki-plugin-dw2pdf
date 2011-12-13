@@ -52,6 +52,7 @@ Arabic/Eastern fonts
 - XW Zar fonts can be downloaded from: http://www.redlers.com/downloadfont.html
 	(2 of these fonts are included in the release)
 	(original site in Farsi: http://wiki.irmug.org/index.php/XWZar)
+- See below for more details and font names of the fonts used in mPDF 4.x
 
 
 Other sources
@@ -86,7 +87,7 @@ the font file must include the Arabic Presentation Forms-B (U+FE70–U+FEFF).
 ===========
 INDIC FONTS
 ===========
-Indic scripts e.g. Hindi, Bengali etc. use conjunct forms which have no Unicode assignment. You 
+Indic scripts e.g. Hindi, Bengali etc. use conjuct forms which have no Unicode assignment. You 
 cannot therefore use any standard .ttf font files with mPDF.
 
 A set of fonts has been adapted to use specifically with mPDF. They are based on a set of fonts from:
@@ -99,6 +100,13 @@ You need these adapted fonts (ind_bn_1_001.ttf etc.) to work with mPDF, as the g
 assigned to Unicode values in the Private Use area (U+E000 ->). These are included in the 
 mPDF download.
 
+
+
+Users of mPDF v4.x
+------------------
+The original indic font files do not contain a full set of even basic ASCII
+characters. The fonts supplied have been "fixed" to include those extra
+characters. This now works whether the font is subset or not.
 
 
 

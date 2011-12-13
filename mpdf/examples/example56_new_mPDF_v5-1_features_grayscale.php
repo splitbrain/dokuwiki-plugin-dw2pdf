@@ -94,7 +94,7 @@ div.text {
 <h2>New features in mPDF Version 5.1</h2>
 
 <div class="rounded text">
-<p>This is a copy of Example 53, but all object colours are converted to grayscale using simply:</p>
+<p>This is a copy of Example 54, but all object colours are converted to grayscale using simply:</p>
 <p class="code">$mpdf-&gt;restrictColorSpace = 1;</p>
 </div>
 
