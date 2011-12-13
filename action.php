@@ -63,6 +63,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $html .= '</head><body>';
 
         // set headers/footers
+	$this->getConf("header_odd");
+	$this->getConf("header_even");
         $this->prepare_headers($mpdf);
 
         // one or multiple pages?
@@ -88,6 +90,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         $this->arrangeHtml($html, $this->getConf("norender"));
+	if(isset($_GET['watermarkText'])){
+		$mpdf->SetWatermarkText($_GET['watermarkText']);
+		//$mpdf->watermark_font = 'DejaVuSansCondensed';
+		$mpdf->showWatermarkText = true;
+	} 
         $mpdf->WriteHTML($html);
 
         $title = $_GET['pdfbook_title'];
@@ -133,11 +140,22 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $ho = str_replace(array_keys($replace), array_values($replace), $this->getConf("header_odd"));
         $he = str_replace(array_keys($replace), array_values($replace), $this->getConf("header_even"));
 
-        // set the headers/footers
-        $mpdf->SetHeader($ho);
-        $mpdf->SetHeader($he, 'E');
-        $mpdf->SetFooter($fo);
-        $mpdf->SetFooter($fe, 'E');
+        // set the headers
+	if($this->getConf("html_header")) {		
+		$mpdf->SetHTMLHeader($ho);
+		$mpdf->SetHTMLHeader($he, 'E');
+	}else{
+	        $mpdf->SetHeader($ho);
+        	$mpdf->SetHeader($he, 'E');
+	}
+	// set the footers
+	if($this->getConf("html_footer")) {		
+	        $mpdf->SetHTMLFooter($fo);
+	        $mpdf->SetHTMLFooter($fe, 'E');
+	}else{
+	        $mpdf->SetFooter($fo);
+	        $mpdf->SetFooter($fe, 'E');
+	}
 
         // title
         $mpdf->SetTitle($title);
