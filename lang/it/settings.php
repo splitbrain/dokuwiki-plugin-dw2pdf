@@ -10,8 +10,6 @@ $lang['output']       = "Modalit&agrave; di output";
 $lang['output_o_browser']    = "Nel browser";
 $lang['output_o_file']       = "Documento da scaricare";
 
-$lang['norender']       = "Tag non gestiti nel PDF";
-
 $lang['footer_odd']     = 'Pi&egrave; di pagine dispari';
 $lang['footer_even']    = 'Pi&egrave; di pagine pari';
 $lang['header_odd']     = 'Intestazione pagine dispari';

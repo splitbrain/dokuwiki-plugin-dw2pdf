@@ -10,8 +10,6 @@ $lang['output']       = "So wird die Datei ausgegeben";
 $lang['output_o_browser']    = "Browser";
 $lang['output_o_file']       = "Datei herunterladen";
 
-$lang['norender']       = "Diese 'tags' werden nicht in PDF ausgegeben";
-
 $lang['footer_odd']     = 'Fusszeile auf ungeraden Seiten';
 $lang['footer_even']    = 'Fusszeile auf geraden Seiten';
 $lang['header_odd']     = 'Kopfzeile auf ungeraden Seiten';

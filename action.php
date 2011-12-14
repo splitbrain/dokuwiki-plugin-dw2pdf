@@ -57,6 +57,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // prepare HTML header styles
         $html  = '<html><head>';
         $html .= '<style>';
+        $html .= file_get_contents(DOKU_INC.'lib/styles/screen.css');
+        $html .= file_get_contents(DOKU_INC.'lib/styles/print.css');
         $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.css');
         $html .= @file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.local.css');
         $html .= '</style>';
@@ -156,9 +158,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $html = str_replace('<div class="wrap_pagebreak"></div>','<pagebreak />',$html);
         $html = str_replace('<span class="wrap_pagebreak"></span>','<pagebreak />',$html);
 
-        // Customized to strip all span tags so that the wiki <code> SQL would display properly
-        $norender = explode(',',$this->getConf('norender'));
-        $this->strip_only($html, $norender);
     }
 
     /**

@@ -10,8 +10,6 @@ $lang['output']       = "Output mode";
 $lang['output_o_browser']    = "Browser";
 $lang['output_o_file']       = "File to download";
 
-$lang['norender']       = "Tags will no render on PDF";
-
 $lang['footer_odd']     = 'Footer on odd pages';
 $lang['footer_even']    = 'Footer on even pages';
 $lang['header_odd']     = 'Header on odd pages';
