@@ -71,5 +71,24 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $this->doc .= $this->_xmlEntities($acronym);
     }
 
+
+    /**
+     * reformat links if needed
+     */
+    function _formatLink($link){
+        // prefix interwiki links with interwiki icon
+        if($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/',$link['class'],$m)){
+            if(file_exists(DOKU_INC.'lib/images/interwiki/'.$m[1].'.png')){
+                $img = DOKU_BASE.'lib/images/interwiki/'.$m[1].'.png';
+            }elseif(file_exists(DOKU_INC.'lib/images/interwiki/'.$m[1].'.gif')){
+                $img = DOKU_BASE.'lib/images/interwiki/'.$m[1].'.gif';
+            }else{
+                $img = DOKU_BASE.'lib/images/interwiki.png';
+            }
+
+            $link['name'] = '<img src="'.$img.'" width="16" height="16" style="vertical-align: center" />'.$link['name'];
+        }
+        return parent::_formatLink($link);
+    }
 }
 
