@@ -64,5 +64,12 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         return $out;
     }
 
+    /**
+     * hover info makes no sense in PDFs, so drop acronyms
+     */
+    function acronym($acronym) {
+        $this->doc .= $this->_xmlEntities($acronym);
+    }
+
 }
 

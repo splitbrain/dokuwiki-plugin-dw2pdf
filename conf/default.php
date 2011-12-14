@@ -1,7 +1,7 @@
 <?php
 $conf['output']         = 'file';
 
-$conf['norender']         = 'span,acronym';
+$conf['norender']         = 'span';
 
 $conf['footer_odd']     = '@WIKI@ - @WIKIURL@||';
 $conf['footer_even']    = '@WIKIURL@||Printed on @DATE@';
