@@ -64,12 +64,19 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
             // some default settings
             $mpdf->mirrorMargins          = 1;  // Use different Odd/Even headers and footers and mirror margins
-            $mpdf->defaultheaderfontsize  = 8;  // in pts
+            $mdpf->useOddEven = 1;
+/*            $mpdf->defaultheaderfontsize  = 8;  // in pts
             $mpdf->defaultheaderfontstyle = ''; // blank, B, I, or BI
             $mpdf->defaultheaderline      = 1;  // 1 to include line below header/above footer
             $mpdf->defaultfooterfontsize  = 8;  // in pts
             $mpdf->defaultfooterfontstyle = ''; // blank, B, I, or BI
             $mpdf->defaultfooterline      = 1;  // 1 to include line below header/above footer
+*/
+
+        // title
+//        $mpdf->SetTitle($title); //FIXME
+
+            $template = $this->load_template('default'); //FIXME
 
             // prepare HTML header styles
             $html  = '<html><head>';
@@ -78,11 +85,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= file_get_contents(DOKU_INC.'lib/styles/print.css');
             $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.css');
             $html .= @file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.local.css');
+            $html .= '@page {'.$template['page'].'}';
+            $html .= '@page :first {'.$template['first'].'}';
+            $html .= '@page :last {'.$template['last'].'}';
+            $html .= $template['css'];
             $html .= '</style>';
             $html .= '</head><body>';
+            $html .= $template['html'];
+
 
             // set headers/footers
-            $this->prepare_headers($mpdf);
+        //    $this->prepare_headers($mpdf);
 
             // loop over all pages
             $cnt = count($list);
@@ -90,9 +103,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $page = $list[$n];
 
                 $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
-                if($this->getConf('addcitation')){
-                    $html .= $this->citation($page);
-                }
+                $html .= $template['cite'];
                 if ($n < ($cnt - 1)){
                     $html .= '<pagebreak />';
                 }
@@ -133,13 +144,47 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Setup the page headers and footers
+     * Load the various template files and prepare the HTML/CSS for insertion
      */
-    protected function prepare_headers(&$mpdf){
+    protected function load_template($tpl){
         global $ID;
         global $REV;
         global $conf;
 
+        // this is what we'll return
+        $output = array(
+            'html'  => '',
+            'css'   => '',
+            'page'  => '',
+            'first' => '',
+            'last'  => '',
+            'cite'  => '',
+        );
+
+        // prepare header/footer elements
+        $html = '';
+        foreach(array('header','footer') as $t){
+            foreach(array('','_odd','_even','_first','_last') as $h){
+                if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/'.$t.$h.'.html')){
+                    $html .= '<htmlpage'.$t.' name="'.$t.$h.'">'.DOKU_LF;
+                    $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/'.$t.$h.'.html').DOKU_LF;
+                    $html .= '</htmlpage'.$t.'>'.DOKU_LF;
+
+                    // register the needed pseudo CSS
+                    if($h == '_last'){
+                        $output['last'] .= $t.': html_'.$t.$h.';'.DOKU_LF;
+                    }elseif($h == '_first'){
+                        $output['first'] .= $t.': html_'.$t.$h.';'.DOKU_LF;
+                    }elseif($h == '_even'){
+                        $output['page'] .= 'even-'.$t.'-name: html_'.$t.$h.';'.DOKU_LF;
+                    }else{
+                        $output['page'] .= 'odd-'.$t.'-name: html_'.$t.$h.';'.DOKU_LF;
+                    }
+                }
+            }
+        }
+
+        // fixme move title to function params
         if($_GET['pdfbook_title']){
             $title = $_GET['pdfbook_title'];
         }else{
@@ -152,7 +197,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@ID@'      => $ID,
                 '@PAGE@'    => '{PAGENO}',
                 '@PAGES@'   => '{nb}',
-                '@TITLE@'   => $title,
+                '@TITLE@'   => hsc($title),
                 '@WIKI@'    => $conf['title'],
                 '@WIKIURL@' => DOKU_URL,
                 '@UPDATE@'  => dformat(filemtime(wikiFN($ID,$REV))),
@@ -160,20 +205,21 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@DATE@'    => dformat(time()),
         );
 
-        // do the replacements
-        $fo = str_replace(array_keys($replace), array_values($replace), $this->getConf("footer_odd"));
-        $fe = str_replace(array_keys($replace), array_values($replace), $this->getConf("footer_even"));
-        $ho = str_replace(array_keys($replace), array_values($replace), $this->getConf("header_odd"));
-        $he = str_replace(array_keys($replace), array_values($replace), $this->getConf("header_even"));
+        // set HTML element
+        $output['html'] = str_replace(array_keys($replace), array_values($replace), $html);
 
-        // set the headers/footers
-        $mpdf->SetHeader($ho);
-        $mpdf->SetHeader($he, 'E');
-        $mpdf->SetFooter($fo);
-        $mpdf->SetFooter($fe, 'E');
+        // citation box
+        if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html')){
+            $output['cite'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html');
+            $output['cite'] = str_replace(array_keys($replace), array_values($replace), $output['cite']);
+        }
 
-        // title
-        $mpdf->SetTitle($title);
+        // set custom styles
+        if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/style.css')){
+            $output['css'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/style.css');
+        }
+
+        return $output;
     }
 
     /**
@@ -191,25 +237,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     }
 
-    /**
-     * Create the citation box
-     *
-     * @todo can we drop the inline style here?
-     */
-    protected function citation($page) {
-        global $conf;
-
-        $date = filemtime(wikiFN($page));
-        $html  = '';
-        $html .= "<br><br><div style='font-size: 80%; border: solid 0.5mm #DDDDDD;background-color: #EEEEEE; padding: 2mm; border-radius: 2mm 2mm; width: 100%;'>";
-        $html .= "From:<br>";
-        $html .= "<a href='".DOKU_URL."'>".DOKU_URL."</a>&nbsp;-&nbsp;"."<b>".$conf['title']."</b>";
-        $html .= "<br><br>Permanent link:<br>";
-        $html .= "<b><a href='".wl($page, false, true, "&")."'>".wl($page, false, true, "&")."</a></b>";
-        $html .= "<br><br>Last update: <b>".dformat($date)."</b><br>";
-        $html .= "</div>";
-        return $html;
-    }
 
     /**
      * Strip unwanted tags

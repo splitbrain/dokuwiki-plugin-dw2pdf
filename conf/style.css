@@ -14,11 +14,11 @@ a {
     text-decoration: none;
 }
 
-table {
+table.inline {
     border: 1px solid #808080;
     border-collapse: collapse;
 }
-td, th {
+table.inline td, th {
     border: 1px solid #808080;
 }
 
