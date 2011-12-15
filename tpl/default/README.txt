@@ -29,7 +29,7 @@ pages, just the header.html is used.
 You can use all HTML that is understood by mpdf
 (See http://mpdf1.com/manual/index.php?tid=256)
 
-If you reference image files, be sure to prefix them with the Wiki base
+If you reference image files, be sure to prefix them with the @TPLBASE@
 parameter (See [[#Replacements]] below).
 
 ===== Replacements =====
@@ -46,6 +46,8 @@ footer files.
   * ''@WIKIURL@'' -- URL to the wiki
   * ''@UPDATE@'' -- Time of the last update of the article
   * ''@DATE@'' -- time when the PDF was created (might be in the past if cached)
+  * ''@BASE@'' -- the wiki base directory
+  * ''@TPLBASE@'' -- the template base directory (use to reference images)
 
 ===== Styles =====
 
