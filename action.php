@@ -62,21 +62,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             if($self['port']) $url .= ':'.$port;
             $mpdf->setBasePath($url);
 
+            // Set the title
+            $title = $_GET['pdfbook_title'];
+            if(!$title) $title = p_get_first_heading($ID);
+            $mpdf->SetTitle($title);
+
             // some default settings
             $mpdf->mirrorMargins          = 1;  // Use different Odd/Even headers and footers and mirror margins
             $mdpf->useOddEven = 1;
-/*            $mpdf->defaultheaderfontsize  = 8;  // in pts
-            $mpdf->defaultheaderfontstyle = ''; // blank, B, I, or BI
-            $mpdf->defaultheaderline      = 1;  // 1 to include line below header/above footer
-            $mpdf->defaultfooterfontsize  = 8;  // in pts
-            $mpdf->defaultfooterfontstyle = ''; // blank, B, I, or BI
-            $mpdf->defaultfooterline      = 1;  // 1 to include line below header/above footer
-*/
 
-        // title
-//        $mpdf->SetTitle($title); //FIXME
-
-            $template = $this->load_template('default'); //FIXME
+            // load the template
+            $template = $this->load_template('default',$title); //FIXME
 
             // prepare HTML header styles
             $html  = '<html><head>';
@@ -92,10 +88,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '</style>';
             $html .= '</head><body>';
             $html .= $template['html'];
-
-
-            // set headers/footers
-        //    $this->prepare_headers($mpdf);
 
             // loop over all pages
             $cnt = count($list);
@@ -123,12 +115,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         header('Pragma: public');
         http_conditionalRequest(filemtime($cache->cache));
 
-        $title = $_GET['pdfbook_title'];
-        if(!$title) $title = noNS($ID);
         if($this->getConf('output') == 'file'){
-            header('Content-Disposition: attachment; filename="'.urlencode($title).'.pdf";');
+            header('Content-Disposition: attachment; filename="'.rawurlencode($title).'.pdf";');
         }else{
-            header('Content-Disposition: inline; filename="'.urlencode($title).'.pdf";');
+            header('Content-Disposition: inline; filename="'.rawurlencode($title).'.pdf";');
         }
 
         if (http_sendfile($cache->cache)) exit;
@@ -146,7 +136,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Load the various template files and prepare the HTML/CSS for insertion
      */
-    protected function load_template($tpl){
+    protected function load_template($tpl,$title){
         global $ID;
         global $REV;
         global $conf;
@@ -183,14 +173,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 }
             }
         }
-
-        // fixme move title to function params
-        if($_GET['pdfbook_title']){
-            $title = $_GET['pdfbook_title'];
-        }else{
-            $title = p_get_first_heading($ID);
-        }
-        if(!$title) $title = noNS($ID);
 
         // prepare replacements
         $replace = array(
