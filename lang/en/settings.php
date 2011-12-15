@@ -10,6 +10,8 @@ $lang['output']       = "Output mode";
 $lang['output_o_browser']    = "Browser";
 $lang['output_o_file']       = "File to download";
 
+$lang['usecache'] = 'Should PDFs be cached? Embedded images won\'t be ACL checked then, disable if that\'s a security concern for you.';
+
 $lang['footer_odd']     = 'Footer on odd pages';
 $lang['footer_even']    = 'Footer on even pages';
 $lang['header_odd']     = 'Header on odd pages';

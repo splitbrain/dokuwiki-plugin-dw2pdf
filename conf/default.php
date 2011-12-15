@@ -1,5 +1,6 @@
 <?php
 $conf['output']         = 'file';
+$conf['usecache']       = 1;
 
 $conf['footer_odd']     = '@WIKI@ - @WIKIURL@||';
 $conf['footer_even']    = '@WIKIURL@||Printed on @DATE@';

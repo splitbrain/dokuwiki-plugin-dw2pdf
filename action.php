@@ -35,38 +35,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // it's ours, no one else's
         $event->preventDefault();
 
-        // initialize PDF library
-        require_once(dirname(__FILE__)."/DokuPDF.class.php");
-        $mpdf = new DokuPDF();
-
-        // let mpdf fix local links
-        $self = parse_url(DOKU_URL);
-        $url  = $self['scheme'].'://'.$self['host'];
-        if($self['port']) $url .= ':'.$port;
-        $mpdf->setBasePath($url);
-
-        // some default settings
-        $mpdf->mirrorMargins          = 1;  // Use different Odd/Even headers and footers and mirror margins
-        $mpdf->defaultheaderfontsize  = 8;  // in pts
-        $mpdf->defaultheaderfontstyle = ''; // blank, B, I, or BI
-        $mpdf->defaultheaderline      = 1;  // 1 to include line below header/above footer
-        $mpdf->defaultfooterfontsize  = 8;  // in pts
-        $mpdf->defaultfooterfontstyle = ''; // blank, B, I, or BI
-        $mpdf->defaultfooterline      = 1;  // 1 to include line below header/above footer
-
-        // prepare HTML header styles
-        $html  = '<html><head>';
-        $html .= '<style>';
-        $html .= file_get_contents(DOKU_INC.'lib/styles/screen.css');
-        $html .= file_get_contents(DOKU_INC.'lib/styles/print.css');
-        $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.css');
-        $html .= @file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.local.css');
-        $html .= '</style>';
-        $html .= '</head><body>';
-
-        // set headers/footers
-        $this->prepare_headers($mpdf);
-
         // one or multiple pages?
         $list = array();
         if ( $ACT == 'export_pdf' ) {
@@ -75,29 +43,92 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $list = explode("|", $_COOKIE['list-pagelist']);
         }
 
-        // loop over all pages
-        $cnt = count($list);
-        for($n=0; $n<$cnt; $n++){
-            $page = $list[$n];
+        // prepare cache
+        $cache = new cache(join(',',$list).$REV,'.dw2.pdf');
+        $depends['files']   = array_map('wikiFN',$list);
+        $depends['files'][] = __FILE__;
+        $depends['files'][] = dirname(__FILE__).'/renderer.php';
+        $depends['files'][] = dirname(__FILE__).'/mpdf/mpdf.php';
 
-            $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
-            if($this->getConf('addcitation')){
-                $html .= $this->citation($page);
+
+        if(!$this->getConf('usecache') || !$cache->useCache($depends)){
+            // initialize PDF library
+            require_once(dirname(__FILE__)."/DokuPDF.class.php");
+            $mpdf = new DokuPDF();
+
+            // let mpdf fix local links
+            $self = parse_url(DOKU_URL);
+            $url  = $self['scheme'].'://'.$self['host'];
+            if($self['port']) $url .= ':'.$port;
+            $mpdf->setBasePath($url);
+
+            // some default settings
+            $mpdf->mirrorMargins          = 1;  // Use different Odd/Even headers and footers and mirror margins
+            $mpdf->defaultheaderfontsize  = 8;  // in pts
+            $mpdf->defaultheaderfontstyle = ''; // blank, B, I, or BI
+            $mpdf->defaultheaderline      = 1;  // 1 to include line below header/above footer
+            $mpdf->defaultfooterfontsize  = 8;  // in pts
+            $mpdf->defaultfooterfontstyle = ''; // blank, B, I, or BI
+            $mpdf->defaultfooterline      = 1;  // 1 to include line below header/above footer
+
+            // prepare HTML header styles
+            $html  = '<html><head>';
+            $html .= '<style>';
+            $html .= file_get_contents(DOKU_INC.'lib/styles/screen.css');
+            $html .= file_get_contents(DOKU_INC.'lib/styles/print.css');
+            $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.css');
+            $html .= @file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.local.css');
+            $html .= '</style>';
+            $html .= '</head><body>';
+
+            // set headers/footers
+            $this->prepare_headers($mpdf);
+
+            // loop over all pages
+            $cnt = count($list);
+            for($n=0; $n<$cnt; $n++){
+                $page = $list[$n];
+
+                $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
+                if($this->getConf('addcitation')){
+                    $html .= $this->citation($page);
+                }
+                if ($n < ($cnt - 1)){
+                    $html .= '<pagebreak />';
+                }
             }
-            if ($n < ($cnt - 1)){
-                $html .= '<pagebreak />';
-            }
+
+            $this->arrangeHtml($html, $this->getConf("norender"));
+            $mpdf->WriteHTML($html);
+
+            // write to cache file
+            $mpdf->Output($cache->cache, 'F');
         }
 
-        $this->arrangeHtml($html, $this->getConf("norender"));
-        $mpdf->WriteHTML($html);
+        // deliver the file
+        header('Content-Type: application/pdf');
+        header('Expires: '.gmdate("D, d M Y H:i:s", time()+max($conf['cachetime'], 3600)).' GMT');
+        header('Cache-Control: public, proxy-revalidate, no-transform, max-age='.max($conf['cachetime'], 3600));
+        header('Pragma: public');
+        http_conditionalRequest(filemtime($cache->cache));
 
         $title = $_GET['pdfbook_title'];
         if(!$title) $title = noNS($ID);
-        $output = 'I';
-        if($this->getConf('output') == 'file') $output = 'D';
-        $mpdf->Output(urlencode($title).'.pdf', $output);
+        if($this->getConf('output') == 'file'){
+            header('Content-Disposition: attachment; filename="'.urlencode($title).'.pdf";');
+        }else{
+            header('Content-Disposition: inline; filename="'.urlencode($title).'.pdf";');
+        }
 
+        if (http_sendfile($cache->cache)) exit;
+
+        $fp = @fopen($cache->cache,"rb");
+        if($fp){
+            http_rangeRequest($fp,filesize($cache->cache),'application/pdf');
+        }else{
+            header("HTTP/1.0 500 Internal Server Error");
+            print "Could not read file - bad permissions?";
+        }
         exit();
     }
 

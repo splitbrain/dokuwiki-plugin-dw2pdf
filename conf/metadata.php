@@ -1,7 +1,6 @@
 <?php
 $meta['output'] = array('multichoice', '_choices' => array('browser', 'file'));
-
-$meta['norender']    = array('string');
+$meta['usecache']       = array('onoff');
 
 $meta['footer_odd']     = array('string');
 $meta['footer_even']    = array('string');
