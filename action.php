@@ -50,7 +50,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $depends['files'][] = dirname(__FILE__).'/renderer.php';
         $depends['files'][] = dirname(__FILE__).'/mpdf/mpdf.php';
 
-
+        // hard work only when no cache available
         if(!$this->getConf('usecache') || !$cache->useCache($depends)){
             // initialize PDF library
             require_once(dirname(__FILE__)."/DokuPDF.class.php");
@@ -72,7 +72,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $mdpf->useOddEven = 1;
 
             // load the template
-            $template = $this->load_template('default',$title); //FIXME
+            $template = $this->load_template($title); //FIXME
 
             // prepare HTML header styles
             $html  = '<html><head>';
@@ -134,12 +134,29 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * Choose the correct template
+     */
+    protected function select_template(){
+        $tpl;
+        if(isset($_REQUEST['tpl'])){
+            $tpl = trim(preg_replace('/[^A-Za-z0-9_\-]+/','',$_REQUEST['tpl']));
+        }
+        if(!$tpl) $tpl = $this->getConf('template');
+        if(!$tpl) $tpl = 'default';
+        if(!is_dir(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl)) $tpl = 'default';
+
+        return $tpl;
+    }
+
+    /**
      * Load the various template files and prepare the HTML/CSS for insertion
      */
-    protected function load_template($tpl,$title){
+    protected function load_template($title){
         global $ID;
         global $REV;
         global $conf;
+
+        $tpl = $this->select_template();
 
         // this is what we'll return
         $output = array(
