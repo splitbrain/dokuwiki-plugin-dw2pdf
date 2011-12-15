@@ -43,8 +43,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $list = explode("|", $_COOKIE['list-pagelist']);
         }
 
+        $tpl = $this->select_template();
+
         // prepare cache
-        $cache = new cache(join(',',$list).$REV,'.dw2.pdf');
+        $cache = new cache(join(',',$list).$REV.$tpl,'.dw2.pdf');
         $depends['files']   = array_map('wikiFN',$list);
         $depends['files'][] = __FILE__;
         $depends['files'][] = dirname(__FILE__).'/renderer.php';
@@ -72,7 +74,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $mdpf->useOddEven = 1;
 
             // load the template
-            $template = $this->load_template($title); //FIXME
+            $template = $this->load_template($tpl, $title);
 
             // prepare HTML header styles
             $html  = '<html><head>';
@@ -151,12 +153,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Load the various template files and prepare the HTML/CSS for insertion
      */
-    protected function load_template($title){
+    protected function load_template($tpl, $title){
         global $ID;
         global $REV;
         global $conf;
-
-        $tpl = $this->select_template();
 
         // this is what we'll return
         $output = array(
