@@ -70,8 +70,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $mpdf->SetTitle($title);
 
             // some default settings
-            $mpdf->mirrorMargins          = 1;  // Use different Odd/Even headers and footers and mirror margins
-            $mdpf->useOddEven = 1;
+            $mpdf->mirrorMargins = 1;
+            $mpdf->useOddEven    = 1;
+            $mpdf->setAutoTopMargin = 'stretch';
+            $mpdf->setAutoBottomMargin = 'stretch';
 
             // load the template
             $template = $this->load_template($tpl, $title);
@@ -83,7 +85,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= file_get_contents(DOKU_INC.'lib/styles/print.css');
             $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.css');
             $html .= @file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.local.css');
-            $html .= '@page {'.$template['page'].'}';
+            $html .= '@page { size:auto; '.$template['page'].'}';
             $html .= '@page :first {'.$template['first'].'}';
             $html .= '@page :last {'.$template['last'].'}';
             $html .= $template['css'];
@@ -166,6 +168,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             'first' => '',
             'last'  => '',
             'cite'  => '',
+            'oe'    => 0
         );
 
         // prepare header/footer elements
@@ -184,8 +187,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                         $output['first'] .= $t.': html_'.$t.$h.';'.DOKU_LF;
                     }elseif($h == '_even'){
                         $output['page'] .= 'even-'.$t.'-name: html_'.$t.$h.';'.DOKU_LF;
-                    }else{
+                    }elseif($h == '_odd'){
                         $output['page'] .= 'odd-'.$t.'-name: html_'.$t.$h.';'.DOKU_LF;
+                    }else{
+                        $output['page'] .= $t.': html_'.$t.$h.';'.DOKU_LF;
                     }
                 }
             }
