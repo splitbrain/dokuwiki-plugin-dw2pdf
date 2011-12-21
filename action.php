@@ -13,6 +13,23 @@ if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 
 class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
+    private $tpl;
+
+    /**
+     * Constructor. Sets the correct template
+     */
+    function __construct(){
+        $tpl;
+        if(isset($_REQUEST['tpl'])){
+            $tpl = trim(preg_replace('/[^A-Za-z0-9_\-]+/','',$_REQUEST['tpl']));
+        }
+        if(!$tpl) $tpl = $this->getConf('template');
+        if(!$tpl) $tpl = 'default';
+        if(!is_dir(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl)) $tpl = 'default';
+
+        $this->tpl = $tpl;
+    }
+
     /**
      * Register the events
      */
@@ -20,6 +37,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert',array());
     }
 
+    /**
+     * Do the HTML to PDF conversion work
+     */
     function convert(&$event, $param) {
         global $ACT;
         global $REV;
@@ -43,10 +63,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $list = explode("|", $_COOKIE['list-pagelist']);
         }
 
-        $tpl = $this->select_template();
-
         // prepare cache
-        $cache = new cache(join(',',$list).$REV.$tpl,'.dw2.pdf');
+        $cache = new cache(join(',',$list).$REV.$this->tpl,'.dw2.pdf');
         $depends['files']   = array_map('wikiFN',$list);
         $depends['files'][] = __FILE__;
         $depends['files'][] = dirname(__FILE__).'/renderer.php';
@@ -76,15 +94,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $mpdf->setAutoBottomMargin = 'stretch';
 
             // load the template
-            $template = $this->load_template($tpl, $title);
+            $template = $this->load_template($title);
 
             // prepare HTML header styles
             $html  = '<html><head>';
             $html .= '<style>';
-            $html .= file_get_contents(DOKU_INC.'lib/styles/screen.css');
-            $html .= file_get_contents(DOKU_INC.'lib/styles/print.css');
-            $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.css');
-            $html .= @file_get_contents(DOKU_PLUGIN.'dw2pdf/conf/style.local.css');
+            $html .= $this->load_css();
             $html .= '@page { size:auto; '.$template['page'].'}';
             $html .= '@page :first {'.$template['first'].'}';
             $html .= '@page :last {'.$template['last'].'}';
@@ -92,6 +107,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '</style>';
             $html .= '</head><body>';
             $html .= $template['html'];
+            $html .= '<div class="dokuwiki">';
 
             // loop over all pages
             $cnt = count($list);
@@ -105,7 +121,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 }
             }
 
-            $this->arrangeHtml($html, $this->getConf("norender"));
+            $html .= '</div>';
             $mpdf->WriteHTML($html);
 
             // write to cache file
@@ -137,28 +153,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         exit();
     }
 
-    /**
-     * Choose the correct template
-     */
-    protected function select_template(){
-        $tpl;
-        if(isset($_REQUEST['tpl'])){
-            $tpl = trim(preg_replace('/[^A-Za-z0-9_\-]+/','',$_REQUEST['tpl']));
-        }
-        if(!$tpl) $tpl = $this->getConf('template');
-        if(!$tpl) $tpl = 'default';
-        if(!is_dir(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl)) $tpl = 'default';
-
-        return $tpl;
-    }
 
     /**
      * Load the various template files and prepare the HTML/CSS for insertion
      */
-    protected function load_template($tpl, $title){
+    protected function load_template($title){
         global $ID;
         global $REV;
         global $conf;
+        $tpl = $this->tpl;
 
         // this is what we'll return
         $output = array(
@@ -229,32 +232,43 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Fix up the HTML a bit
-     *
-     * FIXME This is far from perfect and most of it should be moved to
-     * our own renderer instead of modifying the HTML at all.
+     * Load all the style sheets and apply the needed replacements
      */
-    protected function arrangeHtml(&$html, $norendertags = '' ) {
+    protected function load_css(){
+        //reusue the CSS dispatcher functions without triggering the main function
+        define('SIMPLE_TEST',1);
+        require_once(DOKU_INC.'lib/exe/css.php');
 
-        // insert a pagebreak for support of WRAP and PAGEBREAK plugins
-        $html = str_replace('<br style="page-break-after:always;">','<pagebreak />',$html);
-        $html = str_replace('<div class="wrap_pagebreak"></div>','<pagebreak />',$html);
-        $html = str_replace('<span class="wrap_pagebreak"></span>','<pagebreak />',$html);
+        // prepare CSS files
+        $files = array_merge(
+                    array(
+                        DOKU_INC.'lib/styles/screen.css'
+                            => DOKU_BASE.'lib/styles/',
+                        DOKU_INC.'lib/styles/print.css'
+                            => DOKU_BASE.'lib/styles/',
+                    ),
+                    css_pluginstyles('all'),
+                    css_pluginstyles('print'),
+                    css_pluginstyles('pdf'),
+                    array(
+                        DOKU_PLUGIN.'dw2pdf/conf/style.css'
+                            => DOKU_BASE.'lib/plugins/dw2pdf/conf/',
+                        DOKU_PLUGIN.'dw2pdf/tpl/'.$this->tpl.'/style.css'
+                            => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$this->tpl.'/',
+                        DOKU_PLUGIN.'dw2pdf/conf/style.local.css'
+                            => DOKU_BASE.'lib/plugins/dw2pdf/conf/',
+                    )
+                 );
 
-    }
-
-
-    /**
-     * Strip unwanted tags
-     *
-     * @fixme could this be done by strip_tags?
-     * @author Jared Ong
-     */
-    protected function strip_only(&$str, $tags) {
-        if(!is_array($tags)) {
-            $tags = (strpos($str, '>') !== false ? explode('>', str_replace('<', '', $tags)) : array($tags));
-            if(end($tags) == '') array_pop($tags);
+        $css = '';
+        foreach($files as $file => $location){
+            $css .= css_loadfile($file, $location);
         }
-        foreach($tags as $tag) $str = preg_replace('#</?'.$tag.'[^>]*>#is', '', $str);
+
+        // apply pattern replacements
+        $css = css_applystyle($css,DOKU_INC.'lib/tpl/'.$conf['template'].'/');
+
+        return $css;
     }
+
 }
