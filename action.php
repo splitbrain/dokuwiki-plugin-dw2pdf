@@ -248,8 +248,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                             => DOKU_BASE.'lib/styles/',
                     ),
                     css_pluginstyles('all'),
-                    css_pluginstyles('print'),
-                    css_pluginstyles('pdf'),
+                    $this->css_pluginPDFstyles(),
                     array(
                         DOKU_PLUGIN.'dw2pdf/conf/style.css'
                             => DOKU_BASE.'lib/plugins/dw2pdf/conf/',
@@ -269,6 +268,28 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $css = css_applystyle($css,DOKU_INC.'lib/tpl/'.$conf['template'].'/');
 
         return $css;
+    }
+
+
+    /**
+     * Returns a list of possible Plugin PDF Styles
+     *
+     * Checks for a pdf.css, falls back to print.css
+     *
+     * @author Andreas Gohr <andi@splitbrain.org>
+     */
+    function css_pluginPDFstyles(){
+        global $lang;
+        $list = array();
+        $plugins = plugin_list();
+        foreach ($plugins as $p){
+            if(file_exists(DOKU_PLUGIN."$p/pdf.css")){
+                $list[DOKU_PLUGIN."$p/pdf.css"] = DOKU_BASE."lib/plugins/$p/";
+            }else{
+                $list[DOKU_PLUGIN."$p/print.css"] = DOKU_BASE."lib/plugins/$p/";
+            }
+        }
+        return $list;
     }
 
 }
