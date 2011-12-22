@@ -129,8 +129,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // deliver the file
         header('Content-Type: application/pdf');
-        header('Expires: '.gmdate("D, d M Y H:i:s", time()+max($conf['cachetime'], 3600)).' GMT');
-        header('Cache-Control: public, proxy-revalidate, no-transform, max-age='.max($conf['cachetime'], 3600));
+        header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
         header('Pragma: public');
         http_conditionalRequest(filemtime($cache->cache));
 
