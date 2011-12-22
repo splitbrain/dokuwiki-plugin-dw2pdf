@@ -102,7 +102,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= $this->load_css();
             $html .= '@page { size:auto; '.$template['page'].'}';
             $html .= '@page :first {'.$template['first'].'}';
-            $html .= '@page :last {'.$template['last'].'}';
             $html .= $template['css'];
             $html .= '</style>';
             $html .= '</head><body>';
@@ -169,24 +168,20 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             'css'   => '',
             'page'  => '',
             'first' => '',
-            'last'  => '',
             'cite'  => '',
-            'oe'    => 0
         );
 
         // prepare header/footer elements
         $html = '';
         foreach(array('header','footer') as $t){
-            foreach(array('','_odd','_even','_first','_last') as $h){
+            foreach(array('','_odd','_even','_first') as $h){
                 if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/'.$t.$h.'.html')){
                     $html .= '<htmlpage'.$t.' name="'.$t.$h.'">'.DOKU_LF;
                     $html .= file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/'.$t.$h.'.html').DOKU_LF;
                     $html .= '</htmlpage'.$t.'>'.DOKU_LF;
 
                     // register the needed pseudo CSS
-                    if($h == '_last'){
-                        $output['last'] .= $t.': html_'.$t.$h.';'.DOKU_LF;
-                    }elseif($h == '_first'){
+                    if($h == '_first'){
                         $output['first'] .= $t.': html_'.$t.$h.';'.DOKU_LF;
                     }elseif($h == '_even'){
                         $output['page'] .= 'even-'.$t.'-name: html_'.$t.$h.';'.DOKU_LF;

@@ -9,20 +9,18 @@ To create a new template, just create a new folder within the plugin's
 ===== Headers and Footers =====
 
 The following files can be created and will be used to set headers and
-footers on odd or even pages. Special footers can be used on the first
-and last page of a document. If a file is does not exist the next more
-generic one will be tried. Eg. if You don't differ between even and odd
-pages, just the header.html is used.
+footers on odd or even pages. Special headers/footers can be used on the
+first page of a document. If a file is does not exist the next more generic
+one will be tried. Eg. if You don't differ between even and odd pages,
+just the header.html is used.
 
   * ''header_odd.html'' -- Header for odd pages
   * ''header_even.html'' -- Header for even pages
   * ''header_first.html'' -- Header for the first page
-  * ''header_last.html'' -- Header for the last page
   * ''header.html'' -- Header for all pages
   * ''footer_odd.html'' -- Footer for odd pages
   * ''footer_even.html'' -- Footer for even pages
   * ''footer_first.html'' -- Footer for the first page
-  * ''footer_last.html'' -- Footer for the last page
   * ''footer.html'' -- Footer for all pages
   * ''citation.html'' -- Citationbox to be printed after each article
 
@@ -47,7 +45,7 @@ footer files.
   * ''@UPDATE@'' -- Time of the last update of the article
   * ''@DATE@'' -- time when the PDF was created (might be in the past if cached)
   * ''@BASE@'' -- the wiki base directory
-  * ''@TPLBASE@'' -- the template base directory (use to reference images)
+  * ''@TPLBASE@'' -- the PDF template base directory (use to reference images)
 
 ===== Styles =====
 
