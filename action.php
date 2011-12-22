@@ -252,7 +252,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                             => DOKU_BASE.'lib/plugins/dw2pdf/conf/',
                     )
                  );
-
         $css = '';
         foreach($files as $file => $location){
             $css .= css_loadfile($file, $location);
@@ -276,7 +275,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         global $lang;
         $list = array();
         $plugins = plugin_list();
+
+        $usestyle = explode(',',$this->getConf('usestyles'));
         foreach ($plugins as $p){
+            if(in_array($p,$usestyle)){
+                $list[DOKU_PLUGIN."$p/screen.css"] = DOKU_BASE."lib/plugins/$p/";
+                $list[DOKU_PLUGIN."$p/style.css"] = DOKU_BASE."lib/plugins/$p/";
+            }
+
             if(file_exists(DOKU_PLUGIN."$p/pdf.css")){
                 $list[DOKU_PLUGIN."$p/pdf.css"] = DOKU_BASE."lib/plugins/$p/";
             }else{

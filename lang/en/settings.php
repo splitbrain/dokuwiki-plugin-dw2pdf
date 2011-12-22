@@ -12,5 +12,5 @@ $lang['output_o_file']    = 'Download the PDF';
 $lang['usecache']         = 'Should PDFs be cached? Embedded images won\'t be ACL checked then, disable if that\'s a security concern for you.';
 $lang['template']         = 'Which template should be used for formatting the PDFs?';
 $lang['maxbookmarks']     = 'How many section levels should be used in the PDF bookmarks? <small>(0=none, 5=all)</small>';
-
+$lang['usestyles']        = 'You can give a comma separated list of plugins of which the <code>style.css</code> or <code>screen.css</code> should be used for PDF generation. By default only <code>print.css</code> and <code>pdf.css</code> are used.';
 
