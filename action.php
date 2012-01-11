@@ -69,6 +69,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $depends['files'][] = __FILE__;
         $depends['files'][] = dirname(__FILE__).'/renderer.php';
         $depends['files'][] = dirname(__FILE__).'/mpdf/mpdf.php';
+        $depends['files']   = array_merge($depends['files'], getConfigFiles('main'));
 
         // hard work only when no cache available
         if(!$this->getConf('usecache') || !$cache->useCache($depends)){
