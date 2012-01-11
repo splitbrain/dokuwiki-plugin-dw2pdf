@@ -23,9 +23,6 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         return false;
     }
 
-    // FIXME override any methods of Doku_Renderer_xhtml here
-
-
     /**
      * Simplified header printing with PDF bookmarks
      */
@@ -90,5 +87,17 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         }
         return parent::_formatLink($link);
     }
+
+    /**
+     * no obfuscation for email addresses
+     */
+    function emaillink($address, $name = NULL) {
+        global $conf;
+        $old = $conf['mailguard'];
+        $conf['mailguard'] = 'none';
+        parent::emaillink($address, $name);
+        $conf['mailguard'] = $old;
+    }
+
 }
 
