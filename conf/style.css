@@ -25,6 +25,7 @@ table.inline td, th {
 pre {
     background-color: #eeeeee;
     color: #000000;
+    padding: 0.3em;
 }
 
 em.u {
