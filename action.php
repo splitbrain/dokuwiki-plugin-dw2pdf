@@ -194,6 +194,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
         }
 
+        // generate qr code for this page using kaywa.com
+        $protocol = ($_SERVER['HTTPS']) ? 'https://' : 'http://';
+        $url = $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+        $url = str_replace("?do=export_pdf", "", $url);            
+        $qr_code = '<img src="http://qrcode.kaywa.com/img.php?s=3&d='.$url.'">';
+
         // prepare replacements
         $replace = array(
                 '@ID@'      => $ID,
@@ -207,6 +213,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@DATE@'    => dformat(time()),
                 '@BASE@'    => DOKU_BASE,
                 '@TPLBASE@' => DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/',
+                '@QRCODE@'  => $qr_code,
         );
 
         // set HTML element
