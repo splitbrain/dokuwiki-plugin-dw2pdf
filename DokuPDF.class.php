@@ -42,16 +42,23 @@ class DokuPDF extends mpdf {
      */
     function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false){
         list($ext,$mime) = mimetype($file);
+
+        // build regex to parse URL back to media info
+        $re = preg_quote(ml('xxx123yyy'),'/');
+        $re = str_replace('xxx123yyy','([^&\?]*)',$re);
+
+        // extract the real media from a fetch.php uri and determine mime
+        if(preg_match("/$re/",$file,$m) ||
+            preg_match('/[&\?]media=([^&\?]*)/',$file,$m)){
+            $media = rawurldecode($m[1]);
+            list($ext,$mime) = mimetype($media);
+        }else{
+            list($ext,$mime) = mimetype($file);
+        }
+
         if(substr($mime,0,6) == 'image/'){
-            // build regex to parse URL back to media info
-            $re = preg_quote(ml('xxx123yyy'),'/');
-            $re = str_replace('xxx123yyy','([^&\?]*)',$re);
-
-
-            if(preg_match("/$re/",$file,$m) ||
-               preg_match('/[&\?]media=([^&\?]*)/',$file,$m)){
-                $media = rawurldecode($m[1]);
-
+            if(!empty($media)){
+                // any size restrictions?
                 if(preg_match('/[\?&]w=(\d+)/',$file, $m)) $w = $m[1];
                 if(preg_match('/[\?&]h=(\d+)/',$file, $m)) $h = $m[1];
 
