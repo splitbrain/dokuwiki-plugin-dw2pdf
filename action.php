@@ -194,11 +194,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
         }
 
-        // generate qr code for this page using kaywa.com
-        $protocol = ($_SERVER['HTTPS']) ? 'https://' : 'http://';
-        $url = $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-        $url = str_replace("?do=export_pdf", "", $url);            
-        $qr_code = '<img src="http://qrcode.kaywa.com/img.php?s=3&d='.$url.'">';
+        // generate qr code for this page using google infographics api
+        $qr_code = '';
+        if ($conf['plugin']['dw2pdf']['useqrcodes'] == 1) {        
+            $url = urlencode(wl($ID,'','&',true));        
+            $qr_code = '<img src="https://chart.googleapis.com/chart?chs='.$conf['plugin']['dw2pdf']['qrcodesize'].'&cht=qr&chl='.$url.'">';            
+        }
 
         // prepare replacements
         $replace = array(
