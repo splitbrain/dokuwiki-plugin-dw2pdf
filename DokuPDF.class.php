@@ -44,11 +44,11 @@ class DokuPDF extends mpdf {
         list($ext,$mime) = mimetype($file);
 
         // build regex to parse URL back to media info
-        $re = preg_quote(ml('xxx123yyy'),'/');
+        $re = preg_quote(ml('xxx123yyy','',true,'&',true),'/');
         $re = str_replace('xxx123yyy','([^&\?]*)',$re);
 
         // extract the real media from a fetch.php uri and determine mime
-        if(preg_match("/$re/",$file,$m) ||
+        if(preg_match("/^$re/",$file,$m) ||
             preg_match('/[&\?]media=([^&\?]*)/',$file,$m)){
             $media = rawurldecode($m[1]);
             list($ext,$mime) = mimetype($media);
