@@ -194,6 +194,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
         }
 
+        // generate qr code for this page using google infographics api
+        $qr_code = '';
+        if ($conf['plugin']['dw2pdf']['useqrcodes'] == 1) {        
+            $url = urlencode(wl($ID,'','&',true));        
+            $qr_code = '<img src="https://chart.googleapis.com/chart?chs='.$conf['plugin']['dw2pdf']['qrcodesize'].'&cht=qr&chl='.$url.'">';            
+        }
+
         // prepare replacements
         $replace = array(
                 '@ID@'      => $ID,
@@ -207,6 +214,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@DATE@'    => dformat(time()),
                 '@BASE@'    => DOKU_BASE,
                 '@TPLBASE@' => DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/',
+                '@QRCODE@'  => $qr_code,
         );
 
         // set HTML element
