@@ -134,7 +134,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         header('Pragma: public');
         http_conditionalRequest(filemtime($cache->cache));
 
-        $filename = cleanID(strtr(':/;"','    ',$title))
+        $filename = cleanID(strtr(':/;"','    ',$title));
         if($this->getConf('output') == 'file'){
             header('Content-Disposition: attachment; filename="'.rawurlencode($title).'.pdf";');
         }else{
