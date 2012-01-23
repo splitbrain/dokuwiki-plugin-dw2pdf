@@ -206,7 +206,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@PAGEURL@' => wl($ID,($REV)?array('rev'=>$REV):false, true, "&"),
                 '@DATE@'    => dformat(time()),
                 '@BASE@'    => DOKU_BASE,
-                '@TPLBASE@' => DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/',
+                '@TPLBASE@' => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$tpl.'/',
         );
 
         // set HTML element

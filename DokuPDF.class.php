@@ -56,6 +56,16 @@ class DokuPDF extends mpdf {
             list($ext,$mime) = mimetype($file);
         }
 
+        // local files
+        if(substr($file,0,9) == 'dw2pdf://'){
+            // support local files passed from plugins
+            $local = substr($file,9);
+        }elseif(!preg_match('/(\.php|\?)/',$file)){
+            $re = preg_quote(DOKU_URL,'/');
+            // directly access local files instead of using HTTP, skip dynamic content
+            $local = preg_replace("/^$re/i",DOKU_INC,$file);
+        }
+
         if(substr($mime,0,6) == 'image/'){
             if(!empty($media)){
                 // any size restrictions?
