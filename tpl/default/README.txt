@@ -46,6 +46,7 @@ footer files.
   * ''@DATE@'' -- time when the PDF was created (might be in the past if cached)
   * ''@BASE@'' -- the wiki base directory
   * ''@TPLBASE@'' -- the PDF template base directory (use to reference images)
+  * ''@QRCODE@'' -- QR code image pointing to the original page url
 
 ===== Styles =====
 
