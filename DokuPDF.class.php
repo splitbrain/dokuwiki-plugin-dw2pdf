@@ -85,7 +85,7 @@ class DokuPDF extends mpdf {
                 }
 
                 //handle image resizing/cropping
-                if($w){
+                if($w && file_exists($local)){
                     if($h){
                         $local = media_crop_image($local,$ext,$w,$h);
                     }else{
