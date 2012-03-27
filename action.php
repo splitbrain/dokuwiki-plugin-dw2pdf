@@ -103,7 +103,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= $this->load_css();
             $html .= '@page { size:auto; '.$template['page'].'}';
             $html .= '@page :first {'.$template['first'].'}';
-            $html .= $template['css'];
             $html .= '</style>';
             $html .= '</head><body>';
             $html .= $template['html'];
@@ -166,7 +165,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // this is what we'll return
         $output = array(
             'html'  => '',
-            'css'   => '',
             'page'  => '',
             'first' => '',
             'cite'  => '',
@@ -227,11 +225,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html')){
             $output['cite'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html');
             $output['cite'] = str_replace(array_keys($replace), array_values($replace), $output['cite']);
-        }
-
-        // set custom styles
-        if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/style.css')){
-            $output['css'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/style.css');
         }
 
         return $output;
