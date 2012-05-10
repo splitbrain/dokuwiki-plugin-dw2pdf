@@ -8,7 +8,7 @@
  * @author Andreas Gohr <andi@splitbrain.org>
  */
 
-if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'].'/');
+if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'].'/dwpdf/'.rand(1000));
 if(!defined('_MPDF_TTFONTDATAPATH')) define('_MPDF_TTFONTDATAPATH',$conf['cachedir'].'/mpdf_ttf/');
 require_once(dirname(__FILE__)."/mpdf/mpdf.php");
 
