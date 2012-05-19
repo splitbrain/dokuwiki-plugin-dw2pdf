@@ -8,7 +8,7 @@
  * @author Andreas Gohr <andi@splitbrain.org>
  */
 
-if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'].'/dwpdf/'.rand(1,1000));
+if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'].'/dwpdf/'.rand(1,1000).'/');
 if(!defined('_MPDF_TTFONTDATAPATH')) define('_MPDF_TTFONTDATAPATH',$conf['cachedir'].'/mpdf_ttf/');
 require_once(dirname(__FILE__)."/mpdf/mpdf.php");
 
@@ -16,12 +16,34 @@ class DokuPDF extends mpdf {
 
     function __construct(){
         io_mkdir_p(_MPDF_TTFONTDATAPATH);
+        io_mkdir_p(_MPDF_TEMP_PATH);
 
         // we're always UTF-8
         parent::__construct('UTF-8-s');
         $this->SetAutoFont(AUTOFONT_ALL);
         $this->ignore_invalid_utf8 = true;
+    }
 
+    /**
+     * Cleanup temp dir
+     */
+    function __destruct(){
+        $this->deletedir(_MPDF_TEMP_PATH);
+    }
+
+    /**
+     * Recursively delete a directory and its contents
+     *
+     * @link http://de3.php.net/manual/en/function.rmdir.php#108113
+     */
+    function deletedir($dir){
+        foreach(glob($dir . '/*') as $file) {
+            if(is_dir($file))
+                $this->deletedir($file);
+            else
+                @unlink($file);
+        }
+        @rmdir($dir);
     }
 
     /**
