@@ -89,8 +89,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $mpdf->SetTitle($title);
 
             // some default settings
-            $mpdf->mirrorMargins = 1;
-            $mpdf->useOddEven    = 1;
+            $mpdf->mirrorMargins = $this->getConf('doublesided');
+            $mpdf->useOddEven    = $this->getConf('doublesided');
             $mpdf->setAutoTopMargin = 'stretch';
             $mpdf->setAutoBottomMargin = 'stretch';
 
@@ -98,16 +98,27 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $template = $this->load_template($title);
 
             // prepare HTML header styles
-            $html  = '<html><head>';
-            $html .= '<style>';
-            $html .= $this->load_css();
-            $html .= '@page { size:auto; '.$template['page'].'}';
-            $html .= '@page :first {'.$template['first'].'}';
-            $html .= $template['css'];
-            $html .= '</style>';
-            $html .= '</head><body>';
-            $html .= $template['html'];
+            $htmlhead  = '<html><head>';
+            $htmlhead .= '<style>';
+            $htmlhead .= $this->load_css();
+            $htmlhead .= '@page { size:auto; '.$template['page'].'}';
+            $htmlhead .= '@page :first {'.$template['first'].'}';
+            $htmlhead .= $template['css'];
+            $htmlhead .= '</style>';
+            $htmlhead .= '</head><body>';
+            
+            $html = $template['html'];            
             $html .= '<div class="dokuwiki">';
+                       
+            $TOC = '';
+            
+            // if render TOC option is enabled, render it
+            $enableTOC = $this->getConf('renderTOC');   
+            $bmlevel = $this->getConf('maxbookmarks');
+            if($enableTOC)
+            {
+                $TOC = '<tocpagebreak toc-preHTML="'.htmlspecialchars('<h1>Index</h1>', ENT_QUOTES).'" links = "1"/>'; 
+            }   
 
             // loop over all pages
             $cnt = count($list);
@@ -121,13 +132,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 }
             }
 
-            $html .= '</div>';
-            $mpdf->WriteHTML($html);
-
+            $html .= '</div>'; 
+            
+            // render HTML with header, TOC (if enabled) and body
+            $mpdf->WriteHTML($htmlhead.$TOC.$html);
+          
             // write to cache file
             $mpdf->Output($cache->cache, 'F');
         }
-
+                
         // deliver the file
         header('Content-Type: application/pdf');
         header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
