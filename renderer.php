@@ -34,18 +34,27 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         // add PDF bookmark
         $bmlevel = $this->getConf('maxbookmarks');
         if($bmlevel && $bmlevel >= $level){
+        
             // PDF readers choke on invalid nested levels
             $step = $level - $this->lastheadlevel;
             if($step > 1) $level = $this->lastheadlevel;
             $this->lastheadlevel = $level;
 
-            $this->doc .= '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($level-1).'" />';
+            $this->doc .= '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($level-1).'" />'; 
         }
-
+        
+        // if render TOC option is enabled, render it
+        $enableTOC = $this->getConf('renderTOC');
+        
+        if($enableTOC)
+        { 
+            $this->doc .= '<tocentry content="'.$this->_xmlEntities($text).'" level="'.($level-1).'" />';
+        }
+        
         // print header
         $this->doc .= DOKU_LF."<h$level>";
         $this->doc .= $this->_xmlEntities($text);
-        $this->doc .= "</h$level>".DOKU_LF;
+        $this->doc .= "</h$level>".DOKU_LF;  
     }
 
     /**
@@ -74,7 +83,6 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     function acronym($acronym) {
         $this->doc .= $this->_xmlEntities($acronym);
     }
-
 
     /**
      * reformat links if needed
