@@ -31,6 +31,8 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     function header($text, $level, $pos) {
         if(!$text) return; //skip empty headlines
 
+        $hid = $this->_headerToLink($text,true);
+
         // add PDF bookmark
         $bmlevel = $this->getConf('maxbookmarks');
         if($bmlevel && $bmlevel >= $level){
@@ -44,7 +46,9 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
         // print header
         $this->doc .= DOKU_LF."<h$level>";
+        $this->doc .= "<a name=\"$hid\">";
         $this->doc .= $this->_xmlEntities($text);
+        $this->doc .= "</a>";
         $this->doc .= "</h$level>".DOKU_LF;
     }
 
