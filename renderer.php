@@ -63,6 +63,16 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
             $out .= '<div align="center" style="text-align: center">';
         }
 
+        $NS  = getNS($src);
+        $AUTH = auth_quickaclcheck("$NS:*");
+        $confAttachment = $this->getConf('attachment');
+        if($AUTH >= AUTH_READ && $confAttachment) { 
+          $file = mediaFN($src);
+          $filename = basename($file);
+          $mediatitle = sprintf($this->getLang('mediatitle'), $filename);
+          $out .= "<annotation file=\"".htmlspecialchars($file)."\" content=\"".htmlspecialchars($title)."\" icon=\"Paperclip\" title=\"".htmlspecialchars($mediatitle)."\"/>&nbsp;&nbsp;&nbsp;";
+        }
+
         $out .= parent::_media ($src, $title, $align, $width, $height, $cache, $render);
 
         if($align == 'center'){
