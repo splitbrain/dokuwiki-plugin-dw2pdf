@@ -37,15 +37,19 @@ footer files.
 
   * ''@PAGE@'' -- current page number in the PDF
   * ''@PAGES@'' -- number of all pages in the PDF
-  * ''@ID@'' -- The article's pageID
   * ''@TITLE@'' -- The article's title
-  * ''@PAGEURL@'' -- URL to the article
   * ''@WIKI@'' -- The wiki's title
   * ''@WIKIURL@'' -- URL to the wiki
-  * ''@UPDATE@'' -- Time of the last update of the article
   * ''@DATE@'' -- time when the PDF was created (might be in the past if cached)
   * ''@BASE@'' -- the wiki base directory
   * ''@TPLBASE@'' -- the PDF template base directory (use to reference images)
+
+**Remark about Bookcreator**:
+The page depended replacements are only for ''citation.html'' updated for every page.
+In the headers and footers the ID of the bookmanager page of the Bookcreator is applied.
+  * ''@ID@'' -- The article's pageID
+  * ''@PAGEURL@'' -- URL to the article
+  * ''@UPDATE@'' -- Time of the last update of the article
   * ''@QRCODE@'' -- QR code image pointing to the original page url
 
 ===== Styles =====
