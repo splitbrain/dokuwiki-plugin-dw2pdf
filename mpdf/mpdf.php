@@ -7101,7 +7101,7 @@ function Output($name='',$dest='')
 	// DELETE OLD TMP FILES - Housekeeping
 	// Delete any files in tmp/ directory that are >1 hrs old
 		$interval = 3600;
-		if ($handle = opendir(preg_replace('/\/$/','',_MPDF_TEMP_PATH))) {
+		if ($handle = @opendir(preg_replace('/\/$/','',_MPDF_TEMP_PATH))) {
 		   while (false !== ($file = readdir($handle))) { 
 			if (!is_dir($file) && ((filemtime(_MPDF_TEMP_PATH.$file)+$interval) < time()) && ($file != "..") && ($file != ".")) { // mPDF 5.4.19
 				unlink(_MPDF_TEMP_PATH.$file); 

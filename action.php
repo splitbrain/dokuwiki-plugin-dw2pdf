@@ -19,7 +19,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Constructor. Sets the correct template
      */
     function __construct(){
-        $tpl;
+        $tpl = false;
         if(isset($_REQUEST['tpl'])){
             $tpl = trim(preg_replace('/[^A-Za-z0-9_\-]+/','',$_REQUEST['tpl']));
         }
@@ -39,12 +39,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * Do the HTML to PDF conversion work
+     *
+     * @param Doku_Event $event
+     * @param array      $param
+     * @return bool
      */
     function convert(&$event, $param) {
         global $ACT;
         global $REV;
         global $ID;
-        global $conf;
 
         // our event?
         if (( $ACT != 'export_pdfbook' ) && ( $ACT != 'export_pdf' )) return false;
@@ -52,16 +55,35 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // check user's rights
         if ( auth_quickaclcheck($ID) < AUTH_READ ) return false;
 
+        // one or multiple pages?
+        $list  = array();
+        if($ACT == 'export_pdf') {
+            $list[0] = $ID;
+            $title = p_get_first_heading($ID);
+        } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
+            //is in Bookmanager of bookcreator plugin title given
+            if(!$title = $_GET['pdfbook_title']) {  //TODO when title is changed, the cached file contains the old title
+                /** @var $bookcreator action_plugin_bookcreator */
+                $bookcreator =& plugin_load('action', 'bookcreator');
+                msg($bookcreator->getLang('needtitle'), -1);
+
+                $event->data               = 'show';
+                $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+                return false;
+            }
+            $list = explode("|", $_COOKIE['list-pagelist']);
+        } else {
+            /** @var $bookcreator action_plugin_bookcreator */
+            $bookcreator =& plugin_load('action', 'bookcreator');
+            msg($bookcreator->getLang('empty'), -1);
+
+            $event->data               = 'show';
+            $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+            return false;
+        }
+
         // it's ours, no one else's
         $event->preventDefault();
-
-        // one or multiple pages?
-        $list = array();
-        if ( $ACT == 'export_pdf' ) {
-            $list[0] = $ID;
-        } elseif (isset($_COOKIE['list-pagelist'])) {
-            $list = explode("|", $_COOKIE['list-pagelist']);
-        }
 
         // prepare cache
         $cache = new cache(join(',',$list).$REV.$this->tpl,'.dw2.pdf');
@@ -80,12 +102,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             // let mpdf fix local links
             $self = parse_url(DOKU_URL);
             $url  = $self['scheme'].'://'.$self['host'];
-            if($self['port']) $url .= ':'.$port;
+            if($self['port']) $url .= ':'.$self['port'];
             $mpdf->setBasePath($url);
 
             // Set the title
-            $title = $_GET['pdfbook_title'];
-            if(!$title) $title = p_get_first_heading($ID);
             $mpdf->SetTitle($title);
 
             // some default settings
@@ -99,7 +119,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
             // prepare HTML header styles
             $html  = '<html><head>';
-            $html .= '<style>';
+            $html .= '<style type="text/css">';
             $html .= $this->load_css();
             $html .= '@page { size:auto; '.$template['page'].'}';
             $html .= '@page :first {'.$template['first'].'}';
@@ -115,7 +135,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $page = $list[$n];
 
                 $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
-                $html .= $template['cite'];
+                $html .= $this->page_depend_replacements($template['cite'], cleanID($page));
                 if ($n < ($cnt - 1)){
                     $html .= '<pagebreak />';
                 }
@@ -159,7 +179,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     protected function load_template($title){
         global $ID;
-        global $REV;
         global $conf;
         $tpl = $this->tpl;
 
@@ -195,33 +214,22 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
         }
 
-        // generate qr code for this page using google infographics api
-        $qr_code = '';
-        if ($this->getConf('qrcodesize')) {
-            $url = urlencode(wl($ID,'','&',true));
-            $qr_code = '<img src="https://chart.googleapis.com/chart?chs='.
-                       $this->getConf('qrcodesize').'&cht=qr&chl='.$url.'" />';
-        }
-
         // prepare replacements
         $replace = array(
-                '@ID@'      => $ID,
                 '@PAGE@'    => '{PAGENO}',
                 '@PAGES@'   => '{nb}',
                 '@TITLE@'   => hsc($title),
                 '@WIKI@'    => $conf['title'],
                 '@WIKIURL@' => DOKU_URL,
-                '@UPDATE@'  => dformat(filemtime(wikiFN($ID,$REV))),
-                '@PAGEURL@' => wl($ID,($REV)?array('rev'=>$REV):false, true, "&"),
                 '@DATE@'    => dformat(time()),
                 '@BASE@'    => DOKU_BASE,
-                '@TPLBASE@' => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$tpl.'/',
-                '@TPLBASE@' => DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/',
-                '@QRCODE@'  => $qr_code,
+                '@TPLBASE@' => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$tpl.'/'
         );
 
         // set HTML element
-        $output['html'] = str_replace(array_keys($replace), array_values($replace), $html);
+        $html = str_replace(array_keys($replace), array_values($replace), $html);
+        //TODO For bookcreator $ID (= bookmanager page) makes no sense
+        $output['html'] = $this->page_depend_replacements($html, $ID);
 
         // citation box
         if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html')){
@@ -238,9 +246,34 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * @param string $raw code with placeholders
+     * @param string $id  pageid
+     * @return string
+     */
+    protected function page_depend_replacements($raw, $id){
+        global $REV;
+
+        // generate qr code for this page using google infographics api
+        $qr_code = '';
+        if ($this->getConf('qrcodesize')) {
+            $url = urlencode(wl($id,'','&',true));
+            $qr_code = '<img src="https://chart.googleapis.com/chart?chs='.
+                $this->getConf('qrcodesize').'&cht=qr&chl='.$url.'" />';
+        }
+        // prepare replacements
+        $replace['@ID@']      = $id;
+        $replace['@UPDATE@']  = dformat(filemtime(wikiFN($id, $REV)));
+        $replace['@PAGEURL@'] = wl($id, ($REV) ? array('rev'=> $REV) : false, true, "&");
+        $replace['@QRCODE@']  = $qr_code;
+
+        return str_replace(array_keys($replace), array_values($replace), $raw);
+    }
+
+    /**
      * Load all the style sheets and apply the needed replacements
      */
     protected function load_css(){
+        global $conf;
         //reusue the CSS dispatcher functions without triggering the main function
         define('SIMPLE_TEST',1);
         require_once(DOKU_INC.'lib/exe/css.php');
@@ -284,7 +317,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @author Andreas Gohr <andi@splitbrain.org>
      */
     function css_pluginPDFstyles(){
-        global $lang;
         $list = array();
         $plugins = plugin_list();
 
