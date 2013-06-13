@@ -6552,7 +6552,7 @@ function Image($file,$x,$y,$w=0,$h=0,$type='',$link='',$paint=true, $constrain=t
 		$this->AddPage($this->CurOrientation);
 		// Added to correct for OddEven Margins
 		$x=$x +$this->MarginCorrection;
-		$y = $tMargin + $this->margin_header;
+		$y = $this->tMargin + $this->margin_header;
 		$changedpage = true;
 	  }
 /*-- COLUMNS --*/
@@ -9105,13 +9105,13 @@ function _beginpage($orientation,$mgl='',$mgr='',$mgt='',$mgb='',$mgh='',$mgf=''
 
 function _setAutoHeaderHeight(&$det, &$htmlh) {
   if ($this->setAutoTopMargin=='pad') {
-	if ($htmlh['h']) { $h = $htmlh['h']; }
+	if (isset($htmlh['h'])) { $h = $htmlh['h']; }
 	else if ($det) { $h = $this->_getHFHeight($det,'H'); }
 	else { $h = 0; }
 	$this->tMargin = $this->margin_header + $h + $this->orig_tMargin;
   }
   else if ($this->setAutoTopMargin=='stretch') {
-	if ($htmlh['h']) { $h = $htmlh['h']; }
+	if (isset($htmlh['h'])) { $h = $htmlh['h']; }
 	else if ($det) { $h = $this->_getHFHeight($det,'H'); }
 	else { $h = 0; }
 	$this->tMargin = max($this->orig_tMargin, $this->margin_header + $h + $this->autoMarginPadding);
@@ -9121,14 +9121,14 @@ function _setAutoHeaderHeight(&$det, &$htmlh) {
 
 function _setAutoFooterHeight(&$det, &$htmlf) {
   if ($this->setAutoBottomMargin=='pad') {
-	if ($htmlf['h']) { $h = $htmlf['h']; }
+	if (isset($htmlf['h'])) { $h = $htmlf['h']; }
 	else if ($det) { $h = $this->_getHFHeight($det,'F'); }
 	else { $h = 0; }
 	$this->bMargin = $this->margin_footer + $h + $this->orig_bMargin;
 	$this->PageBreakTrigger=$this->h-$this->bMargin ;
   }
   else if ($this->setAutoBottomMargin=='stretch') {
-	if ($htmlf['h']) { $h = $htmlf['h']; }
+	if (isset($htmlf['h'])) { $h = $htmlf['h']; }
 	else if ($det) { $h = $this->_getHFHeight($det,'F'); }
 	else { $h = 0; }
 	$this->bMargin = max($this->orig_bMargin, $this->margin_footer + $h + $this->autoMarginPadding);
@@ -9624,7 +9624,7 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 		if(isset($gif->m_img->m_gih->m_bLocalClr) && $gif->m_img->m_gih->m_bLocalClr) {
 			$nColors = $gif->m_img->m_gih->m_nTableSize;
 			$pal = $gif->m_img->m_gih->m_colorTable->toString();
-			if($bgColor != -1) {
+			if(isset($bgColor) AND $bgColor != -1) {
 				$bgColor = $gif->m_img->m_gih->m_colorTable->colorIndex($bgColor);
 			}
 			$colspace='Indexed';
@@ -11718,7 +11718,7 @@ function SetHTMLHeaderByName($name,$side='O',$write=false) {
 
 function SetHTMLFooterByName($name,$side='O') {
 	if (!$name) { $name = '_default'; }
-	$this->SetHTMLFooter($this->pageHTMLfooters[$name],$side,$write);
+	$this->SetHTMLFooter($this->pageHTMLfooters[$name],$side);
 }
 /*-- END HTMLHEADERS-FOOTERS --*/
 
@@ -28880,7 +28880,7 @@ function DeletePages($start_page, $end_page=-1) {
 		// HTML Headers & Footers
 		if (count($this->saveHTMLHeader)) {
 			foreach($this->saveHTMLHeader AS $p=>$v) {
-				if($p>end_page) { $newarr[($p - $n_tod)] = $this->saveHTMLHeader[$p]; }
+				if($p>$end_page) { $newarr[($p - $n_tod)] = $this->saveHTMLHeader[$p]; }
 				else if($p<$start_page) { $newarr[$p] = $this->saveHTMLHeader[$p]; }
 			}
 			ksort($newarr);
