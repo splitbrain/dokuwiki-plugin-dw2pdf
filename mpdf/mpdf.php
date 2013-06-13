@@ -10677,7 +10677,8 @@ function GetFullPath(&$path,$basepath='') {
 		if (substr($path,0,1) == "/") { 
 			$tr = parse_url($basepath);
 			$root = $tr['scheme'].'://'.$tr['host'];
-			$path = $root . $path; 
+			if($tr['port']) $root .= ':'.$tr['port'];
+			$path = $root . $path;
 		}
 		else { $path = $basepath . $path; }
 	}
