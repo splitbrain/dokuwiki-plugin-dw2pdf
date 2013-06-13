@@ -135,7 +135,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $page = $list[$n];
 
                 $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
-                $html .= $template['cite'];
+                $html .= $this->page_depend_replacements($template['cite'], cleanID($page));
                 if ($n < ($cnt - 1)){
                     $html .= '<pagebreak />';
                 }
@@ -179,7 +179,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     protected function load_template($title){
         global $ID;
-        global $REV;
         global $conf;
         $tpl = $this->tpl;
 
@@ -215,32 +214,22 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
         }
 
-        // generate qr code for this page using google infographics api
-        $qr_code = '';
-        if ($this->getConf('qrcodesize')) {
-            $url = urlencode(wl($ID,'','&',true));
-            $qr_code = '<img src="https://chart.googleapis.com/chart?chs='.
-                       $this->getConf('qrcodesize').'&cht=qr&chl='.$url.'" />';
-        }
-
         // prepare replacements
         $replace = array(
-                '@ID@'      => $ID,
                 '@PAGE@'    => '{PAGENO}',
                 '@PAGES@'   => '{nb}',
                 '@TITLE@'   => hsc($title),
                 '@WIKI@'    => $conf['title'],
                 '@WIKIURL@' => DOKU_URL,
-                '@UPDATE@'  => dformat(filemtime(wikiFN($ID,$REV))),
-                '@PAGEURL@' => wl($ID,($REV)?array('rev'=>$REV):false, true, "&"),
                 '@DATE@'    => dformat(time()),
                 '@BASE@'    => DOKU_BASE,
-                '@TPLBASE@' => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$tpl.'/',
-                '@QRCODE@'  => $qr_code,
+                '@TPLBASE@' => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$tpl.'/'
         );
 
         // set HTML element
-        $output['html'] = str_replace(array_keys($replace), array_values($replace), $html);
+        $html = str_replace(array_keys($replace), array_values($replace), $html);
+        //TODO For bookcreator $ID (= bookmanager page) makes no sense
+        $output['html'] = $this->page_depend_replacements($html, $ID);
 
         // citation box
         if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html')){
@@ -254,6 +243,30 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         return $output;
+    }
+
+    /**
+     * @param string $raw code with placeholders
+     * @param string $id  pageid
+     * @return string
+     */
+    protected function page_depend_replacements($raw, $id){
+        global $REV;
+
+        // generate qr code for this page using google infographics api
+        $qr_code = '';
+        if ($this->getConf('qrcodesize')) {
+            $url = urlencode(wl($id,'','&',true));
+            $qr_code = '<img src="https://chart.googleapis.com/chart?chs='.
+                $this->getConf('qrcodesize').'&cht=qr&chl='.$url.'" />';
+        }
+        // prepare replacements
+        $replace['@ID@']      = $id;
+        $replace['@UPDATE@']  = dformat(filemtime(wikiFN($id, $REV)));
+        $replace['@PAGEURL@'] = wl($id, ($REV) ? array('rev'=> $REV) : false, true, "&");
+        $replace['@QRCODE@']  = $qr_code;
+
+        return str_replace(array_keys($replace), array_values($replace), $raw);
     }
 
     /**
