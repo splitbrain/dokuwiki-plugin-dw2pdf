@@ -259,6 +259,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $replace['@PAGEURL@'] = wl($id, ($REV) ? array('rev'=> $REV) : false, true, "&");
         $replace['@QRCODE@']  = $qr_code;
 
+        // Relace @DATA:column@ placeholders, if the Data plugin is available.
+        $data_replacements = $this->get_data_replacements($raw, $id);
+        $replace = array_merge($replace, $data_replacements);
+
         return str_replace(array_keys($replace), array_values($replace), $raw);
     }
 
@@ -266,20 +270,20 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Replace all @DATA:column@ patterns with values retrieved from the
      * data plugin's metadata database.
      * 
-     * @global string $ID The current page ID.
      * @param string $html Input HTML, in which to find replacement strings.
+     * @param string $id The page ID
      * @return string HTML string with replacements made.
      */
-    public function handleDataReplacements($html) {
-        global $ID;
+    public function get_data_replacements($html, $id) {
+        $replacements = array();
 
         // Load helper (or give up)
         $helper = plugin_load('helper', 'data');
-        if ($helper == NULL) return $html;
+        if ($helper == NULL) return $replacements;
 
         // Find replacements (or give up)
         $count = preg_match_all('/@DATA:(.*?)@/', $html, $matches);
-        if ($count < 1) return $html;
+        if ($count < 1) return $replacements;
         $replaceable = array();
         for ($m=0; $m<count($matches[0]); $m++) {
             $replaceable[strtolower($matches[1][$m])] = $matches[0][$m];
@@ -289,21 +293,19 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $sqlite = $helper->_getDB();
         $sql = "SELECT key, value
             FROM pages JOIN data ON data.pid=pages.pid
-            WHERE pages.page = '".$ID."'";
+            WHERE pages.page = '".$id."'";
         $rows = $sqlite->res2arr($sqlite->query($sql));
 
         // Get replacement values and build the replacement array
-        $replace = array();
         foreach ($rows as $row) {
             if (isset($replaceable[$row['key']])) {
-                $replace[$replaceable[$row['key']]] = $row['value'];
+                $replacements[$replaceable[$row['key']]] = $row['value'];
             }
         }
 
-        // Perform replacements
-        $html = str_replace(array_keys($replace), array_values($replace), $html);
-
-        return $html;
+        // Return required replacements. Replacing is done in
+        // $this->page_depend_replacements() along with other replacements.
+        return $replacements;
     }
 
     /**
