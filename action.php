@@ -15,6 +15,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     private $tpl;
 
+    /** @var array The current page's Data-plugin keys and values */
+    private $data = array();
+
     /**
      * Constructor. Sets the correct template
      */
@@ -314,15 +317,18 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $replaceable[strtolower($matches[1][$m])] = $matches[0][$m];
         }
 
-        // Set up SQLite, and retrieve this page's metadata
-        $sqlite = $helper->_getDB();
-        $sql = "SELECT key, value
-            FROM pages JOIN data ON data.pid=pages.pid
-            WHERE pages.page = '".$id."'";
-        $rows = $sqlite->res2arr($sqlite->query($sql));
+        // If not already done for this page, set up SQLite and retrieve this
+        // page's metadata
+        if (!isset($this->data[$id])) {
+            $sqlite = $helper->_getDB();
+            $sql = "SELECT key, value
+                FROM pages JOIN data ON data.pid=pages.pid
+                WHERE pages.page = '".$id."'";
+            $this->data[$id] = $sqlite->res2arr($sqlite->query($sql));
+        }
 
         // Get replacement values and build the replacement array
-        foreach ($rows as $row) {
+        foreach ($this->data[$id] as $row) {
             if (isset($replaceable[$row['key']])) {
                 $replacements[$replaceable[$row['key']]] = $row['value'];
             }
