@@ -22,6 +22,7 @@ class DokuPDF extends mpdf {
         parent::__construct('UTF-8-s');
         $this->SetAutoFont(AUTOFONT_ALL);
         $this->ignore_invalid_utf8 = true;
+        $this->tabSpaces = 4;
     }
 
     /**
@@ -63,6 +64,7 @@ class DokuPDF extends mpdf {
      * takes care of checking image ACls.
      */
     function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false){
+        global $conf;
         list($ext,$mime) = mimetype($file);
 
         // build regex to parse URL back to media info
@@ -94,7 +96,7 @@ class DokuPDF extends mpdf {
                 if(preg_match('/[\?&]w=(\d+)/',$file, $m)) $w = $m[1];
                 if(preg_match('/[\?&]h=(\d+)/',$file, $m)) $h = $m[1];
 
-                if(preg_match('/^https?:\/\//',$media)){
+                if(preg_match('/^(https?|ftp):\/\//',$media)){
                     $local = media_get_from_URL($media,$ext,-1);
                     if(!$local) $local = $media; // let mpdf try again
                 }else{
@@ -114,7 +116,7 @@ class DokuPDF extends mpdf {
                         $local = media_resize_image($local,$ext,$w,$h);
                     }
                 }
-            }elseif(preg_match('/^https?:\/\//',$file)){ // fixed external URLs
+            }elseif(preg_match('/^(https?|ftp):\/\//',$file)){ // fixed external URLs
                 $local = media_get_from_URL($file,$ext,$conf['cachetime']);
             }
 
