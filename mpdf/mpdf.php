@@ -32567,6 +32567,7 @@ function AdjustHTML($html, $tabSpaces=8) {
 
 		$temp[2][$iterator] = preg_replace('/\n/',"<br />",$temp[2][$iterator]);
 		$temp[2][$iterator] = str_replace('\\',"\\\\",$temp[2][$iterator]);
+		$temp[2][$iterator] = preg_replace('/\$(\d)/', '\\\$$1', $temp[2][$iterator]);
 		$html = preg_replace('#<pre(.*?)>(.*?)</pre>#si','<erp'.$temp[1][$iterator].'>'.$temp[2][$iterator].'</erp>',$html,1);
 		$thereispre--;
 		$iterator++;
