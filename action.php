@@ -15,6 +15,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     private $tpl;
 
+    /** @var array The current page's Data-plugin keys and values */
+    private $data = array();
+
     /**
      * Constructor. Sets the correct template
      */
@@ -95,63 +98,89 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // hard work only when no cache available
         if(!$this->getConf('usecache') || !$cache->useCache($depends)){
-            // initialize PDF library
-            require_once(dirname(__FILE__)."/DokuPDF.class.php");
-            $mpdf = new DokuPDF();
-
-            // let mpdf fix local links
-            $self = parse_url(DOKU_URL);
-            $url  = $self['scheme'].'://'.$self['host'];
-            if($self['port']) $url .= ':'.$self['port'];
-            $mpdf->setBasePath($url);
-
-            // Set the title
-            $mpdf->SetTitle($title);
-
-            // some default settings
-            $mpdf->mirrorMargins = 1;
-            $mpdf->useOddEven    = 1;
-            $mpdf->setAutoTopMargin = 'stretch';
-            $mpdf->setAutoBottomMargin = 'stretch';
-
-            // load the template
-            $template = $this->load_template($title);
-
-            // prepare HTML header styles
-            $html  = '<html><head>';
-            $html .= '<style type="text/css">';
-            $html .= $this->load_css();
-            $html .= '@page { size:auto; '.$template['page'].'}';
-            $html .= '@page :first {'.$template['first'].'}';
-            $html .= '</style>';
-            $html .= '</head><body>';
-            $html .= $template['html'];
-            $html .= '<div class="dokuwiki">';
-
-            // loop over all pages
-            $cnt = count($list);
-            for($n=0; $n<$cnt; $n++){
-                $page = $list[$n];
-
-                $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
-                $html .= $this->page_depend_replacements($template['cite'], cleanID($page));
-                if ($n < ($cnt - 1)){
-                    $html .= '<pagebreak />';
-                }
-            }
-
-            $html .= '</div>';
-            $mpdf->WriteHTML($html);
-
-            // write to cache file
-            $mpdf->Output($cache->cache, 'F');
+            $this->generate_pdf($list, $title, $cache->cache);
         }
 
+        // Send PDF to the user
+        $this->send_pdf($title, $cache->cache);
+    }
+
+    /**
+     * Generate a PDF from a given set of wiki pages.
+     * 
+     * @param array $pages List of page IDs to include
+     * @param string $title The title of the whole PDF document
+     * @param string $filename The cache filename to write the PDF to
+     * @return void The 
+     */
+    public function generate_pdf($pages, $title, $filename) {
+        global $REV;
+
+        // initialize PDF library
+        require_once(dirname(__FILE__)."/DokuPDF.class.php");
+        $mpdf = new DokuPDF();
+
+        // let mpdf fix local links
+        $self = parse_url(DOKU_URL);
+        $url  = $self['scheme'].'://'.$self['host'];
+        if($self['port']) $url .= ':'.$self['port'];
+        $mpdf->setBasePath($url);
+
+        // Set the title
+        $mpdf->SetTitle($title);
+
+        // some default settings
+        $mpdf->mirrorMargins = 1;
+        $mpdf->useOddEven    = 1;
+        $mpdf->setAutoTopMargin = 'stretch';
+        $mpdf->setAutoBottomMargin = 'stretch';
+
+        // load the template
+        $template = $this->load_template($title);
+
+        // prepare HTML header styles
+        $html  = '<html><head>';
+        $html .= '<style type="text/css">';
+        $html .= $this->load_css();
+        $html .= '@page { size:auto; '.$template['page'].'}';
+        $html .= '@page :first {'.$template['first'].'}';
+        $html .= '</style>';
+        $html .= '</head><body>';
+        $html .= $template['html'];
+        $html .= '<div class="dokuwiki">';
+
+        // loop over all pages
+        $cnt = count($pages);
+        for($n=0; $n<$cnt; $n++){
+            $page = $pages[$n];
+
+            $html .= p_cached_output(wikiFN($page,$REV),'dw2pdf',$page);
+            $html .= $this->page_depend_replacements($template['cite'], cleanID($page));
+            if ($n < ($cnt - 1)){
+                $html .= '<pagebreak />';
+            }
+        }
+
+        $html .= '</div>';
+        $mpdf->WriteHTML($html);
+
+        // Write to cache file
+        $mpdf->Output($filename, 'F');
+    }
+
+    /**
+     * Send a cached PDF file to the user with a given title/filename.
+     * 
+     * @param string $title Title to be used as the output filename (special characters will be removed)
+     * @param string $cache_filename Full path to the PDF file to send
+     * @return void Does not return
+     */
+    protected function send_pdf($title, $cache_filename) {
         // deliver the file
         header('Content-Type: application/pdf');
         header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
         header('Pragma: public');
-        http_conditionalRequest(filemtime($cache->cache));
+        http_conditionalRequest(filemtime($cache_filename));
 
         $filename = rawurlencode(cleanID(strtr($title, ':/;"','    ')));
         if($this->getConf('output') == 'file'){
@@ -160,18 +189,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             header('Content-Disposition: inline; filename="'.$filename.'.pdf";');
         }
 
-        if (http_sendfile($cache->cache)) exit;
+        if (http_sendfile($cache_filename)) exit;
 
-        $fp = @fopen($cache->cache,"rb");
+        $fp = @fopen($cache_filename,"rb");
         if($fp){
-            http_rangeRequest($fp,filesize($cache->cache),'application/pdf');
+            http_rangeRequest($fp,filesize($cache_filename),'application/pdf');
         }else{
             header("HTTP/1.0 500 Internal Server Error");
             print "Could not read file - bad permissions?";
         }
         exit();
     }
-
 
     /**
      * Load the various template files and prepare the HTML/CSS for insertion
@@ -259,7 +287,56 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $replace['@PAGEURL@'] = wl($id, ($REV) ? array('rev'=> $REV) : false, true, "&");
         $replace['@QRCODE@']  = $qr_code;
 
+        // Relace @DATA:column@ placeholders, if the Data plugin is available.
+        $data_replacements = $this->get_data_replacements($raw, $id);
+        $replace = array_merge($replace, $data_replacements);
+
         return str_replace(array_keys($replace), array_values($replace), $raw);
+    }
+
+    /**
+     * Replace all @DATA:column@ patterns with values retrieved from the
+     * data plugin's metadata database.
+     * 
+     * @param string $html Input HTML, in which to find replacement strings.
+     * @param string $id The page ID
+     * @return string HTML string with replacements made.
+     */
+    public function get_data_replacements($html, $id) {
+        $replacements = array();
+
+        // Load helper (or give up)
+        $helper = plugin_load('helper', 'data');
+        if ($helper == NULL) return $replacements;
+
+        // Find replacements (or give up)
+        $count = preg_match_all('/@DATA:(.*?)@/', $html, $matches);
+        if ($count < 1) return $replacements;
+        $replaceable = array();
+        for ($m=0; $m<count($matches[0]); $m++) {
+            $replaceable[strtolower($matches[1][$m])] = $matches[0][$m];
+        }
+
+        // If not already done for this page, set up SQLite and retrieve this
+        // page's metadata
+        if (!isset($this->data[$id])) {
+            $sqlite = $helper->_getDB();
+            $sql = "SELECT key, value
+                FROM pages JOIN data ON data.pid=pages.pid
+                WHERE pages.page = '".$id."'";
+            $this->data[$id] = $sqlite->res2arr($sqlite->query($sql));
+        }
+
+        // Get replacement values and build the replacement array
+        foreach ($this->data[$id] as $row) {
+            if (isset($replaceable[$row['key']])) {
+                $replacements[$replaceable[$row['key']]] = $row['value'];
+            }
+        }
+
+        // Return required replacements. Replacing is done in
+        // $this->page_depend_replacements() along with other replacements.
+        return $replacements;
     }
 
     /**
