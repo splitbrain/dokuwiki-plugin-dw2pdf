@@ -33,7 +33,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Register the events
      */
-    function register(&$controller) {
+    function register(Doku_Event_Handler $controller) {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert',array());
     }
 
@@ -57,6 +57,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // one or multiple pages?
         $list  = array();
+
         if($ACT == 'export_pdf') {
             $list[0] = $ID;
             $title = p_get_first_heading($ID);
@@ -64,7 +65,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             //is in Bookmanager of bookcreator plugin title given
             if(!$title = $_GET['pdfbook_title']) {  //TODO when title is changed, the cached file contains the old title
                 /** @var $bookcreator action_plugin_bookcreator */
-                $bookcreator =& plugin_load('action', 'bookcreator');
+                $bookcreator = plugin_load('action', 'bookcreator');
                 msg($bookcreator->getLang('needtitle'), -1);
 
                 $event->data               = 'show';
@@ -74,7 +75,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $list = explode("|", $_COOKIE['list-pagelist']);
         } else {
             /** @var $bookcreator action_plugin_bookcreator */
-            $bookcreator =& plugin_load('action', 'bookcreator');
+            $bookcreator = plugin_load('action', 'bookcreator');
             msg($bookcreator->getLang('empty'), -1);
 
             $event->data               = 'show';
@@ -292,11 +293,22 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                  );
         $css = '';
         foreach($files as $file => $location){
+            $display = str_replace(fullpath(DOKU_INC), '', fullpath($file));
+            $css .= "\n/* XXXXXXXXX $display XXXXXXXXX */\n";
             $css .= css_loadfile($file, $location);
         }
 
-        // apply pattern replacements
-        $css = css_applystyle($css,DOKU_INC.'lib/tpl/'.$conf['template'].'/');
+        if(function_exists('css_parseless')) {
+            // apply pattern replacements
+            $styleini = css_styleini($conf['template']);
+            $css = css_applystyle($css, $styleini['replacements']);
+
+            // parse less
+            $css = css_parseless($css);
+        } else {
+            // @deprecated 2013-12-19: fix backward compatibility
+            $css = css_applystyle($css,DOKU_INC.'lib/tpl/'.$conf['template'].'/');
+        }
 
         return $css;
     }
