@@ -9,7 +9,6 @@
 
 // must be run within Dokuwiki
 if (!defined('DOKU_INC')) die();
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 
 class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
@@ -18,7 +17,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Constructor. Sets the correct template
      */
-    function __construct(){
+    public function __construct(){
         $tpl = false;
         if(isset($_REQUEST['tpl'])){
             $tpl = trim(preg_replace('/[^A-Za-z0-9_\-]+/','',$_REQUEST['tpl']));
@@ -33,8 +32,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Register the events
      */
-    function register(Doku_Event_Handler $controller) {
-        $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert',array());
+    public function register(Doku_Event_Handler $controller) {
+        $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert', array());
+        $controller->register_hook('TEMPLATE_PAGETOOLS_DISPLAY', 'BEFORE', $this, 'addbutton', array());
     }
 
     /**
@@ -44,7 +44,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param array      $param
      * @return bool
      */
-    function convert(&$event, $param) {
+    public function convert(&$event, $param) {
         global $ACT;
         global $REV;
         global $ID;
@@ -173,6 +173,31 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         exit();
     }
 
+    /**
+     * Add 'export pdf'-button to pagetools
+     *
+     * @param Doku_Event $event
+     * @param mixed      $param not defined
+     */
+    public function addbutton(&$event, $param) {
+        global $ID, $REV, $conf;
+
+        if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
+            $params = array('do' => 'export_pdf');
+            if($REV) $params['rev'] = $REV;
+
+            switch($conf['template']) {
+                case 'dokuwiki':
+                    $event->data['items']['export_pdf'] =
+                        '<li>'
+                        .'<a href='.wl($ID, $params).'  class="action export_pdf" rel="nofollow" title="'.$this->getLang('export_pdf_button').'">'
+                        .'<span>'.$this->getLang('export_pdf_button').'</span>'
+                        .'</a>'
+                        .'</li>';
+                    break;
+            }
+        }
+    }
 
     /**
      * Load the various template files and prepare the HTML/CSS for insertion
@@ -313,7 +338,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         return $css;
     }
 
-
     /**
      * Returns a list of possible Plugin PDF Styles
      *
@@ -321,7 +345,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      *
      * @author Andreas Gohr <andi@splitbrain.org>
      */
-    function css_pluginPDFstyles(){
+    protected function css_pluginPDFstyles(){
         $list = array();
         $plugins = plugin_list();
 
@@ -340,5 +364,4 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
         return $list;
     }
-
 }

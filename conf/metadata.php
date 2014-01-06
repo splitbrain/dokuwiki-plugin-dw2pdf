@@ -5,3 +5,4 @@ $meta['template']     = array('dirchoice', '_dir' => DOKU_PLUGIN.'dw2pdf/tpl/');
 $meta['maxbookmarks'] = array('numeric');
 $meta['usestyles']    = array('string');
 $meta['qrcodesize']   = array('string', '_pattern'=>'/^(|\d+x\d+)$/');
+$meta['showexportbutton'] = array('onoff');
