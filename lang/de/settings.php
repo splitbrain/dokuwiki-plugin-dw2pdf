@@ -13,3 +13,4 @@ $lang['template']              = 'Welches Template soll zur Formatierung der PDF
 $lang['maxbookmarks']          = 'Bis zu welcher Tiefe werden Lesezeichen angezeigt? (0=keine, 5=alle)';
 $lang['usestyles']             = 'Hier können komma-separiert Plugins angegeben werden, von denen die <code>style.css</code oder <code>screen.css</code> für die PDF-Generierung verwendet werden sollen. Als Standard wird nur die <code>print.css</code> und <code>pdf.css</code> verwendet.';
 $lang['qrcodesize']            = 'Größe des eingebetteten QR-Codes (in Pixeln <code><i>width</i><b>x</b><i>height</i></code>. Leer lassen zum Deaktivieren.';
+$lang['showexportbutton']      = 'Zeige PDF Export Button (nur wenn vom Template unterstützt, Template muss in "action.php" im Plugin-Verzeichnis eingetragen werden. Siehe Zeile 190';
