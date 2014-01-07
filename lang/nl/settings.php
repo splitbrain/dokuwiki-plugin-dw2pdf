@@ -13,3 +13,4 @@ $lang['template']              = 'Welke template moet worden gebruikt bij het cr
 $lang['maxbookmarks']          = 'Hoe veel paragraafniveau\'s moeten worden gebruikt in de PDF bladwijzers? <small>(0=geen, 5=alle)</small>';
 $lang['usestyles']             = 'Je kunt een komma gescheiden lijst van plugins opgeven waarvan de  <code>style.css</code> of <code>screen.css</code> moeten worden gebruikt bij het genereren van de PDF. Standaard worden alleen <code>print.css</code> en <code>pdf.css</code> gebruikt.';
 $lang['qrcodesize']            = 'Afmetingen van de ingebedde QR code (in pixels <code><i>breedte</i><b>x</b><i>hoogte</i></code>). Uit te schakelen door leeglaten.';
+$lang['showexportbutton']      = 'PDF export knop weergeven (alleen als je template dat ondersteund en is toegevoegd aan de plugin)';
