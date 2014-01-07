@@ -191,8 +191,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 case 'arago':
                     $event->data['items']['export_pdf'] =
                         '<li>'
-                        .'<a href='.wl($ID, $params).'  class="action export_pdf" rel="nofollow" title="'.$this->getLang('export_pdf_button').'">'
-                        .'<span>'.$this->getLang('export_pdf_button').'</span>'
+                        .'<a href='.wl($ID, $params).'  class="action export_pdf" rel="nofollow" title="Export to PDF '.$this->getLang('export_pdf_button').'">'
+                        .'<span>Export to PDF '.$this->getLang('export_pdf_button').'</span>'
                         .'</a>'
                         .'</li>';
                     break;
