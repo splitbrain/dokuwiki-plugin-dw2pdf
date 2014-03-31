@@ -6,6 +6,7 @@
  * @author NicolasFriedli <nicolas@theologique.ch>
  * @author Fabrice Dejaigher <fabrice@chtiland.com>
  * @author Schplurtz le Déboulonné <schplurtz@laposte.net>
+ * @author Nicolas Friedli <nicolas@theologique.ch>
  */
 $lang['output']                = 'Comment le PDF doit-il être présenté à l\'utilisateur?';
 $lang['output_o_browser']      = 'Afficher dans le navigateur';
