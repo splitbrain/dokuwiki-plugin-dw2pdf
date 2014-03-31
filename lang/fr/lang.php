@@ -5,4 +5,4 @@
  * 
  * @author Schplurtz le Déboulonné <schplurtz@laposte.net>
  */
-$lang['export_pdf_button']     = 'Exporter en PDF.';
+$lang['export_pdf_button']     = 'Exporter en PDF';
