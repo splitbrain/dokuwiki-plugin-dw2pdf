@@ -15,7 +15,8 @@ require_once DOKU_INC.'inc/parser/xhtml.php';
 
 class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
-    private $lastheadlevel = 0;
+    private $lastheadlevel = -1;
+    private $current_bookmark_level = 0;
 
     /**
      * Make available as XHTML replacement renderer
@@ -37,11 +38,23 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $bmlevel = $this->getConf('maxbookmarks');
         if($bmlevel && $bmlevel >= $level){
             // PDF readers choke on invalid nested levels
+
+            if ($this->lastheadlevel == -1)
+            	$this->lastheadlevel = $level;
+
             $step = $level - $this->lastheadlevel;
-            if($step > 1) $level = $this->lastheadlevel;
+
+            if ($step > 0) 
+            	$this->current_bookmark_level += 1;
+            else if ($step <0)  {
+            	$this->current_bookmark_level -= 1;
+                if ($this->current_bookmark_level < 0) 
+                    $this->current_bookmark_level = 0;
+            }
+
             $this->lastheadlevel = $level;
 
-            $this->doc .= '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($level-1).'" />';
+            $this->doc .= '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($this->current_bookmark_level).'" />';
         }
 
         // print header
