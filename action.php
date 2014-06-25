@@ -48,6 +48,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         global $ACT;
         global $REV;
         global $ID;
+        global $INPUT;
 
         // our event?
         if (( $ACT != 'export_pdfbook' ) && ( $ACT != 'export_pdf' )) return false;
@@ -86,8 +87,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // it's ours, no one else's
         $event->preventDefault();
 
+        // decide on the paper setup from param or config
+        $pagesize    = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
+        $orientation = $INPUT->str('orientation', $this->getConf('orientation'), true);
+
         // prepare cache
-        $cache = new cache(join(',',$list).$REV.$this->tpl,'.dw2.pdf');
+        $cache = new cache(join(',',$list).$REV.$this->tpl.$pagesize.$orientation,'.dw2.pdf');
         $depends['files']   = array_map('wikiFN',$list);
         $depends['files'][] = __FILE__;
         $depends['files'][] = dirname(__FILE__).'/renderer.php';
@@ -98,7 +103,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if(!$this->getConf('usecache') || !$cache->useCache($depends)){
             // initialize PDF library
             require_once(dirname(__FILE__)."/DokuPDF.class.php");
-            $mpdf = new DokuPDF();
+
+            $mpdf = new DokuPDF($pagesize, $orientation);
 
             // let mpdf fix local links
             $self = parse_url(DOKU_URL);
