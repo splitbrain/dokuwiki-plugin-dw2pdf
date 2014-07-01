@@ -8,6 +8,10 @@
 $lang['output']                = 'Kiel prezenti la PDF-on al la uzanto?';
 $lang['output_o_browser']      = 'Montri en foliumilo';
 $lang['output_o_file']         = 'Elŝuti la PDF-on';
+$lang['pagesize']              = 'La paĝformaton, kiun mPDF subtenas. Kutime <code>A4</code> aŭ <code>letter</code>.';
+$lang['orientation']           = 'La paĝ-orientiĝo.';
+$lang['orientation_o_portrait'] = 'Portreto (vertikala)';
+$lang['orientation_o_landscape'] = 'Pejzaĝo (horizontala)';
 $lang['usecache']              = 'Ĉu kaŝmemori PDF-ojn? Enmetitaj bildoj ne estos alirkontrolataj; malebligu, se tio estas sekurecrisko por vi.';
 $lang['template']              = 'Kiujn ŝablonojn uzi por formatigi la PDF-ojn?';
 $lang['maxbookmarks']          = 'Kiom da sekciaj ebenoj estu uzataj en la PDF-libromarkoj? <small>(0=neniuj, 5=ĉiuj)</small>';
