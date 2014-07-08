@@ -4,10 +4,15 @@
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  * 
  * @author Gerrit Uitslag <klapinklapin@gmail.com>
+ * @author mprins <mprins@users.sf.net>
  */
 $lang['output']                = 'Hoe moet een PDF worden gepresenteerd aan de gebruiker?';
 $lang['output_o_browser']      = 'Weergeven in de browser';
 $lang['output_o_file']         = 'Download de PDF';
+$lang['pagesize']              = 'Het pagina formaat zoals dat door mPDF wordt ondersteund. Normaliter <code>A4</code> of <code>letter</code>.';
+$lang['orientation']           = 'Pagina orientatie';
+$lang['orientation_o_portrait'] = 'Staand';
+$lang['orientation_o_landscape'] = 'Liggend';
 $lang['usecache']              = 'Moeten PDF\'s gebufferd worden? Ingebedde afbeeldingen zullen niet  op toegangsrechten worden gecontroleerd, schakel bufferen uit als dit een beveiligingsprobleem oplevert voor jou.';
 $lang['template']              = 'Welke template moet worden gebruikt bij het creëren van PDF\'s?';
 $lang['maxbookmarks']          = 'Hoe veel paragraafniveau\'s moeten worden gebruikt in de PDF bladwijzers? <small>(0=geen, 5=alle)</small>';
