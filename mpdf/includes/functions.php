@@ -1,12 +1,34 @@
 <?php
 
- 
-function urldecode_pathonly($url) {	// mPDF 5.5.03
+// mPDF 5.6.23
+function array_insert(&$array, $value, $offset) {
+	if (is_array($array)) {
+		$array  = array_values($array);
+		$offset = intval($offset);
+		if ($offset < 0 || $offset >= count($array)) { array_push($array, $value); }
+		else if ($offset == 0) { array_unshift($array, $value); }
+		else { 
+			$temp  = array_slice($array, 0, $offset);
+			array_push($temp, $value);
+			$array = array_slice($array, $offset);
+			$array = array_merge($temp, $array);
+		}
+	}
+	else { $array = array($value); }
+	return count($array);
+}
+
+function urlencode_part($url) {	// mPDF 5.6.02
+	if (!preg_match('/^[a-z]+:\/\//i',$url)) { return $url; }
+	$file=$url;
+	$query='';
 	if (preg_match('/[?]/',$url)) {
 		$bits = preg_split('/[?]/',$url,2);
-		return (urldecode($bits[0]).'?'.$bits[1]);
+		$file=$bits[0];
+		$query='?'.$bits[1];
 	}
-	else return urldecode($url);
+	$file = str_replace(array(" ","!","$","&","'","(",")","*","+",",",";","="),array("%20","%21","%24","%26","%27","%28","%29","%2A","%2B","%2C","%3B","%3D"),$file);
+	return $file.$query;
 }
 
 
