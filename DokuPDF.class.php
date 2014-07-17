@@ -15,14 +15,28 @@ require_once(dirname(__FILE__)."/mpdf/mpdf.php");
 class DokuPDF extends mpdf {
 
     function __construct($pagesize='A4', $orientation='portrait'){
+        global $conf;
+
         io_mkdir_p(_MPDF_TTFONTDATAPATH);
         io_mkdir_p(_MPDF_TEMP_PATH);
 
         $format = $pagesize;
         if($orientation == 'landscape') $format .= '-L';
 
+        switch($conf['lang']) {
+            case 'zh':
+            case 'zh-tw':
+            case 'ja':
+            case 'ko':
+                $mode = '+aCJK';
+                break;
+            default:
+                $mode = 'UTF-8-s';
+
+        }
+
         // we're always UTF-8
-        parent::__construct('UTF-8-s', $format);
+        parent::__construct($mode, $format);
         $this->SetAutoFont(AUTOFONT_ALL);
         $this->ignore_invalid_utf8 = true;
         $this->tabSpaces = 4;
