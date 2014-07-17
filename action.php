@@ -148,6 +148,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
 
             $html .= '</div>';
+
+            //Return html for debugging
+            if($_GET['debughtml'] == 'html') die($html);
+
             $mpdf->WriteHTML($html);
 
             // write to cache file
