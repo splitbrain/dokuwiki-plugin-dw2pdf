@@ -167,7 +167,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             header('Content-Disposition: inline; filename="'.$filename.'.pdf";');
         }
 
-        if (http_sendfile($cache->cache)) exit;
+        //try to send file, and exit if done
+        http_sendfile($cache->cache);
 
         $fp = @fopen($cache->cache,"rb");
         if($fp){
