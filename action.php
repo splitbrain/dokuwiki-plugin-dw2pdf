@@ -48,10 +48,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         global $ACT;
         global $REV;
         global $ID;
-        global $INPUT;
+        global $INPUT, $conf;
 
         // our event?
-        if (( $ACT != 'export_pdfbook' ) && ( $ACT != 'export_pdf' )) return false;
+        if (( $ACT != 'export_pdfbook' ) && ( $ACT != 'export_pdf' ) && ( $ACT != 'export_pdfns' )) return false;
 
         // check user's rights
         if ( auth_quickaclcheck($ID) < AUTH_READ ) return false;
@@ -62,6 +62,55 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if($ACT == 'export_pdf') {
             $list[0] = $ID;
             $title = p_get_first_heading($ID);
+
+        } elseif($ACT == 'export_pdfns') {
+            //check input for title and ns
+            if(!$title = $INPUT->str('pdfns_title', '')) {
+                $bookcreator = plugin_load('action', 'bookcreator');
+                msg($bookcreator->getLang('needtitle'), -1);
+                $event->data               = 'show';
+                $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+                return false;
+            }
+
+            $pdfnamespace = cleanID($INPUT->str('pdfns_ns', ''));
+            if(!@is_dir(dirname(wikiFN($pdfnamespace . ':dummy')))) {
+                $bookcreator = plugin_load('action', 'bookcreator');
+                msg($bookcreator->getLang('needtitle').' missing ns', -1);
+                $event->data               = 'show';
+                $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+                return false;
+            }
+
+            $order = $INPUT->str('pdfns_order', 'natural', true);
+            $sortoptions = array('pagename', 'date', 'natural');
+            if(!in_array($order, $sortoptions)) {
+                $order = 'natural';
+            }
+
+            $depth = $INPUT->int('pdfns_depth', 0);
+            if($depth < 0) {
+                $depth = 0;
+            }
+            //page search
+            $result = array();
+            $opts = array('depth' => $depth); //recursive all levels
+            $dir = utf8_encodeFN(str_replace(':', '/', $pdfnamespace));
+            search($result, $conf['datadir'], 'search_allpages', $opts, $dir);
+
+            //sort
+            if(count($result) > 0) {
+                if($order == 'date') {
+                    usort($result, array($this, '_datesort'));
+                } elseif($order == 'pagename') {
+                    usort($result, array($this, '_pagenamesort'));
+                }
+            }
+
+            foreach($result as $item) {
+                $list[] = $item['id'];
+            }
+
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
             //is in Bookmanager of bookcreator plugin title given
             if(!$title = $_GET['pdfbook_title']) {  //TODO when title is changed, the cached file contains the old title
@@ -74,6 +123,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 return false;
             }
             $list = explode("|", $_COOKIE['list-pagelist']);
+
         } else {
             /** @var $bookcreator action_plugin_bookcreator */
             $bookcreator = plugin_load('action', 'bookcreator');
@@ -376,5 +426,23 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
         }
         return $list;
+    }
+
+    /**
+     * usort callback to sort by file lastmodified time
+     */
+    public function _datesort($a, $b) {
+        if($b['rev'] < $a['rev']) return -1;
+        if($b['rev'] > $a['rev']) return 1;
+        return strcmp($b['id'], $a['id']);
+    }
+
+    /**
+     * usort callback to sort by page id
+     */
+    public function _pagenamesort($a, $b) {
+        if($a['id'] <= $b['id']) return -1;
+        if($a['id'] > $b['id']) return 1;
+        return 0;
     }
 }
