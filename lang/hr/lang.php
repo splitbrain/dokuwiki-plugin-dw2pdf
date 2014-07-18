@@ -6,3 +6,5 @@
  * @author Davor Turkalj <turki.bsc@gmail.com>
  */
 $lang['export_pdf_button']     = 'Izvoz u PDF';
+$lang['empty']           = "Nemate još odabranih stranica.";
+$lang['needtitle']       = "Molim unesite naslov";

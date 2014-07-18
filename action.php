@@ -65,40 +65,36 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         } elseif($ACT == 'export_pdfns') {
             //check input for title and ns
-            if(!$title = $INPUT->str('pdfns_title', '')) {
-                $bookcreator = plugin_load('action', 'bookcreator');
-                msg($bookcreator->getLang('needtitle'), -1);
-                $event->data               = 'show';
-                $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+            if(!$title = $INPUT->str('pdfns_title')) {
+                $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
             }
-
-            $pdfnamespace = cleanID($INPUT->str('pdfns_ns', ''));
+            $pdfnamespace = cleanID($INPUT->str('pdfns_ns'));
             if(!@is_dir(dirname(wikiFN($pdfnamespace . ':dummy')))) {
-                $bookcreator = plugin_load('action', 'bookcreator');
-                msg($bookcreator->getLang('needtitle').' missing ns', -1);
-                $event->data               = 'show';
-                $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+                $this->showPageWithErrorMsg($event, 'needns');
                 return false;
             }
 
+            //sort order
             $order = $INPUT->str('pdfns_order', 'natural', true);
             $sortoptions = array('pagename', 'date', 'natural');
             if(!in_array($order, $sortoptions)) {
                 $order = 'natural';
             }
 
+            //search depth
             $depth = $INPUT->int('pdfns_depth', 0);
             if($depth < 0) {
                 $depth = 0;
             }
+
             //page search
             $result = array();
             $opts = array('depth' => $depth); //recursive all levels
             $dir = utf8_encodeFN(str_replace(':', '/', $pdfnamespace));
             search($result, $conf['datadir'], 'search_allpages', $opts, $dir);
 
-            //sort
+            //sorting
             if(count($result) > 0) {
                 if($order == 'date') {
                     usort($result, array($this, '_datesort'));
@@ -112,25 +108,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
 
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
-            //is in Bookmanager of bookcreator plugin title given
-            if(!$title = $_GET['pdfbook_title']) {  //TODO when title is changed, the cached file contains the old title
-                /** @var $bookcreator action_plugin_bookcreator */
-                $bookcreator = plugin_load('action', 'bookcreator');
-                msg($bookcreator->getLang('needtitle'), -1);
-
-                $event->data               = 'show';
-                $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+            //is in Bookmanager of bookcreator plugin a title given?
+            if(!$title = $INPUT->str('pdfbook_title')) {  //TODO when title is changed, the cached file contains the old title
+                $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
+            } else {
+                $list = explode("|", $_COOKIE['list-pagelist']);
             }
-            $list = explode("|", $_COOKIE['list-pagelist']);
 
         } else {
-            /** @var $bookcreator action_plugin_bookcreator */
-            $bookcreator = plugin_load('action', 'bookcreator');
-            msg($bookcreator->getLang('empty'), -1);
-
-            $event->data               = 'show';
-            $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+            //show empty bookcreator message
+            $this->showPageWithErrorMsg($event, 'empty');
             return false;
         }
 
@@ -200,7 +188,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '</div>';
 
             //Return html for debugging
-            if($_GET['debughtml'] == 'html') die($html);
+            if($conf['allowdebug'] && $_GET['debughtml'] == 'html') {
+                echo $html;
+                exit();
+            };
 
             $mpdf->WriteHTML($html);
 
@@ -444,5 +435,18 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if($a['id'] <= $b['id']) return -1;
         if($a['id'] > $b['id']) return 1;
         return 0;
+    }
+
+    /**
+     * Set error notification and reload page again
+     *
+     * @param Doku_Event $event
+     * @param string     $msglangkey key of translation key
+     */
+    private function showPageWithErrorMsg(&$event, $msglangkey) {
+        msg($this->getLang($msglangkey), -1);
+
+        $event->data = 'show';
+        $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
     }
 }
