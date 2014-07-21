@@ -232,24 +232,18 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param mixed      $param not defined
      */
     public function addbutton(&$event, $param) {
-        global $ID, $REV, $conf;
+        global $ID, $REV;
 
         if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
             $params = array('do' => 'export_pdf');
             if($REV) $params['rev'] = $REV;
 
-            switch($conf['template']) {
-                case 'dokuwiki':
-                case 'arago':
-                case 'wikilu': // a private template
-                    $event->data['items']['export_pdf'] =
-                        '<li>'
-                        .'<a href='.wl($ID, $params).'  class="action export_pdf" rel="nofollow" title="'.$this->getLang('export_pdf_button').'">'
-                        .'<span>'.$this->getLang('export_pdf_button').'</span>'
-                        .'</a>'
-                        .'</li>';
-                    break;
-            }
+            $event->data['items']['export_pdf'] =
+                '<li>'
+                .'<a href='.wl($ID, $params).'  class="action export_pdf" rel="nofollow" title="'.$this->getLang('export_pdf_button').'">'
+                .'<span>'.$this->getLang('export_pdf_button').'</span>'
+                .'</a>'
+                .'</li>';
         }
     }
 

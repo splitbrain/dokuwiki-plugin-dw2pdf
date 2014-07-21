@@ -13,4 +13,4 @@ $lang['template']              = 'Hvilken mal skal brukes for formattering av PD
 $lang['maxbookmarks']          = 'Hvor mange seksjonsnivåer skal benyttes i PDF-bokmerkene? <small>(0=ingen, 5=alle)</small>';
 $lang['usestyles']             = 'Du kan angi en kommaseparert liste med tillegg hvor <code>style.css</code> eller <code>screen.css</code> skal benyttes til generering av PDF. Som standard benyttes kun <code>print.css</code> and <code>pdf.css</code>.';
 $lang['qrcodesize']            = 'Størrelse på innkapslet QR-kode (i piksler <code><i>bredde</i><b>x</b><i>høyde</i></code>). Ingen verdi vil deaktivere.';
-$lang['showexportbutton']      = 'Vis PDF-eksportknapp (bare når det er støttet av valgt mal, og malen er hvitlistet)';
+$lang['showexportbutton']      = 'Vis PDF-eksportknapp (bare når det er støttet av valgt mal)';
