@@ -7,22 +7,41 @@
  *
  * @author Andreas Gohr <andi@splitbrain.org>
  */
-
+global $conf;
 if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'].'/dwpdf/'.rand(1,1000).'/');
 if(!defined('_MPDF_TTFONTDATAPATH')) define('_MPDF_TTFONTDATAPATH',$conf['cachedir'].'/mpdf_ttf/');
+
 require_once(dirname(__FILE__)."/mpdf/mpdf.php");
 
+/**
+ * Class DokuPDF
+ * Some DokuWiki specific extentions
+ */
 class DokuPDF extends mpdf {
 
     function __construct($pagesize='A4', $orientation='portrait'){
+        global $conf;
+
         io_mkdir_p(_MPDF_TTFONTDATAPATH);
         io_mkdir_p(_MPDF_TEMP_PATH);
 
         $format = $pagesize;
         if($orientation == 'landscape') $format .= '-L';
 
+        switch($conf['lang']) {
+            case 'zh':
+            case 'zh-tw':
+            case 'ja':
+            case 'ko':
+                $mode = '+aCJK';
+                break;
+            default:
+                $mode = 'UTF-8-s';
+
+        }
+
         // we're always UTF-8
-        parent::__construct('UTF-8-s', $format);
+        parent::__construct($mode, $format);
         $this->SetAutoFont(AUTOFONT_ALL);
         $this->ignore_invalid_utf8 = true;
         $this->tabSpaces = 4;
@@ -68,7 +87,6 @@ class DokuPDF extends mpdf {
      */
     function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false){
         global $conf;
-        list($ext,$mime) = mimetype($file);
 
         // build regex to parse URL back to media info
         $re = preg_quote(ml('xxx123yyy','',true,'&',true),'/');
@@ -84,6 +102,7 @@ class DokuPDF extends mpdf {
         }
 
         // local files
+        $local = '';
         if(substr($file,0,9) == 'dw2pdf://'){
             // support local files passed from plugins
             $local = substr($file,9);
@@ -96,6 +115,7 @@ class DokuPDF extends mpdf {
         if(substr($mime,0,6) == 'image/'){
             if(!empty($media)){
                 // any size restrictions?
+                $w = $h = 0;
                 if(preg_match('/[\?&]w=(\d+)/',$file, $m)) $w = $m[1];
                 if(preg_match('/[\?&]h=(\d+)/',$file, $m)) $h = $m[1];
 
