@@ -32210,7 +32210,7 @@ function AdjustHTML($html, $tabSpaces=8) {
 	$iterator = 0;
 	while($thereispre) //Recover <pre attributes>content</pre>
 	{
-		$temp[2][$iterator] = preg_replace('/<([^a-zA-Z_:])/','&lt;\\1',$temp[2][$iterator]);	// mPDF 5.7.2
+		$temp[2][$iterator] = preg_replace('/<([^a-zA-Z_:\/])/','&lt;\\1',$temp[2][$iterator]);	// mPDF 5.7.2
 		$temp[2][$iterator] = preg_replace_callback("/^([^\n\t]*?)\t/m", array($this, 'tabs2spaces_callback'), $temp[2][$iterator]);	// mPDF 5.7+
 		$temp[2][$iterator] = preg_replace('/\t/',str_repeat(" ",$tabSpaces),$temp[2][$iterator]);
 
@@ -32221,6 +32221,7 @@ function AdjustHTML($html, $tabSpaces=8) {
 		$thereispre--;
 		$iterator++;
 	}
+	
 	$iterator = 0;
 	while($thereistextarea) //Recover <textarea attributes>content</textarea>
 	{
