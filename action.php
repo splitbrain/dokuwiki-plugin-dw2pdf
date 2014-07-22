@@ -186,6 +186,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
 
             $html .= '</div>';
+            $html .= '</body>';
+            $html .= '</html>';
 
             //Return html for debugging
             if($conf['allowdebug'] && $_GET['debughtml'] == 'html') {
