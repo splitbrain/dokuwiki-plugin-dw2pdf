@@ -35,6 +35,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $hid = $this->_headerToLink($text,true);
 
         // add PDF bookmark
+        $bookmark = '';
         $bmlevel = $this->getConf('maxbookmarks');
         if($bmlevel && $bmlevel >= $level){
             // PDF readers choke on invalid nested levels
@@ -54,11 +55,11 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
             $this->lastheadlevel = $level;
 
-            $this->doc .= '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($this->current_bookmark_level).'" />';
+            $bookmark = '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($this->current_bookmark_level).'" />';
         }
 
         // print header
-        $this->doc .= DOKU_LF."<h$level>";
+        $this->doc .= DOKU_LF."<h$level>$bookmark";
         $this->doc .= "<a name=\"$hid\">";
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
