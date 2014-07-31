@@ -173,6 +173,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= $template['html'];
             $html .= '<div class="dokuwiki">';		
             
+            // cover page
+	    if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/cover.html')){
+              $output['cover'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/cover.html');
+              $output['cover'] = str_replace(array_keys($replace), array_values($replace), $output['cover']);
+              $html .= $output['cover'];
+              $html .= '<pagebreak />';
+            }
+            
             // loop over all pages
             $cnt = count($list);
             for($n=0; $n<$cnt; $n++){
@@ -304,14 +312,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@TPLBASE@' => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$tpl.'/'
         );
         
-        // cover page
-	   if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/cover.html')){
-            $output['cover'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/cover.html');
-            $output['cover'] = str_replace(array_keys($replace), array_values($replace), $output['cover']);
-            $html .= $output['cover'];
-            $html .= '<pagebreak />';
-        }
-
         // set HTML element
         $html = str_replace(array_keys($replace), array_values($replace), $html);
         //TODO For bookcreator $ID (= bookmanager page) makes no sense
