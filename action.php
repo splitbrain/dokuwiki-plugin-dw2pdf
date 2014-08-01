@@ -311,7 +311,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 '@BASE@'    => DOKU_BASE,
                 '@TPLBASE@' => DOKU_BASE.'lib/plugins/dw2pdf/tpl/'.$tpl.'/'
         );
-        
+
         // set HTML element
         $html = str_replace(array_keys($replace), array_values($replace), $html);
         //TODO For bookcreator $ID (= bookmanager page) makes no sense
