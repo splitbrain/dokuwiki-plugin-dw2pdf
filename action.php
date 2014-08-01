@@ -275,7 +275,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             'page'  => '',
             'first' => '',
             'cite'  => '',
-        );		
+        );
 
         // prepare header/footer elements
         $html = '';
@@ -321,7 +321,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html')){
             $output['cite'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html');
             $output['cite'] = str_replace(array_keys($replace), array_values($replace), $output['cite']);
-        }        
+        }
 
         return $output;
     }
