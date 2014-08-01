@@ -202,7 +202,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 echo $html;
                 exit();
             };
-                        
+
             $mpdf->WriteHTML($html);
 
             // write to cache file
