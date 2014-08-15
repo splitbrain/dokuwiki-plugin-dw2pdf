@@ -8,6 +8,10 @@
 $lang['output']                = '어떻게 PDF를 사용자에게 제시되어야 합니까?';
 $lang['output_o_browser']      = '브라우저에서 보기';
 $lang['output_o_file']         = 'PDF 다운로드';
+$lang['pagesize']              = 'mPDF가 지원하는 용지 형식. 보통 <code>A4</code>나 <code>letter</code>입니다.';
+$lang['orientation']           = '용지 방향.';
+$lang['orientation_o_portrait'] = '세로';
+$lang['orientation_o_landscape'] = '가로';
 $lang['usecache']              = 'PDF를 캐시해야 합니까? 보안 문제가 있으면 포함된 그림은 ACL을 확인되지 않고, 비활성화합니다.';
 $lang['template']              = '어떤 템플릿을 PDF 파일의 형식에 사용되어야 합니까?';
 $lang['maxbookmarks']          = '얼마나 많은 문단 수준을 PDF 책갈피에 사용되어야 합니까? <small>(0=없음, 5=모두)</small>';
