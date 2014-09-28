@@ -172,7 +172,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '</head><body>';
             $html .= $template['html'];
             $html .= '<div class="dokuwiki">';
-
+            
+            // insert the cover page
+            $html .= $output['cover'];
+            $html .= '<pagebreak />';
+            
             // loop over all pages
             $cnt = count($list);
             for($n=0; $n<$cnt; $n++){
@@ -263,6 +267,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // this is what we'll return
         $output = array(
+            'cover' => '',
             'html'  => '',
             'page'  => '',
             'first' => '',
@@ -308,6 +313,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $html = str_replace(array_keys($replace), array_values($replace), $html);
         //TODO For bookcreator $ID (= bookmanager page) makes no sense
         $output['html'] = $this->page_depend_replacements($html, $ID);
+        
+        // cover page
+        if($output['cover']){
+          $output['cover'] = file_get_contents(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/cover.html');
+          $output['cover'] = str_replace(array_keys($replace), array_values($replace), $output['cover']);
+            }
 
         // citation box
         if(file_exists(DOKU_PLUGIN.'dw2pdf/tpl/'.$tpl.'/citation.html')){
