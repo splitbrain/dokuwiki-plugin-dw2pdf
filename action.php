@@ -199,7 +199,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '</html>';
 
             //Return html for debugging
-            if($conf['allowdebug'] && $_GET['debughtml'] == 'html') {
+            if($this->getConf('allowdebug') && $_GET['debughtml'] == 'html') {
                 echo $html;
                 exit();
             };
