@@ -194,6 +194,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 }
             }
 
+            // insert the back page
+            $html .= $template['back'];
+
             $html .= '</div>';
             $html .= '</body>';
             $html .= '</html>';
@@ -281,22 +284,23 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // prepare header/footer elements
         $html = '';
-        foreach(array('header', 'footer') as $t) {
-            foreach(array('', '_odd', '_even', '_first') as $h) {
-                if(file_exists(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/' . $t . $h . '.html')) {
-                    $html .= '<htmlpage' . $t . ' name="' . $t . $h . '">' . DOKU_LF;
-                    $html .= file_get_contents(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/' . $t . $h . '.html') . DOKU_LF;
-                    $html .= '</htmlpage' . $t . '>' . DOKU_LF;
+        foreach(array('header', 'footer') as $section) {
+            foreach(array('', '_odd', '_even', '_first') as $order) {
+                $file = DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/' . $section . $order . '.html';
+                if(file_exists($file)) {
+                    $html .= '<htmlpage' . $section . ' name="' . $section . $order . '">' . DOKU_LF;
+                    $html .= file_get_contents($file) . DOKU_LF;
+                    $html .= '</htmlpage' . $section . '>' . DOKU_LF;
 
                     // register the needed pseudo CSS
-                    if($h == '_first') {
-                        $output['first'] .= $t . ': html_' . $t . $h . ';' . DOKU_LF;
-                    } elseif($h == '_even') {
-                        $output['page'] .= 'even-' . $t . '-name: html_' . $t . $h . ';' . DOKU_LF;
-                    } elseif($h == '_odd') {
-                        $output['page'] .= 'odd-' . $t . '-name: html_' . $t . $h . ';' . DOKU_LF;
+                    if($order == '_first') {
+                        $output['first'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
+                    } elseif($order == '_even') {
+                        $output['page'] .= 'even-' . $section . '-name: html_' . $section . $order . ';' . DOKU_LF;
+                    } elseif($order == '_odd') {
+                        $output['page'] .= 'odd-' . $section . '-name: html_' . $section . $order . ';' . DOKU_LF;
                     } else {
-                        $output['page'] .= $t . ': html_' . $t . $h . ';' . DOKU_LF;
+                        $output['page'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
                     }
                 }
             }
@@ -320,15 +324,25 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $output['html'] = $this->page_depend_replacements($html, $ID);
 
         // cover page
-        if(file_exists(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/cover.html')) {
-            $output['cover'] = file_get_contents(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/cover.html');
+        $coverfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/cover.html';
+        if(file_exists($coverfile)) {
+            $output['cover'] = file_get_contents($coverfile);
             $output['cover'] = str_replace(array_keys($replace), array_values($replace), $output['cover']);
             $output['cover'] .= '<pagebreak />';
         }
 
+        // cover page
+        $backfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/back.html';
+        if(file_exists($backfile)) {
+            $output['back'] = '<pagebreak />';
+            $output['back'] .= file_get_contents($backfile);
+            $output['back'] = str_replace(array_keys($replace), array_values($replace), $output['back']);
+        }
+
         // citation box
-        if(file_exists(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/citation.html')) {
-            $output['cite'] = file_get_contents(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/citation.html');
+        $citationfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/citation.html';
+        if(file_exists($citationfile)) {
+            $output['cite'] = file_get_contents($citationfile);
             $output['cite'] = str_replace(array_keys($replace), array_values($replace), $output['cite']);
         }
 

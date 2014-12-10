@@ -14,15 +14,19 @@ first page of a document. If a file is does not exist the next more generic
 one will be tried. Eg. if You don't differ between even and odd pages,
 just the header.html is used.
 
+  * ''header.html'' -- Header for all pages
   * ''header_odd.html'' -- Header for odd pages
   * ''header_even.html'' -- Header for even pages
   * ''header_first.html'' -- Header for the first page
-  * ''header.html'' -- Header for all pages
+
+  * ''footer.html'' -- Footer for all pages
   * ''footer_odd.html'' -- Footer for odd pages
   * ''footer_even.html'' -- Footer for even pages
   * ''footer_first.html'' -- Footer for the first page
-  * ''footer.html'' -- Footer for all pages
+
   * ''citation.html'' -- Citationbox to be printed after each article
+  * ''cover.html'' -- Added once before first page
+  * ''back.html'' -- Added once after last page
 
 You can use all HTML that is understood by mpdf
 (See http://mpdf1.com/manual/index.php?tid=256)
@@ -50,11 +54,11 @@ In the headers and footers the ID of the bookmanager page of the Bookcreator is 
   * ''@ID@'' -- The article's pageID
   * ''@PAGEURL@'' -- URL to the article
   * ''@UPDATE@'' -- Time of the last update of the article
-  * ''@QRCODE@'' -- QR code image pointing to the original page url
+  * ''@QRCODE@'' -- QR code image pointing to the original page url (requires an online generator, see config setting)
 
 ===== Styles =====
 
-Custom stylings can be provided in the following file:
+Custom stylings can be provided in the following file of your dw2pdf-template folder:
 
   * style.css
 
