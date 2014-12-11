@@ -182,10 +182,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             // insert the cover page
             $html .= $template['cover'];
 
+            // store original pageid
+            $keep = $ID;
+
             // loop over all pages
             $cnt = count($list);
             for($n = 0; $n < $cnt; $n++) {
                 $page = $list[$n];
+
+                // set global pageid to the rendered page
+                $ID   = $page;
 
                 $html .= p_cached_output(wikiFN($page, $REV), 'dw2pdf', $page);
                 $html .= $this->page_depend_replacements($template['cite'], cleanID($page));
@@ -193,6 +199,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                     $html .= '<pagebreak />';
                 }
             }
+            //restore ID
+            $ID = $keep;
 
             // insert the back page
             $html .= $template['back'];
