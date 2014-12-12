@@ -146,6 +146,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // hard work only when no cache available
         if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
+            // debug enabled?
+            $debug = $conf['allowdebug'] && isset($_GET['debughtml']);
+
             // initialize PDF library
             require_once(dirname(__FILE__) . "/DokuPDF.class.php");
 
@@ -170,53 +173,80 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $template = $this->load_template($title);
 
             // prepare HTML header styles
-            $html  = '<html><head>';
-            $html .= '<style type="text/css">';
-            $html .= $this->load_css();
-            $html .= '@page { size:auto; ' . $template['page'] . '}';
-            $html .= '@page :first {' . $template['first'] . '}';
-            $html .= '</style>';
-            $html .= '</head><body>';
-            $html .= $template['html'];
-            $html .= '<div class="dokuwiki">';
+            $html = '';
+            if($debug) {
+                $html .= '<html><head>';
+                $html .= '<style type="text/css">';
+            }
+            $styles = $this->load_css();
+            $styles .= '@page { size:auto; ' . $template['page'] . '}';
+            $styles .= '@page :first {' . $template['first'] . '}';
+            $mpdf->WriteHTML($styles, 1);
+
+            if($debug) {
+                $html .= $styles;
+                $html .= '</style>';
+                $html .= '</head><body>';
+            }
+
+            $body_start = $template['html'];
+            $body_start .= '<div class="dokuwiki">';
 
             // insert the cover page
-            $html .= $template['cover'];
+            $body_start .= $template['cover'];
+
+            $mpdf->WriteHTML($body_start, 2, true, false); //start body html
+            if($debug) {
+                $html .= $body_start;
+            }
 
             // store original pageid
             $keep = $ID;
 
             // loop over all pages
-            $cnt = count($list);
+            $cnt = count($this->list);
             for($n = 0; $n < $cnt; $n++) {
-                $page = $list[$n];
+                $page = $this->list[$n];
 
                 // set global pageid to the rendered page
                 $ID   = $page;
 
-                $html .= p_cached_output(wikiFN($page, $REV), 'dw2pdf', $page);
-                $html .= $this->page_depend_replacements($template['cite'], cleanID($page));
+                $pagehtml = p_cached_output(wikiFN($page, $REV), 'dw2pdf', $page);
+                $pagehtml .= $this->page_depend_replacements($template['cite'], cleanID($page));
                 if($n < ($cnt - 1)) {
-                    $html .= '<pagebreak />';
+                    $pagehtml .= '<pagebreak />';
+                }
+
+                $mpdf->WriteHTML($pagehtml, 2, false, false); //intermediate body html
+                if($debug) {
+                    $html .= $pagehtml;
                 }
             }
             //restore ID
             $ID = $keep;
 
             // insert the back page
-            $html .= $template['back'];
+            $body_end = $template['back'];
 
-            $html .= '</div>';
-            $html .= '</body>';
-            $html .= '</html>';
+            $body_end .= '</div>';
+
+            $mpdf->WriteHTML($body_end, 2, false, true); // end body html
+            if($debug) {
+                $html .= $body_end;
+                $html .= '</body>';
+                $html .= '</html>';
+            }
 
             //Return html for debugging
-            if($conf['allowdebug'] && $_GET['debughtml'] == 'html') {
-                echo $html;
+            if($debug) {
+                if($_GET['debughtml'] == 'html') {
+                    echo $html;
+                } else {
+                    header('Content-Type: text/plain; charset=utf-8');
+                    echo $html;
+                }
                 exit();
             };
-
-            $mpdf->WriteHTML($html);
 
             // write to cache file
             $mpdf->Output($cache->cache, 'F');
