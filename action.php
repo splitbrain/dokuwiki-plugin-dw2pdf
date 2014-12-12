@@ -18,7 +18,8 @@ if(!defined('DOKU_INC')) die();
  */
 class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
-    private $tpl;
+    protected $tpl;
+    protected $list = array();
 
     /**
      * Constructor. Sets the correct template
@@ -63,10 +64,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if(auth_quickaclcheck($ID) < AUTH_READ) return false;
 
         // one or multiple pages?
-        $list = array();
+        $this->list = array();
 
         if($ACT == 'export_pdf') {
-            $list[0] = $ID;
+            $this->list[0] = $ID;
             $title = p_get_first_heading($ID);
 
         } elseif($ACT == 'export_pdfns') {
@@ -110,7 +111,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
 
             foreach($result as $item) {
-                $list[] = $item['id'];
+                $this->list[] = $item['id'];
             }
 
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
@@ -119,7 +120,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
             } else {
-                $list = explode("|", $_COOKIE['list-pagelist']);
+                $this->list = explode("|", $_COOKIE['list-pagelist']);
             }
 
         } else {
@@ -136,8 +137,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $orientation = $INPUT->str('orientation', $this->getConf('orientation'), true);
 
         // prepare cache
-        $cache = new cache(join(',', $list) . $REV . $this->tpl . $pagesize . $orientation, '.dw2.pdf');
-        $depends['files']   = array_map('wikiFN', $list);
+        $cache = new cache(join(',', $this->list) . $REV . $this->tpl . $pagesize . $orientation, '.dw2.pdf');
+        $depends['files']   = array_map('wikiFN', $this->list);
         $depends['files'][] = __FILE__;
         $depends['files'][] = dirname(__FILE__) . '/renderer.php';
         $depends['files'][] = dirname(__FILE__) . '/mpdf/mpdf.php';
@@ -456,6 +457,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
         }
         return $list;
+    }
+
+    /**
+     * Returns array of pages which will be included in the exported pdf
+     *
+     * @return array
+     */
+    public function getExportedPages() {
+        return $this->list;
     }
 
     /**
