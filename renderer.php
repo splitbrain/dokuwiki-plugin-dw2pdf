@@ -65,7 +65,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
             // add PDF bookmark
         $bookmark = '';
-        $bmlevel = $this->getConf('maxbookmarks');
+        $bmlevel = $this->actioninstance->getExportConfig('maxbookmarks');
         if($bmlevel && $bmlevel >= $level){
             // PDF readers choke on invalid nested levels
 
