@@ -26,7 +26,9 @@ class DokuPDF extends mpdf {
         io_mkdir_p(_MPDF_TEMP_PATH);
 
         $format = $pagesize;
-        if($orientation == 'landscape') $format .= '-L';
+        if($orientation == 'landscape') {
+            $format .= '-L';
+        }
 
         switch($conf['lang']) {
             case 'zh':
@@ -51,22 +53,7 @@ class DokuPDF extends mpdf {
      * Cleanup temp dir
      */
     function __destruct(){
-        $this->deletedir(_MPDF_TEMP_PATH);
-    }
-
-    /**
-     * Recursively delete a directory and its contents
-     *
-     * @link http://de3.php.net/manual/en/function.rmdir.php#108113
-     */
-    function deletedir($dir){
-        foreach(glob($dir . '/*') as $file) {
-            if(is_dir($file))
-                $this->deletedir($file);
-            else
-                @unlink($file);
-        }
-        @rmdir($dir);
+        io_rmdir(_MPDF_TEMP_PATH, true);
     }
 
     /**
@@ -119,7 +106,7 @@ class DokuPDF extends mpdf {
                 if(preg_match('/[\?&]w=(\d+)/',$file, $m)) $w = $m[1];
                 if(preg_match('/[\?&]h=(\d+)/',$file, $m)) $h = $m[1];
 
-                if(preg_match('/^(https?|ftp):\/\//',$media)){
+                if(media_isexternal($media)){
                     $local = media_get_from_URL($media,$ext,-1);
                     if(!$local) $local = $media; // let mpdf try again
                 }else{
@@ -139,7 +126,7 @@ class DokuPDF extends mpdf {
                         $local = media_resize_image($local,$ext,$w,$h);
                     }
                 }
-            }elseif(preg_match('/^(https?|ftp):\/\//',$file)){ // fixed external URLs
+            }elseif(media_isexternal($file)){ // fixed external URLs
                 $local = media_get_from_URL($file,$ext,$conf['cachetime']);
             }
 
