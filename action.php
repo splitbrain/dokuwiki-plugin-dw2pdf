@@ -79,11 +79,21 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                     . $title;
         $cache = new cache($cachekey, '.dw2.pdf');
 
+        $mediafiles = array();
+        foreach($this->list as $pageid) {
+            $mediainuse = p_get_metadata($pageid, 'relation media');
+            foreach($mediainuse as $mediaid => $exists) {
+                if($exists) {
+                   $mediafiles[] = mediaFN($mediaid);
+                }
+            }
+        }
+
         $depends['files']   = array_map('wikiFN', $this->list);
         $depends['files'][] = __FILE__;
         $depends['files'][] = dirname(__FILE__) . '/renderer.php';
         $depends['files'][] = dirname(__FILE__) . '/mpdf/mpdf.php';
-        $depends['files']   = array_merge($depends['files'], getConfigFiles('main'));
+        $depends['files']   = array_merge($depends['files'], $mediafiles, getConfigFiles('main'));
 
         // hard work only when no cache available
         if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
@@ -177,6 +187,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             return false;
         }
 
+        $list = array_map('cleanID', $list);
         return array($title, $list);
     }
 
@@ -306,7 +317,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $ID = $page;
 
             $pagehtml = p_cached_output(wikiFN($page, $REV), 'dw2pdf', $page);
-            $pagehtml .= $this->page_depend_replacements($template['cite'], cleanID($page));
+            $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
             if($n < ($cnt - 1)) {
                 $pagehtml .= '<pagebreak />';
             }
