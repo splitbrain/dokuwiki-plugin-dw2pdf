@@ -65,7 +65,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         if($ACT == 'export_pdf') {
             $this->list[0] = $ID;
-            $title = p_get_first_heading($ID);
+            $title = $INPUT->str('pdftitle');
+            if(!$title) {
+                $title = p_get_first_heading($ID);
+            }
 
         } elseif($ACT == 'export_pdfns') {
             //check input for title and ns
