@@ -680,7 +680,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $this->exportConfig['maxbookmarks'] = $INPUT->int('maxbookmarks', $this->getConf('maxbookmarks'), true);
 
         $tplconf = $this->getConf('template');
-        $tpl = $INPUT->str('template', $tplconf, true);
+        $tpl = $INPUT->str('tpl', $tplconf, true);
         if(!is_dir(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl)) {
             $tpl = $tplconf;
         }
