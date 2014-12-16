@@ -1,6 +1,7 @@
 <?php
 $conf['pagesize']         = 'A4';
 $conf['orientation']      = 'portrait';
+$conf['doublesided']      = 1;
 $conf['toc']              = 0;
 $conf['toclevels']        = '';
 $conf['maxbookmarks']     = 5;

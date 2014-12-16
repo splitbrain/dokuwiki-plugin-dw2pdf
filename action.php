@@ -22,7 +22,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      *
      * @var array
      */
-    public $exportConfig = null;
+    protected $exportConfig = null;
     protected $tpl;
     protected $list = array();
 
@@ -143,6 +143,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                     . $this->getExportConfig('template')
                     . $this->getExportConfig('pagesize')
                     . $this->getExportConfig('orientation')
+                    . $this->getExportConfig('doublesided')
                     . ($hasToC ? join('-', $levels) : '0')
                     . $title;
         $cache = new cache($cachekey, '.dw2.pdf');
@@ -174,8 +175,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $mpdf->SetTitle($title);
 
             // some default settings
-            $mpdf->mirrorMargins = 1; //double-sided document, starts at an odd page (first page is a right-hand side page)
-            $mpdf->useOddEven    = 1; //duplicate of mirrorMargins
+            //double-sided document, starts at an odd page (first page is a right-hand side page)
+            //single-side document has only odd pages
+            $mpdf->mirrorMargins = $this->getExportConfig('doublesided');
+            //duplicate of mirrorMargins
+            $mpdf->useOddEven    = $this->getExportConfig('doublesided');
             $mpdf->setAutoTopMargin = 'stretch';
             $mpdf->setAutoBottomMargin = 'stretch';
 //            $mpdf->pagenumSuffix = '/'; //prefix for {nbpg}
@@ -580,9 +584,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // decide on the paper setup from param or config
         $this->exportConfig['pagesize'] = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
-        $this->exportConfig['orientation']  = $INPUT->str('orientation', $this->getConf('orientation'), true);
+        $this->exportConfig['orientation'] = $INPUT->str('orientation', $this->getConf('orientation'), true);
 
-        $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'), true);
+        $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
+        $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
+
+        $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
         $levels = array();
         if($hasToC) {
             $toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);

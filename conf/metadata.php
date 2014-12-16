@@ -1,6 +1,7 @@
 <?php
 $meta['pagesize']         = array('string');
 $meta['orientation']      = array('multichoice', '_choices' => array('portrait', 'landscape'));
+$meta['doublesided']      = array('onoff');
 $meta['toc']              = array('onoff');
 $meta['toclevels']        = array('string', '_pattern' => '/^(|[1-5]-[1-5])$/');
 $meta['maxbookmarks']     = array('numeric');
