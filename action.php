@@ -474,8 +474,35 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $replace['@PAGEURL@'] = wl($id, ($REV) ? array('rev' => $REV) : false, true, "&");
         $replace['@QRCODE@']  = $qr_code;
 
-        return str_replace(array_keys($replace), array_values($replace), $raw);
+        $content = str_replace(array_keys($replace), array_values($replace), $raw);
+
+        // @DATE(<date>[, <format>])@
+        $content = preg_replace_callback(
+            '/@DATE\((.*?)(?:,\s*(.*?))?\)@/',
+            array($this, 'replacedate'),
+            $content
+        );
+
+        return $content;
     }
+
+
+    /**
+     * (callback) Replace date by request datestring
+     * e.g. '%m(30-11-1975)' is replaced by '11'
+     *
+     * @param array $match with [0]=>whole match, [1]=> first subpattern, [2] => second subpattern
+     * @return string
+     */
+    function replacedate($match) {
+        global $conf;
+        //no 2nd argument for default date format
+        if($match[2] == null) {
+            $match[2] = $conf['dformat'];
+        }
+        return strftime($match[2], strtotime($match[1]));
+    }
+
 
     /**
      * Load all the style sheets and apply the needed replacements
