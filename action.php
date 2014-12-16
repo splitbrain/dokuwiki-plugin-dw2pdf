@@ -48,11 +48,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param array      $param
      * @return bool
      */
-    public function convert(&$event, $param) {
+    public function convert(Doku_Event $event, $param) {
         global $ACT;
         global $REV;
         global $ID;
-        global $INPUT, $conf;
 
         // our event?
         if(($ACT != 'export_pdfbook') && ($ACT != 'export_pdf') && ($ACT != 'export_pdfns')) return false;
@@ -60,11 +59,60 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // check user's rights
         if(auth_quickaclcheck($ID) < AUTH_READ) return false;
 
-        // one or multiple pages?
-        $this->list = array();
+        if($data = $this->collectExportPages($event)) {
+            list($title, $this->list) = $data;
+        } else {
+            return false;
+        }
+
+        // it's ours, no one else's
+        $event->preventDefault();
+
+        // prepare cache
+        $cachekey = join(',', $this->list)
+                    . $REV
+                    . $this->getExportConfig('template')
+                    . $this->getExportConfig('pagesize')
+                    . $this->getExportConfig('orientation')
+                    . $this->getExportConfig('doublesided')
+                    . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
+                    . $title;
+        $cache = new cache($cachekey, '.dw2.pdf');
+
+        $depends['files']   = array_map('wikiFN', $this->list);
+        $depends['files'][] = __FILE__;
+        $depends['files'][] = dirname(__FILE__) . '/renderer.php';
+        $depends['files'][] = dirname(__FILE__) . '/mpdf/mpdf.php';
+        $depends['files']   = array_merge($depends['files'], getConfigFiles('main'));
+
+        // hard work only when no cache available
+        if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
+            $this->generatePDF($cache->cache, $title);
+        }
+
+        // deliver the file
+        $this->sendPDFFile($cache->cache, $title);
+        return true;
+    }
+
+
+    /**
+     * Obtain list of pages and title, based on url parameters
+     *
+     * @param Doku_Event $event
+     * @return string|bool
+     */
+    protected function collectExportPages(Doku_Event $event) {
+        global $ACT;
+        global $ID;
+        global $INPUT;
+        global $conf;
+
+        // list of one or multiple pages
+        $list = array();
 
         if($ACT == 'export_pdf') {
-            $this->list[0] = $ID;
+            $list[0] = $ID;
             $title = $INPUT->str('pdftitle');
             if(!$title) {
                 $title = p_get_first_heading($ID);
@@ -111,16 +159,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
 
             foreach($result as $item) {
-                $this->list[] = $item['id'];
+                $list[] = $item['id'];
             }
 
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
             //is in Bookmanager of bookcreator plugin a title given?
-            if(!$title = $INPUT->str('pdfbook_title')) { //TODO when title is changed, the cached file contains the old title
+            if(!$title = $INPUT->str('pdfbook_title')) {
                 $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
             } else {
-                $this->list = explode("|", $_COOKIE['list-pagelist']);
+                $list = explode("|", $_COOKIE['list-pagelist']);
             }
 
         } else {
@@ -129,172 +177,178 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             return false;
         }
 
-        // it's ours, no one else's
-        $event->preventDefault();
+        return array($title, $list);
+    }
+
+
+    /**
+     * Set error notification and reload page again
+     *
+     * @param Doku_Event $event
+     * @param string     $msglangkey key of translation key
+     */
+    private function showPageWithErrorMsg(Doku_Event $event, $msglangkey) {
+        msg($this->getLang($msglangkey), -1);
+
+        $event->data = 'show';
+        $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+    }
+
+    /**
+     * Build a pdf from the html
+     *
+     * @param string $cachefile
+     * @param string $title
+     */
+    protected function generatePDF($cachefile, $title) {
+        global $ID;
+        global $REV;
+        global $INPUT;
 
         //some shortcuts to export settings
         $hasToC = $this->getExportConfig('hasToC');
         $levels = $this->getExportConfig('levels');
         $isDebug = $this->getExportConfig('isDebug');
 
-        // prepare cache
-        $cachekey = join(',', $this->list)
-                    . $REV
-                    . $this->getExportConfig('template')
-                    . $this->getExportConfig('pagesize')
-                    . $this->getExportConfig('orientation')
-                    . $this->getExportConfig('doublesided')
-                    . ($hasToC ? join('-', $levels) : '0')
-                    . $title;
-        $cache = new cache($cachekey, '.dw2.pdf');
+        // initialize PDF library
+        require_once(dirname(__FILE__) . "/DokuPDF.class.php");
 
-        $depends['files']   = array_map('wikiFN', $this->list);
-        $depends['files'][] = __FILE__;
-        $depends['files'][] = dirname(__FILE__) . '/renderer.php';
-        $depends['files'][] = dirname(__FILE__) . '/mpdf/mpdf.php';
-        $depends['files']   = array_merge($depends['files'], getConfigFiles('main'));
+        $mpdf = new DokuPDF($this->getExportConfig('pagesize'), $this->getExportConfig('orientation'));
 
-        // hard work only when no cache available
-        if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
-            // debug enabled?
+        // let mpdf fix local links
+        $self = parse_url(DOKU_URL);
+        $url = $self['scheme'] . '://' . $self['host'];
+        if($self['port']) {
+            $url .= ':' . $self['port'];
+        }
+        $mpdf->setBasePath($url);
 
-            // initialize PDF library
-            require_once(dirname(__FILE__) . "/DokuPDF.class.php");
+        // Set the title
+        $mpdf->SetTitle($title);
 
-            $mpdf = new DokuPDF($this->getExportConfig('pagesize'), $this->getExportConfig('orientation'));
-
-            // let mpdf fix local links
-            $self = parse_url(DOKU_URL);
-            $url = $self['scheme'] . '://' . $self['host'];
-            if($self['port']) {
-                $url .= ':' . $self['port'];
-            }
-            $mpdf->setBasePath($url);
-
-            // Set the title
-            $mpdf->SetTitle($title);
-
-            // some default settings
-            //double-sided document, starts at an odd page (first page is a right-hand side page)
-            //single-side document has only odd pages
-            $mpdf->mirrorMargins = $this->getExportConfig('doublesided');
-            //duplicate of mirrorMargins
-            $mpdf->useOddEven    = $this->getExportConfig('doublesided');
-            $mpdf->setAutoTopMargin = 'stretch';
-            $mpdf->setAutoBottomMargin = 'stretch';
+        // some default document settings
+        //note: double-sided document, starts at an odd page (first page is a right-hand side page)
+        //      single-side document has only odd pages
+        $mpdf->mirrorMargins = $this->getExportConfig('doublesided');
+        $mpdf->useOddEven = $this->getExportConfig('doublesided'); //duplicate of mirrorMargins
+        $mpdf->setAutoTopMargin = 'stretch';
+        $mpdf->setAutoBottomMargin = 'stretch';
 //            $mpdf->pagenumSuffix = '/'; //prefix for {nbpg}
-            if($hasToC) {
-                $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => 'i', 'suppress' => 'off');//use italic pageno until ToC
-                $mpdf->h2toc = $levels;
-            } else {
-                $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off');
-            }
-
-            // load the template
-            $template = $this->load_template($title);
-
-            // prepare HTML header styles
-            $html = '';
-            if($isDebug) {
-                $html .= '<html><head>';
-                $html .= '<style type="text/css">';
-            }
-            $styles = $this->load_css();
-            $styles .= '@page { size:auto; ' . $template['page'] . '}';
-            $styles .= '@page :first {' . $template['first'] . '}';
-            $mpdf->WriteHTML($styles, 1);
-
-            if($isDebug) {
-                $html .= $styles;
-                $html .= '</style>';
-                $html .= '</head><body>';
-            }
-
-            $body_start = $template['html'];
-            $body_start .= '<div class="dokuwiki">';
-
-            // insert the cover page
-            $body_start .= $template['cover'];
-
-            $mpdf->WriteHTML($body_start, 2, true, false); //start body html
-            if($isDebug) {
-                $html .= $body_start;
-            }
-            if($hasToC) {
-                //Note: - for double-sided document the ToC is always on an even number of pages, so that the following content is on a correct odd/even page
-                //      - first page of ToC starts always at odd page (so eventually an additional blank page is included before)
-                //      - there is no page numbering at the pages of the ToC
-                $mpdf->TOCpagebreakByArray(
-                    array(
-                        'toc-preHTML' => '<h2>Table of contents</h2>',
-                        'toc-bookmarkText'=> 'Table of Content',
-                        'links' => true,
-                        'outdent' => '1em',
-                        'resetpagenum' => true, //start pagenumbering after ToC
-                        'pagenumstyle' => '1'
-                    )
-                );
-                $html .= '<tocpagebreak>';
-            }
-
-
-            // store original pageid
-            $keep = $ID;
-
-            // loop over all pages
-            $cnt = count($this->list);
-            for($n = 0; $n < $cnt; $n++) {
-                $page = $this->list[$n];
-
-                // set global pageid to the rendered page
-                $ID   = $page;
-
-                $pagehtml = p_cached_output(wikiFN($page, $REV), 'dw2pdf', $page);
-                $pagehtml .= $this->page_depend_replacements($template['cite'], cleanID($page));
-                if($n < ($cnt - 1)) {
-                    $pagehtml .= '<pagebreak />';
-                }
-
-                $mpdf->WriteHTML($pagehtml, 2, false, false); //intermediate body html
-                if($isDebug) {
-                    $html .= $pagehtml;
-                }
-            }
-            //restore ID
-            $ID = $keep;
-
-            // insert the back page
-            $body_end = $template['back'];
-
-            $body_end .= '</div>';
-
-            $mpdf->WriteHTML($body_end, 2, false, true); // end body html
-            if($isDebug) {
-                $html .= $body_end;
-                $html .= '</body>';
-                $html .= '</html>';
-            }
-
-            //Return html for debugging
-            if($isDebug) {
-                if($INPUT->str('debughtml', 'text', true) == 'html') {
-                    echo $html;
-                } else {
-                    header('Content-Type: text/plain; charset=utf-8');
-                    echo $html;
-                }
-                exit();
-            };
-
-            // write to cache file
-            $mpdf->Output($cache->cache, 'F');
+        if($hasToC) {
+            $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => 'i', 'suppress' => 'off'); //use italic pageno until ToC
+            $mpdf->h2toc = $levels;
+        } else {
+            $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off');
         }
 
-        // deliver the file
+        // load the template
+        $template = $this->load_template($title);
+
+        // prepare HTML header styles
+        $html = '';
+        if($isDebug) {
+            $html .= '<html><head>';
+            $html .= '<style type="text/css">';
+        }
+        $styles = $this->load_css();
+        $styles .= '@page { size:auto; ' . $template['page'] . '}';
+        $styles .= '@page :first {' . $template['first'] . '}';
+        $mpdf->WriteHTML($styles, 1);
+
+        if($isDebug) {
+            $html .= $styles;
+            $html .= '</style>';
+            $html .= '</head><body>';
+        }
+
+        $body_start = $template['html'];
+        $body_start .= '<div class="dokuwiki">';
+
+        // insert the cover page
+        $body_start .= $template['cover'];
+
+        $mpdf->WriteHTML($body_start, 2, true, false); //start body html
+        if($isDebug) {
+            $html .= $body_start;
+        }
+        if($hasToC) {
+            //Note: - for double-sided document the ToC is always on an even number of pages, so that the following content is on a correct odd/even page
+            //      - first page of ToC starts always at odd page (so eventually an additional blank page is included before)
+            //      - there is no page numbering at the pages of the ToC
+            $mpdf->TOCpagebreakByArray(
+                array(
+                    'toc-preHTML' => '<h2>Table of contents</h2>',
+                    'toc-bookmarkText' => 'Table of Content',
+                    'links' => true,
+                    'outdent' => '1em',
+                    'resetpagenum' => true, //start pagenumbering after ToC
+                    'pagenumstyle' => '1'
+                )
+            );
+            $html .= '<tocpagebreak>';
+        }
+
+        // store original pageid
+        $keep = $ID;
+
+        // loop over all pages
+        $cnt = count($this->list);
+        for($n = 0; $n < $cnt; $n++) {
+            $page = $this->list[$n];
+
+            // set global pageid to the rendered page
+            $ID = $page;
+
+            $pagehtml = p_cached_output(wikiFN($page, $REV), 'dw2pdf', $page);
+            $pagehtml .= $this->page_depend_replacements($template['cite'], cleanID($page));
+            if($n < ($cnt - 1)) {
+                $pagehtml .= '<pagebreak />';
+            }
+
+            $mpdf->WriteHTML($pagehtml, 2, false, false); //intermediate body html
+            if($isDebug) {
+                $html .= $pagehtml;
+            }
+        }
+        //restore ID
+        $ID = $keep;
+
+        // insert the back page
+        $body_end = $template['back'];
+
+        $body_end .= '</div>';
+
+        $mpdf->WriteHTML($body_end, 2, false, true); // finish body html
+        if($isDebug) {
+            $html .= $body_end;
+            $html .= '</body>';
+            $html .= '</html>';
+        }
+
+        //Return html for debugging
+        if($isDebug) {
+            if($INPUT->str('debughtml', 'text', true) == 'html') {
+                echo $html;
+            } else {
+                header('Content-Type: text/plain; charset=utf-8');
+                echo $html;
+            }
+            exit();
+        };
+
+        // write to cache file
+        $mpdf->Output($cachefile, 'F');
+    }
+
+    /**
+     * @param string $cachefile
+     * @param string $title
+     */
+    protected function sendPDFFile($cachefile, $title) {
         header('Content-Type: application/pdf');
         header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
         header('Pragma: public');
-        http_conditionalRequest(filemtime($cache->cache));
+        http_conditionalRequest(filemtime($cachefile));
 
         $filename = rawurlencode(cleanID(strtr($title, ':/;"', '    ')));
         if($this->getConf('output') == 'file') {
@@ -304,44 +358,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         //try to send file, and exit if done
-        http_sendfile($cache->cache);
+        http_sendfile($cachefile);
 
-        $fp = @fopen($cache->cache, "rb");
+        $fp = @fopen($cachefile, "rb");
         if($fp) {
-            http_rangeRequest($fp, filesize($cache->cache), 'application/pdf');
+            http_rangeRequest($fp, filesize($cachefile), 'application/pdf');
         } else {
             header("HTTP/1.0 500 Internal Server Error");
             print "Could not read file - bad permissions?";
         }
         exit();
-    }
-
-    /**
-     * Add 'export pdf'-button to pagetools
-     *
-     * @param Doku_Event $event
-     * @param mixed      $param not defined
-     */
-    public function addbutton(Doku_Event $event, $param) {
-        global $ID, $REV;
-
-        if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
-            $params = array('do' => 'export_pdf');
-            if($REV) {
-                $params['rev'] = $REV;
-            }
-
-            // insert button at position before last (up to top)
-            $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
-                                    array('export_pdf' =>
-                                          '<li>'
-                                          . '<a href=' . wl($ID, $params) . '  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
-                                          . '<span>' . $this->getLang('export_pdf_button') . '</span>'
-                                          . '</a>'
-                                          . '</li>'
-                                    ) +
-                                    array_slice($event->data['items'], -1, 1, true);
-        }
     }
 
     /**
@@ -556,19 +582,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Set error notification and reload page again
-     *
-     * @param Doku_Event $event
-     * @param string     $msglangkey key of translation key
-     */
-    private function showPageWithErrorMsg(&$event, $msglangkey) {
-        msg($this->getLang($msglangkey), -1);
-
-        $event->data = 'show';
-        $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
-    }
-
-    /**
      * Return settings read from:
      *   1. url parameters
      *   2. plugin config
@@ -662,6 +675,34 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             return $this->exportConfig[$name];
         }else{
             return $notset;
+        }
+    }
+
+    /**
+     * Add 'export pdf'-button to pagetools
+     *
+     * @param Doku_Event $event
+     * @param mixed      $param not defined
+     */
+    public function addbutton(Doku_Event $event, $param) {
+        global $ID, $REV;
+
+        if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
+            $params = array('do' => 'export_pdf');
+            if($REV) {
+                $params['rev'] = $REV;
+            }
+
+            // insert button at position before last (up to top)
+            $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
+                array('export_pdf' =>
+                          '<li>'
+                          . '<a href=' . wl($ID, $params) . '  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
+                          . '<span>' . $this->getLang('export_pdf_button') . '</span>'
+                          . '</a>'
+                          . '</li>'
+                ) +
+                array_slice($event->data['items'], -1, 1, true);
         }
     }
 }
