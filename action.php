@@ -296,8 +296,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             //      - there is no page numbering at the pages of the ToC
             $mpdf->TOCpagebreakByArray(
                 array(
-                    'toc-preHTML' => '<h2>Table of contents</h2>',
-                    'toc-bookmarkText' => 'Table of Content',
+                    'toc-preHTML' => '<h2>' . $this->getLang('tocheader') . '</h2>',
+                    'toc-bookmarkText' => $this->getLang('tocheader'),
                     'links' => true,
                     'outdent' => '1em',
                     'resetpagenum' => true, //start pagenumbering after ToC
