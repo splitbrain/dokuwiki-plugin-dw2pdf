@@ -82,9 +82,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $mediafiles = array();
         foreach($this->list as $pageid) {
             $mediainuse = p_get_metadata($pageid, 'relation media');
-            foreach($mediainuse as $mediaid => $exists) {
-                if($exists) {
-                   $mediafiles[] = mediaFN($mediaid);
+            if(is_array($mediainuse)) {
+                foreach($mediainuse as $mediaid => $exists) {
+                    if($exists) {
+                        $mediafiles[] = mediaFN($mediaid);
+                    }
                 }
             }
         }
