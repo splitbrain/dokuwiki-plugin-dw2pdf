@@ -8,6 +8,7 @@
  * @author tuxun <tuxuntrash@gmail.com>
  */
 $lang['export_pdf_button']     = 'Exporter en PDF';
-$lang['needtitle']             = 'Il faut indiquer un titre.';
-$lang['needns']                = 'Veuillez choisir un espace de nom existant.';
+$lang['needtitle']             = 'Veuillez choisir un titre.';
+$lang['needns']                = 'Veuillez choisir une catégorie existante.';
 $lang['empty']                 = 'Vous n\'avez pas encore sélectionné de pages.';
+$lang['tocheader']             = 'Table des matières';
