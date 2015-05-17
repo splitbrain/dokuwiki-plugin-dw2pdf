@@ -760,7 +760,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
                 array('export_pdf' =>
                           '<li>'
-                          . '<a href=' . wl($ID, $params) . '  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
+                          . '<a href="' . wl($ID, $params) . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
                           . '<span>' . $this->getLang('export_pdf_button') . '</span>'
                           . '</a>'
                           . '</li>'
