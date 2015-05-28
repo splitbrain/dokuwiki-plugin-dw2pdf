@@ -44,8 +44,6 @@ class DokuPDF extends mpdf {
 
         // we're always UTF-8
         parent::__construct($mode, $format);
-        // The following replaces $this->SetAutoFont(AUTOFONT_ALL);
-        // Taken from mpdf/examples/example29_multilingual_autofont.php
         $this->autoScriptToLang = true;
         $this->baseScript = 1;
         $this->autoVietnamese = true;
