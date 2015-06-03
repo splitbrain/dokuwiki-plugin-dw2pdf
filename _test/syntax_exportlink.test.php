@@ -18,7 +18,7 @@ class dw2pdf_syntax_exportlink_test extends DokuWikiTest {
         global $ID;
         $ID = 'foo:bar:start';
         $parser_response = p_get_instructions('~~PDFNS>.:|Foo~~');
-        $expected_response = array(
+        $expected_parser_response = array(
             'plugin',
             array(
                 'dw2pdf_exportlink',
@@ -26,14 +26,19 @@ class dw2pdf_syntax_exportlink_test extends DokuWikiTest {
                     'link' => '?do=export_pdfns&pdfns_ns=foo:bar&pdfns_title=Foo',
                     'title' => 'Export namespace "foo:bar:" to file Foo.pdf',
                     5,
-                    1
+                    1,
                 ),
                 5,
-                '~~PDFNS>.:|Foo~~'
+                '~~PDFNS>.:|Foo~~',
             ),
-            1
+            1,
         );
-        $this->assertEquals($expected_response,$parser_response[2]);
+        $this->assertEquals($expected_parser_response,$parser_response[2]);
+        $renderer_response = p_render('xhtml',$parser_response,$info);
+        $expected_renderer_response = 'doku.php?id=foo:bar:start&amp;do=export_pdfns&amp;pdfns_ns=foo:bar&amp;pdfns_title=Foo" class="wikilink2" title="foo:bar:start" rel="nofollow">Export namespace &quot;foo:bar:&quot; to file Foo.pdf</a>';
+        $trimmed_renderer_response = substr($renderer_response,strpos($renderer_response,'doku.php'),-5);
+        $trimmed_renderer_response = trim($trimmed_renderer_response);
+        $this->assertEquals($expected_renderer_response,$trimmed_renderer_response);
     }
 }
 
