@@ -39,7 +39,7 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin {
      * @param string $mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('~~PDFNS>(.*?)\|(.*?)~~', $mode, 'plugin_dw2pdf_pagesetting');
+        $this->Lexer->addSpecialPattern('~~PDFNS>(?:.*?)\|(?:.*?)~~', $mode, 'plugin_dw2pdf_exportlink');
     }
 
     /**
@@ -52,9 +52,14 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin {
      * @return  bool|array Return an array with all data you want to use in render, false don't add an instruction
      */
     public function handle($match, $state, $pos, Doku_Handler $handler) {
+        global $ID;
         $ns = substr($match,8,strpos($match,'|')-8);
-        $title = substr($match,strpos($match,'|')-8);
-        return array('ns' => $ns, 'title' => $title, $state, $pos);
+        $id = $ns . ':start';
+        resolve_pageid(getNS($ID),$id,$exists);
+        $ns = getNS($id);
+        $title = substr($match,strpos($match,'|')+1,-2);
+        $link = '?do=export_pdfns&pdfns_ns=' . $ns . '&pdfns_title=' . $title;
+        return array('link' => $link, 'title' => sprintf($this->getLang('export_ns'),$ns,$title),$state, $pos);
     }
 
     /**
@@ -67,8 +72,7 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin {
      */
     public function render($mode, Doku_Renderer $renderer, $data) {
         if($mode == 'xhtml') {
-            $link = '[[?do=export_pdfns&pdfns_ns=' . $data['ns'] . '&pdfns_title=' . $data['title'] . '|PDF-Export]]';
-            $renderer->cdata($link);
+            $renderer->internallink($data['link'],$data['title']);
             return true;
         }
         return false;
