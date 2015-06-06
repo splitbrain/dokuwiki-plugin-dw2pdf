@@ -8,6 +8,7 @@
  * @author Schplurtz le Déboulonné <schplurtz@laposte.net>
  * @author Nicolas Friedli <nicolas@theologique.ch>
  * @author tuxun <tuxuntrash@gmail.com>
+ * @author Schplurtz le Déboulonné <Schplurtz@laposte.net>
  */
 $lang['pagesize']              = 'Le format de page selon les options de mPDF. Généralement <code>A4</code> ou <code>letter</code>.';
 $lang['orientation']           = 'Orientation de la page.';
