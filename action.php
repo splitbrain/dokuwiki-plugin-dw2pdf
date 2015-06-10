@@ -35,6 +35,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * Register the events
+     *
+     * @param Doku_Event_Handler $controller
      */
     public function register(Doku_Event_Handler $controller) {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert', array());
@@ -142,32 +144,33 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         if($ACT == 'export_pdf') {
             $list[0] = $ID;
-            $title = $INPUT->str('pdftitle');
-            if(!$title) {
+            $title = $INPUT->str('pdftitle'); //DEPRECATED
+            $title = $INPUT->str('book_title', $title, true);
+            if(empty($title)) {
                 $title = p_get_first_heading($ID);
             }
 
         } elseif($ACT == 'export_pdfns') {
             //check input for title and ns
-            if(!$title = $INPUT->str('pdfns_title')) {
+            if(!$title = $INPUT->str('book_title')) {
                 $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
             }
-            $pdfnamespace = cleanID($INPUT->str('pdfns_ns'));
+            $pdfnamespace = cleanID($INPUT->str('book_ns'));
             if(!@is_dir(dirname(wikiFN($pdfnamespace . ':dummy')))) {
                 $this->showPageWithErrorMsg($event, 'needns');
                 return false;
             }
 
             //sort order
-            $order = $INPUT->str('pdfns_order', 'natural', true);
+            $order = $INPUT->str('book_order', 'natural', true);
             $sortoptions = array('pagename', 'date', 'natural');
             if(!in_array($order, $sortoptions)) {
                 $order = 'natural';
             }
 
             //search depth
-            $depth = $INPUT->int('pdfns_depth', 0);
+            $depth = $INPUT->int('book_nsdepth', 0);
             if($depth < 0) {
                 $depth = 0;
             }
@@ -193,7 +196,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
             //is in Bookmanager of bookcreator plugin a title given?
-            if(!$title = $INPUT->str('pdfbook_title')) {
+            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
+            $title = $INPUT->str('book_title', $title, true);
+            if(empty($title)) {
                 $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
             } else {
