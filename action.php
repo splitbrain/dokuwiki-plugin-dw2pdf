@@ -52,7 +52,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     public function convert(Doku_Event $event, $param) {
         global $ACT;
-        global $REV;
         global $ID;
 
         // our event?
@@ -70,51 +69,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // it's ours, no one else's
         $event->preventDefault();
 
-        // prepare cache
-        $cachekey = join(',', $this->list)
-                    . $REV
-                    . $this->getExportConfig('template')
-                    . $this->getExportConfig('pagesize')
-                    . $this->getExportConfig('orientation')
-                    . $this->getExportConfig('doublesided')
-                    . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
-                    . $title;
-        $cache = new cache($cachekey, '.dw2.pdf');
-
-        $dependencies = array();
-        foreach($this->list as $pageid) {
-            $relations = p_get_metadata($pageid, 'relation');
-
-            if (is_array($relations)) {
-                if(array_key_exists('media', $relations) && is_array($relations['media'])) {
-                    foreach($relations['media'] as $mediaid => $exists) {
-                        if($exists) {
-                            $dependencies[] = mediaFN($mediaid);
-                        }
-                    }
-                }
-
-                if(array_key_exists('haspart', $relations) && is_array($relations['haspart'])) {
-                    foreach($relations['haspart'] as $part_pageid => $exists) {
-                        if($exists) {
-                            $dependencies[] = wikiFN($part_pageid);
-                        }
-                    }
-                }
-            }
-
-            $dependencies[] = metaFN($pageid,'.meta');
-        }
-
-        $depends['files']   = array_map('wikiFN', $this->list);
-        $depends['files'][] = __FILE__;
-        $depends['files'][] = dirname(__FILE__) . '/renderer.php';
-        $depends['files'][] = dirname(__FILE__) . '/mpdf/mpdf.php';
-        $depends['files']   = array_merge(
-                                $depends['files'],
-                                $dependencies,
-                                getConfigFiles('main')
-                              );
+        // prepare cache and its dependencies
+        $depends = array();
+        $cache = $this->prepareCache($title, $depends);
 
         // hard work only when no cache available
         if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
@@ -215,6 +172,62 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         return array($title, $list);
     }
 
+    /**
+     * Prepare cache
+     *
+     * @param string $title
+     * @param array  $depends (reference) array with dependencies
+     * @return cache
+     */
+    protected function prepareCache($title, &$depends) {
+        global $REV;
+
+        $cachekey = join(',', $this->list)
+            . $REV
+            . $this->getExportConfig('template')
+            . $this->getExportConfig('pagesize')
+            . $this->getExportConfig('orientation')
+            . $this->getExportConfig('doublesided')
+            . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
+            . $title;
+        $cache = new cache($cachekey, '.dw2.pdf');
+
+        $dependencies = array();
+        foreach($this->list as $pageid) {
+            $relations = p_get_metadata($pageid, 'relation');
+
+            if(is_array($relations)) {
+                if(array_key_exists('media', $relations) && is_array($relations['media'])) {
+                    foreach($relations['media'] as $mediaid => $exists) {
+                        if($exists) {
+                            $dependencies[] = mediaFN($mediaid);
+                        }
+                    }
+                }
+
+                if(array_key_exists('haspart', $relations) && is_array($relations['haspart'])) {
+                    foreach($relations['haspart'] as $part_pageid => $exists) {
+                        if($exists) {
+                            $dependencies[] = wikiFN($part_pageid);
+                        }
+                    }
+                }
+            }
+
+            $dependencies[] = metaFN($pageid, '.meta');
+        }
+
+        $depends['files'] = array_map('wikiFN', $this->list);
+        $depends['files'][] = __FILE__;
+        $depends['files'][] = dirname(__FILE__) . '/renderer.php';
+        $depends['files'][] = dirname(__FILE__) . '/mpdf/mpdf.php';
+        $depends['files'] = array_merge(
+            $depends['files'],
+            $dependencies,
+            getConfigFiles('main')
+        );
+        return $cache;
+    }
 
     /**
      * Set error notification and reload page again
