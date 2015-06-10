@@ -47,10 +47,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Do the HTML to PDF conversion work
      *
      * @param Doku_Event $event
-     * @param array      $param
      * @return bool
      */
-    public function convert(Doku_Event $event, $param) {
+    public function convert(Doku_Event $event) {
         global $ACT;
         global $ID;
 
@@ -426,6 +425,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * Load the various template files and prepare the HTML/CSS for insertion
+     *
+     * @param string $title
+     * @return array
      */
     protected function load_template($title) {
         global $ID;
@@ -646,6 +648,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * usort callback to sort by file lastmodified time
+     *
+     * @param array $a
+     * @param array $b
+     * @return int
      */
     public function _datesort($a, $b) {
         if($b['rev'] < $a['rev']) return -1;
@@ -655,6 +661,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * usort callback to sort by page id
+     * @param array $a
+     * @param array $b
+     * @return int
      */
     public function _pagenamesort($a, $b) {
         if($a['id'] <= $b['id']) return -1;
@@ -763,9 +772,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Add 'export pdf'-button to pagetools
      *
      * @param Doku_Event $event
-     * @param mixed      $param not defined
      */
-    public function addbutton(Doku_Event $event, $param) {
+    public function addbutton(Doku_Event $event) {
         global $ID, $REV;
 
         if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
