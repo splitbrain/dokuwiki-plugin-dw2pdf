@@ -44,7 +44,12 @@ class DokuPDF extends mpdf {
 
         // we're always UTF-8
         parent::__construct($mode, $format);
-        $this->SetAutoFont(AUTOFONT_ALL);
+        $this->autoScriptToLang = true;
+        $this->baseScript = 1;
+        $this->autoVietnamese = true;
+        $this->autoArabic = true;
+        $this->autoLangToFont = true;
+
         $this->ignore_invalid_utf8 = true;
         $this->tabSpaces = 4;
     }

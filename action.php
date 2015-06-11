@@ -277,7 +277,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         //note: double-sided document, starts at an odd page (first page is a right-hand side page)
         //      single-side document has only odd pages
         $mpdf->mirrorMargins = $this->getExportConfig('doublesided');
-        $mpdf->useOddEven = $this->getExportConfig('doublesided'); //duplicate of mirrorMargins
         $mpdf->setAutoTopMargin = 'stretch';
         $mpdf->setAutoBottomMargin = 'stretch';
 //            $mpdf->pagenumSuffix = '/'; //prefix for {nbpg}

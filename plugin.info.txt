@@ -5,3 +5,4 @@ date    2015-06-10
 name    Dw2Pdf plugin
 desc    DokuWiki to PDF converter
 url     https://www.dokuwiki.org/plugin:dw2pdf
+
