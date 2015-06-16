@@ -191,6 +191,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $list[] = $item['id'];
             }
 
+            if ($pdfnamespace !== '') {
+                if (!in_array($pdfnamespace . ':start', $list, true)) {
+                    if (file_exists(wikiFN(rtrim($pdfnamespace,':')))) {
+                        array_unshift($list,rtrim($pdfnamespace,':'));
+                    }
+                }
+            }
+
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
             //is in Bookmanager of bookcreator plugin a title given?
             if(!$title = $INPUT->str('pdfbook_title')) {
