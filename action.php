@@ -192,7 +192,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
 
             if ($pdfnamespace !== '') {
-                if (!in_array($pdfnamespace . ':start', $list, true)) {
+                if (!in_array($pdfnamespace . ':' . $conf['start'], $list, true)) {
                     if (file_exists(wikiFN(rtrim($pdfnamespace,':')))) {
                         array_unshift($list,rtrim($pdfnamespace,':'));
                     }
