@@ -58,7 +58,8 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin {
         resolve_pageid(getNS($ID),$id,$exists);
         $ns = getNS($id);
         $title = substr($match,strpos($match,'|')+1,-2);
-        $link = '?do=export_pdfns&book_ns=' . $ns . '&book_title=' . $title . '&book_order=pagename';
+        $link = '?do=export_pdfns&book_ns=' . $ns . '&book_title=' . $title;
+        $title = substr($title,0,strpos($title,'&'));
         return array('link' => $link, 'title' => sprintf($this->getLang('export_ns'),$ns,$title),$state, $pos);
     }
 
