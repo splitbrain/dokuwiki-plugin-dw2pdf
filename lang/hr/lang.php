@@ -10,3 +10,4 @@ $lang['needtitle']             = 'Molim unesite naslov';
 $lang['needns']                = 'Molim navedite postojeći imenski prostor.';
 $lang['empty']                 = 'Nemate još odabranih stranica.';
 $lang['tocheader']             = 'Sadržaj';
+$lang['export_ns']             = 'Izvoz imenskog prostora "%s:" u %s.pdf';
