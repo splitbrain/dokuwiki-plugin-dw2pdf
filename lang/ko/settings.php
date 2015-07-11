@@ -10,9 +10,9 @@ $lang['pagesize']              = 'mPDF가 지원하는 용지 형식. 보통 <co
 $lang['orientation']           = '용지 방향.';
 $lang['orientation_o_portrait'] = '세로';
 $lang['orientation_o_landscape'] = '가로';
-$lang['doublesided']           = '양면 문서는 홀수 페이지를 추가 하고, 짝수 및 홀수 페이지의 쌍을 가지고 있습니다. 단일 문서는 홀수 페이지를 가지고 있습니다.';
-$lang['toc']                   = 'PDF에서 콘텐츠의 자동 생성 테이블을 추가 (참고 : 홀수 페이지에서 시작하기 때문에 빈 페이지를 추가 할 수 있고 ToC는 항상 짝수 페이지 수를 포함합니다, 목차(ToC) 페이지 자체는 pagenumbers가 없습니다)';
-$lang['toclevels']             = '최고 수준의 ToC에 추가됩니다. 최대 수준의 깊이를 정의합니다. 기본 위키 목차 수준  <a href="#config___toptoclevel">toptoclevel</a> and <a href="#config___maxtoclevel">maxtoclevel</a> are used. Format: <code><i>&lt;top&gt;</i>-<i>&lt;max&gt;</i></code>';
+$lang['doublesided']           = '양면 문서는 홀수 페이지를 추가하여 시작하고, 짝수 및 홀수 페이지의 쌍을 가지고 있습니다. 단면 문서는 홀수 페이지만을 가지고 있습니다.';
+$lang['toc']                   = 'PDF에 자동 생성된 목차를 추가 (참고: 홀수 페이지에서 시작하기 때문에 빈 페이지를 추가 할 수 있고 목차는 항상 짝수 페이지 수를 포함합니다, 목차 페이지 자체는 페이지 번호가 없습니다)';
+$lang['toclevels']             = '최고 수준의 목차에 추가되는 최대 수준의 깊이를 정의합니다. 기본 위키 목차 수준 <a href="#config___toptoclevel">toptoclevel</a> 및 <a href="#config___maxtoclevel">maxtoclevel</a>이 사용됩니다. 형식: <code><i>&lt;top&gt;</i>-<i>&lt;max&gt;</i></code>';
 $lang['maxbookmarks']          = '얼마나 많은 문단 수준을 PDF 책갈피에 사용되어야 합니까? <small>(0=없음, 5=모두)</small>';
 $lang['template']              = '어떤 템플릿을 PDF 파일의 형식에 사용되어야 합니까?';
 $lang['output']                = '어떻게 PDF를 사용자에게 제시되어야 합니까?';
