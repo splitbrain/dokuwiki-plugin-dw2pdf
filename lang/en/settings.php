@@ -5,7 +5,6 @@
  */
 
 // for the configuration manager
-
 $lang['pagesize']                = 'The page format as supported by mPDF. Usually <code>A4</code> or <code>letter</code>.';
 $lang['orientation']             = 'The page orientation.';
 $lang['orientation_o_portrait']  = 'Portrait';
@@ -22,3 +21,9 @@ $lang['usecache']                = 'Should PDFs be cached? Embedded images won\'
 $lang['usestyles']               = 'You can give a comma separated list of plugins of which the <code>style.css</code> or <code>screen.css</code> should be used for PDF generation. By default only <code>print.css</code> and <code>pdf.css</code> are used.';
 $lang['qrcodesize']              = 'Size of embedded QR code (in pixels <code><i>&lt;width&gt;</i><b>x</b><i>&lt;height&gt;</i></code>). Empty to disable';
 $lang['showexportbutton']        = 'Show PDF export button (only when supported by your template)';
+
+$lang['enable_settingstree']	 = "Enable 'Pdf export settings by namespace/page' feature and admin?";
+$lang['admin_only_settingstree']   = "Only admins can access the 'Pdf export settings by namespace/page'? <code>false</code>: managers can access it as well.";
+//$lang['enable_export_config_popup'] = "Enable ajax based popup layer to set export configuration directly before exporting a page. <small>Note: enabling this setting overrides the PDF export button, but original behaviour is still available by the<code>?do=export_pdf</code> url.</small>";
+//$lang['enable_extended_templates'] = "Enable extended templates? <small>Note: disabling this leaves the extended templates still available, but their extended features falls back to built-in defaults.</small>";
+//$lang['admin_for_templates_variables'] = "Enable admin 'Extended template settings by namespace/page'? <small>Note: value ignored, if extended templates are disabled.</small>";

@@ -25,6 +25,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     protected $exportConfig = null;
     protected $tpl;
     protected $list = array();
+	protected $dw2pdf_helper = null;	// null: not initialized, object: the helper. There is no way it can't be loaded, as it's in the same plugin.
 
     /**
      * Constructor. Sets the correct template
@@ -679,82 +680,23 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Return settings read from:
-     *   1. url parameters
-     *   2. plugin config
-     *   3. global config
+     * Returns the dw2pdf helper.
      *
-     * @return array
+     * @return plugin or null
      */
-    protected function loadExportConfig() {
-        global $INPUT;
-        global $conf;
+    protected function getHelper() {
+		if (!$this->dw2pdf_helper){
+			if (!($this->dw2pdf_helper = plugin_load('helper','dw2pdf'))){
+				trigger_error("Dw2pdf can't initialize the helper.",E_USER_ERROR);
+			}
+		}
+		return $this->dw2pdf_helper;
+	}
 
-        $this->exportConfig = array();
 
-        // decide on the paper setup from param or config
-        $this->exportConfig['pagesize'] = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
-        $this->exportConfig['orientation'] = $INPUT->str('orientation', $this->getConf('orientation'), true);
-
-        $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
-        $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
-
-        $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
-        $levels = array();
-        if($hasToC) {
-            $toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);
-            list($top_input, $max_input) = explode('-', $toclevels, 2);
-            list($top_conf, $max_conf) = explode('-', $this->getConf('toclevels'), 2);
-            $bounds_input = array(
-                'top' => array(
-                    (int) $top_input,
-                    (int) $top_conf
-                ),
-                'max' => array(
-                    (int) $max_input,
-                    (int) $max_conf
-                )
-            );
-            $bounds = array(
-                'top' => $conf['toptoclevel'],
-                'max' => $conf['maxtoclevel']
-
-            );
-            foreach($bounds_input as $bound => $values) {
-                foreach($values as $value) {
-                    if($value > 0 && $value <= 5) {
-                        //stop at valid value and store
-                        $bounds[$bound] = $value;
-                        break;
-                    }
-                }
-            }
-
-            if($bounds['max'] < $bounds['top']) {
-                $bounds['max'] = $bounds['top'];
-            }
-
-            for($level = $bounds['top']; $level <= $bounds['max']; $level++) {
-                $levels["H$level"] = $level - 1;
-            }
-        }
-        $this->exportConfig['hasToC'] = $hasToC;
-        $this->exportConfig['levels'] = $levels;
-
-        $this->exportConfig['maxbookmarks'] = $INPUT->int('maxbookmarks', $this->getConf('maxbookmarks'), true);
-
-        $tplconf = $this->getConf('template');
-        $tpl = $INPUT->str('tpl', $tplconf, true);
-        if(!is_dir(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl)) {
-            $tpl = $tplconf;
-        }
-        if(!$tpl){
-            $tpl = 'default';
-        }
-        $this->exportConfig['template'] = $tpl;
-
-        $this->exportConfig['isDebug'] = $conf['allowdebug'] && $INPUT->has('debughtml');
-    }
+/*	MOVED TO helper.php 
+	protected function loadExportConfig()
+*/
 
     /**
      * Returns requested config
@@ -765,9 +707,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     public function getExportConfig($name, $notset = false) {
         if ($this->exportConfig === null){
-            $this->loadExportConfig();
+			// moved loadExportConfig to helper, so it should set up the local $this->exportConfig variable. 
+			$this->exportConfig = $this->getHelper()->loadExportConfig();
         }
-
         if(isset($this->exportConfig[$name])){
             return $this->exportConfig[$name];
         }else{
