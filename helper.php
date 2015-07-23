@@ -106,7 +106,6 @@ class helper_plugin_dw2pdf extends DokuWiki_Plugin {
 		if (!is_array(@$this->_folder_confs[$folder])){
 			$this->getAllConf($folder);
 		}
-		
 		return (array_key_exists($key, $this->_folder_confs[$folder]) ? $this->_folder_confs[$folder][$key] : $notset);
 	}
 	
@@ -118,7 +117,6 @@ class helper_plugin_dw2pdf extends DokuWiki_Plugin {
 			if ($this->get_settingstree()){
 				$cnf = array_merge($cnf,$this->settings_helper->getConf('dw2pdf',$folder));
 			}
-			if (!is_array($cnf)) {$cnf = array();}	// should never happen if the plugin have configs, and this plugin have configs.
 			$this->_folder_confs[$folder] = $cnf;
 		}
 		return $this->_folder_confs[$folder];
