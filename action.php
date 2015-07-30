@@ -31,7 +31,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Constructor. Sets the correct template
      */
     public function __construct() {
-        $this->tpl = $this->getExportConfig('template');
+		// REMOVED from constructor, as it triggers configuration finalization, and in some cases the $ID is not properly initialized yet, hence configuration for the root is fetched instead of the config for the actual page.
+		// $this->tpl = $this->getExportConfig('template');
     }
 
     /**
@@ -42,7 +43,18 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function register(Doku_Event_Handler $controller) {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert', array());
         $controller->register_hook('TEMPLATE_PAGETOOLS_DISPLAY', 'BEFORE', $this, 'addbutton', array());
+		$controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE', $this,	'_ajax_call');
+		
     }
+	function _ajax_call(&$event, $param) {
+		if ($event->data !== 'plugin_dw2pdf') {
+			return;
+		}
+		//no other ajax call handlers needed
+		$event->stopPropagation();
+		$event->preventDefault();
+		$this->getHelper()->replyAjax(); //this takes care about the ajax call completely
+	}	
 
     /**
      * Do the HTML to PDF conversion work
@@ -53,13 +65,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function convert(Doku_Event $event) {
         global $ACT;
         global $ID;
-
         // our event?
         if(($ACT != 'export_pdfbook') && ($ACT != 'export_pdf') && ($ACT != 'export_pdfns')) return false;
 
         // check user's rights
         if(auth_quickaclcheck($ID) < AUTH_READ) return false;
 
+        $this->tpl = $this->getExportConfig('template');	// should not be in constructor.
         if($data = $this->collectExportPages($event)) {
             list($title, $this->list) = $data;
         } else {
@@ -74,7 +86,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $cache = $this->prepareCache($title, $depends);
 
         // hard work only when no cache available
-        if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
+        if(!$this->getExportConfig('usecache') || !$cache->useCache($depends)) {
             $this->generatePDF($cache->cache, $title);
         }
 
@@ -412,7 +424,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         http_conditionalRequest(filemtime($cachefile));
 
         $filename = rawurlencode(cleanID(strtr($title, ':/;"', '    ')));
-        if($this->getConf('output') == 'file') {
+        if($this->getExportConfig('output') == 'file') {
             header('Content-Disposition: attachment; filename="' . $filename . '.pdf";');
         } else {
             header('Content-Disposition: inline; filename="' . $filename . '.pdf";');
@@ -527,10 +539,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // generate qr code for this page using google infographics api
         $qr_code = '';
-        if($this->getConf('qrcodesize')) {
+        if($this->getExportConfig('qrcodesize')) {
             $url = urlencode(wl($id, '', '&', true));
             $qr_code = '<img src="https://chart.googleapis.com/chart?chs=' .
-                $this->getConf('qrcodesize') . '&cht=qr&chl=' . $url . '" />';
+                $this->getExportConfig('qrcodesize') . '&cht=qr&chl=' . $url . '" />';
         }
         // prepare replacements
         $replace['@ID@']      = $id;
@@ -629,7 +641,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $list = array();
         $plugins = plugin_list();
 
-        $usestyle = explode(',', $this->getConf('usestyles'));
+        $usestyle = explode(',', $this->getExportConfig('usestyles'));
         foreach($plugins as $p) {
             if(in_array($p, $usestyle)) {
                 $list[DOKU_PLUGIN . "$p/screen.css"] = DOKU_BASE . "lib/plugins/$p/";
@@ -723,24 +735,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function addbutton(Doku_Event $event) {
-        global $ID, $REV;
-
-        if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
-            $params = array('do' => 'export_pdf');
-            if($REV) {
-                $params['rev'] = $REV;
-            }
-
-            // insert button at position before last (up to top)
-            $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
-                array('export_pdf' =>
-                          '<li>'
-                          . '<a href="' . wl($ID, $params) . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
-                          . '<span>' . $this->getLang('export_pdf_button') . '</span>'
-                          . '</a>'
-                          . '</li>'
-                ) +
-                array_slice($event->data['items'], -1, 1, true);
-        }
-    }
+		$this->getHelper()->addExportButton($event);	//adds the fitting export button to items array if needed.
+		// rest of the code is moved to helper for better flexibility.
+	}
 }

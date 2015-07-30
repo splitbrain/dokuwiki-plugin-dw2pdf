@@ -14,6 +14,6 @@ $conf['showexportbutton'] = 1;
 
 $conf['enable_settingstree']   = 0;
 $conf['admin_only_settingstree'] = 0;
-//$conf['enable_export_config_popup'] = 0;
+$conf['enable_export_config_popup'] = 0;
 //$conf['enable_extended_templates'] = 0;
 //$conf['admin_for_templates_variables'] = 0;

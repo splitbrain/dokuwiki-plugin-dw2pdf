@@ -24,6 +24,6 @@ $lang['showexportbutton']        = 'Show PDF export button (only when supported 
 
 $lang['enable_settingstree']	 = "Enable 'Pdf export settings by namespace/page' feature and admin?";
 $lang['admin_only_settingstree']   = "Only admins can access the 'Pdf export settings by namespace/page'? <code>false</code>: managers can access it as well.";
-//$lang['enable_export_config_popup'] = "Enable ajax based popup layer to set export configuration directly before exporting a page. <small>Note: enabling this setting overrides the PDF export button, but original behaviour is still available by the<code>?do=export_pdf</code> url.</small>";
+$lang['enable_export_config_popup'] = "Enable ajax based popup layer to set export configuration directly before exporting a page. <small>Note: enabling this setting overrides the PDF export button, but original behaviour is still available by the<code>?do=export_pdf</code> url.</small>";
 //$lang['enable_extended_templates'] = "Enable extended templates? <small>Note: disabling this leaves the extended templates still available, but their extended features falls back to built-in defaults.</small>";
 //$lang['admin_for_templates_variables'] = "Enable admin 'Extended template settings by namespace/page'? <small>Note: value ignored, if extended templates are disabled.</small>";

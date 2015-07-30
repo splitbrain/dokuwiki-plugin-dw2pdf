@@ -9,12 +9,16 @@ class helper_plugin_dw2pdf extends DokuWiki_Plugin {
 
 	private $settings_helper = false;	// false: not initialized, null: disabled/not available, object: the helper.
 	private $_folder_confs = array();
-	private $exportConfig = array();
+	private $exportConfig = null;
 	
 	private function get_settingstree(){
 		if ($this->settings_helper === false){
-			if (!parent::getConf('enable_settingstree')){ return ($this->settings_helper = null);}
-			$this->settings_helper = plugin_load('helper','settingstree');
+			if (parent::getConf('enable_settingstree') || parent::getConf('enable_export_config_popup')){ 	// the config settings which require settingstree 
+				$this->settings_helper = plugin_load('helper','settingstree');
+			}else{	// else settingstree is not required.
+				$this->settings_helper = null;
+				return null;
+			}
 		}else{
 			return $this->settings_helper;
 		}
@@ -41,8 +45,18 @@ class helper_plugin_dw2pdf extends DokuWiki_Plugin {
 	
 	
 	function __construct(){
+		
     }
-
+	/**
+	 * Overrides the configuration settings when 'co' (abbr. for config override) is present in the input and it is an actual export
+	 */
+	function _checkExportOverride(){
+		global $INPUT;
+		if (is_array($co = $INPUT->arr('co',null)) && strncasecmp($INPUT->str('do',''),'export_pdf',10) === 0){
+			$this->_overrideExportConfig($co);
+		}
+	}
+	
     function getMethods() {
 		$result = array();
 		$result[] = array(
@@ -81,6 +95,16 @@ class helper_plugin_dw2pdf extends DokuWiki_Plugin {
 			'name'   => 'loadExportConfig',
 			'desc'   => "Returns an array of config settings that are going to be used. This includes checking $INPUT for overrides and using current page's hierarchical settings if enabled.",
 			'return' => "array the config settings key=>value array, e.g. array('pagesize'=>'A4', 'orientation'=>'protrait' ...)",
+		);
+		$result[] = array(
+			'name'   => 'addExportButton',
+			'desc'   => "Adds the export by (hierarchical) settings.",
+			'return' => "void",
+		);
+		$result[] = array(
+			'name'   => 'replyAjax',
+			'desc'   => "Handles calls.",
+			'return' => "void (it handled the call so nothing more to do)",
 		);
 		return $result;
 	}
@@ -125,6 +149,58 @@ class helper_plugin_dw2pdf extends DokuWiki_Plugin {
 
 	}
 	
+	// CODE MOVED HERE FROM action.php
+	function addExportButton(&$event){
+        if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
+			// insert button at position before last (up to top)
+			$event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
+				array('export_pdf' => 
+						  '<li>'
+						  .'<a ' . $this->_exportButtonHtml()	// this is the htmlcode for the opening a tag's href and onclick attributes.
+						  . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
+						  . '<span>' . $this->getLang('export_pdf_button') . '</span>'
+						  . '</a>'
+						  . '</li>'
+				) +
+				array_slice($event->data['items'], -1, 1, true);
+        }
+    }
+	private function _getExportUrl($type = 'export_pdf',$params = array(),$_id = null,$_rev = null){
+		global $ID, $REV;
+		if ($_id === null && $_rev === null) $_rev = $REV;	// don't set current page's $REV to an overridden $_id;
+		if ($_id === null) $_id = $ID;
+		$params['do'] = $type;
+		if($_rev) {
+			$params['rev'] = $_rev;
+		}
+		return wl($_id)."?".http_build_query($params);
+	}
+	private function _exportButtonHtml(){
+		$href = $this->_getExportUrl(); $onclick="";
+		if ($this->getConf('enable_export_config_popup') && $this->get_settingstree()){	// fall back to normal export button if settingstree can't be loaded.
+			$opts = array(
+				'path' => $this->_getFolder(null),
+				'pluginname' => 'dw2pdf',
+				'token' => getSecurityToken(),
+				'options' => array(
+					'title' => $this->getLang('export_config_title'),
+				),
+				'on_complete' => 'dw2pdf_export',	// this function is implemented in dw2pdf's script.js 
+			);
+			/* 'settingstree_show_export' is implemented in settingstree's script.js, the plugin may not be installed, so we need to check if it's callable.
+			 * It takes care of all the fuss with creating a popup and displaying the settings inside and returns true if the popup can be displayed, false otherwise.
+			 * The onclick takes care to fall back to normal export button (as returning true) if:
+			 *	 1, there is some kind of script or syntax error
+			 *   2, the settingstree plugin is not installed (or the function is not available for some reason)
+			 *   3, if the popup can not be displayed for some reason. (e.g. the on_complete callback is invalid)
+			 * The json_encode takes care of displaying the array with doublequoted strings, but single quotes still needs to be escaped (e.g. from the title).
+			 */
+			$onclick = " onclick='var ret= true; try{ ret = (!( (typeof settingstree_show_export === \"function\") && (settingstree_show_export(".addcslashes(json_encode($opts),"'").")) )); } catch(e){ ret = false; } return ret;'";	
+		}
+		return "href=\"{$href}\"{$onclick}";
+	}
+	
+	
 // MOVED HERE FROM action.php
 	/**
      * Return settings read from:
@@ -134,78 +210,127 @@ class helper_plugin_dw2pdf extends DokuWiki_Plugin {
      *
      * @return array
      */
-// NOTE: as moved to different plugin, visibility is changed to public.
+// NOTE: as moved to different class, visibility is changed to public.
     public function loadExportConfig() {
-        global $INPUT;
-        global $conf;
+        if ($this->exportConfig === null){
+			global $INPUT;
+			global $conf;
 
-		// NOTE: getConf for helper is overridden, hence no code change is necessary. use 'parent::getConf' if you need to access the original 'getConf'...
-        $this->exportConfig = array();
-        // decide on the paper setup from param or config
-        $this->exportConfig['pagesize'] = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
-        $this->exportConfig['orientation'] = $INPUT->str('orientation', $this->getConf('orientation'), true);
+			// NOTE: getConf for helper is overridden, hence no code change is necessary. use 'parent::getConf' if you need to access the original 'getConf'...
+			$this->exportConfig = array();
+			// decide on the paper setup from param or config
+			$this->exportConfig['pagesize'] = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
+			$this->exportConfig['orientation'] = $INPUT->str('orientation', $this->getConf('orientation'), true);
 
-        $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
-        $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
+			$doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
+			$this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
 
-        $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
-        $levels = array();
-        if($hasToC) {
-            $toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);
-            list($top_input, $max_input) = explode('-', $toclevels, 2);
-            list($top_conf, $max_conf) = explode('-', $this->getConf('toclevels'), 2);
-            $bounds_input = array(
-                'top' => array(
-                    (int) $top_input,
-                    (int) $top_conf
-                ),
-                'max' => array(
-                    (int) $max_input,
-                    (int) $max_conf
-                )
-            );
-            $bounds = array(
-                'top' => $conf['toptoclevel'],
-                'max' => $conf['maxtoclevel']
+			$hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
+			$levels = array();
+			if($hasToC) {
+				$toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);
+				list($top_input, $max_input) = explode('-', $toclevels, 2);
+				list($top_conf, $max_conf) = explode('-', $this->getConf('toclevels'), 2);
+				$bounds_input = array(
+					'top' => array(
+						(int) $top_input,
+						(int) $top_conf
+					),
+					'max' => array(
+						(int) $max_input,
+						(int) $max_conf
+					)
+				);
+				$bounds = array(
+					'top' => $conf['toptoclevel'],
+					'max' => $conf['maxtoclevel']
 
-            );
-            foreach($bounds_input as $bound => $values) {
-                foreach($values as $value) {
-                    if($value > 0 && $value <= 5) {
-                        //stop at valid value and store
-                        $bounds[$bound] = $value;
-                        break;
-                    }
-                }
-            }
+				);
+				foreach($bounds_input as $bound => $values) {
+					foreach($values as $value) {
+						if($value > 0 && $value <= 5) {
+							//stop at valid value and store
+							$bounds[$bound] = $value;
+							break;
+						}
+					}
+				}
 
-            if($bounds['max'] < $bounds['top']) {
-                $bounds['max'] = $bounds['top'];
-            }
+				if($bounds['max'] < $bounds['top']) {
+					$bounds['max'] = $bounds['top'];
+				}
 
-            for($level = $bounds['top']; $level <= $bounds['max']; $level++) {
-                $levels["H$level"] = $level - 1;
-            }
-        }
-        $this->exportConfig['hasToC'] = $hasToC;
-        $this->exportConfig['levels'] = $levels;
+				for($level = $bounds['top']; $level <= $bounds['max']; $level++) {
+					$levels["H$level"] = $level - 1;
+				}
+			}
+			$this->exportConfig['hasToC'] = $hasToC;
+			$this->exportConfig['levels'] = $levels;
 
-        $this->exportConfig['maxbookmarks'] = $INPUT->int('maxbookmarks', $this->getConf('maxbookmarks'), true);
+			$this->exportConfig['maxbookmarks'] = $INPUT->int('maxbookmarks', $this->getConf('maxbookmarks'), true);
 
-        $tplconf = $this->getConf('template');
-        $tpl = $INPUT->str('tpl', $tplconf, true);
-        if(!is_dir(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl)) {
-            $tpl = $tplconf;
-        }
-        if(!$tpl){
-            $tpl = 'default';
-        }
-        $this->exportConfig['template'] = $tpl;
+			$tplconf = $this->getConf('template');
+			$tpl = $INPUT->str('tpl', $tplconf, true);
+			if(!is_dir(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl)) {
+				$tpl = $tplconf;
+			}
+			if(!$tpl){
+				$tpl = 'default';
+			}
+			$this->exportConfig['template'] = $tpl;
 
-        $this->exportConfig['isDebug'] = $conf['allowdebug'] && $INPUT->has('debughtml');
+			$this->exportConfig['isDebug'] = $conf['allowdebug'] && $INPUT->has('debughtml');
+		}
 		// OOPS: did not return the array...
 		return $this->exportConfig;
     }
+	/** 
+	 * Overrides the exportconfig with the given key/values.
+	 */
+	private function _overrideExportConfig(array $values){
+		$this->loadExportConfig();
+		foreach ($values as $key=>$value){
+			$this->exportConfig[$key] = $value;
+		}
+	}
 	
+	function replyAjax(){
+		global $INPUT; //available since release 2012-10-13 "Adora Belle"
+/*		if (!checkSecurityToken()){ //Do we need sectok for this?
+			$data = array('error'=>true,'msg'=>'invalid security token!');
+		}else{*/
+			switch($INPUT->str('operation')){
+				case 'export':
+					$config = $INPUT->arr('config',null);
+					$template = $INPUT->arr('template',array());
+					$type = $INPUT->str('type','export_pdf');
+					$location = $INPUT->str('location');
+					$rev = $INPUT->str('rev');
+					global $ID;
+					$pID = $ID;	// id is overridden for the time that we grab the configuration.
+					$ID = $location;
+					if (is_array($config)) $this->_overrideExportConfig($config);
+					$ID =  $pID;
+					// if ($this->getConf('enable_extended_templates') && $this->isExtendedTemplate($this->getConf('template')))	-> will be added in follow-up commit, left here as reminder for that.
+					$data = array(
+						'html' => "<iframe src='".$this->_getExportUrl($type,array('co'=>$config),$location,$rev)."' style='width: 100%; height: 100%; border: none'></iframe>",	// simple but effective.
+						'location' => $location,
+						'url' => $this->_getExportUrl($type,array(),$location,$rev),
+						'error' => false,
+					);
+					break;
+				default:
+					$data = array('error'=>true,'msg'=>'Unknown operation: '.$INPUT->str('operation'));
+					break;
+			}
+		/*} // Do we need to handle sectoks?
+		if (is_array($data)) $data['token'] = getSecurityToken();
+		*/
+		require_once DOKU_INC . 'inc/JSON.php';
+		$json = new JSON();
+	 	//set content type
+		header('Content-Type: application/json');
+		echo $json->encode($data);
+	}
 	
 }

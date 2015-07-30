@@ -10,4 +10,5 @@ $lang['admin_settingstree'] = "Pdf export settings by namespace/page";
 $lang['admin_is_disabled_title'] = " (disabled)";
 $lang['admin_is_disabled'] = "This admin page is disabled by configuration.";
 $lang['cant_load_settingstree'] = "Settingstree plugin (dependency for using this feature) is not available!";
+$lang['export_config_title'] = "Pdf export settings";
 
