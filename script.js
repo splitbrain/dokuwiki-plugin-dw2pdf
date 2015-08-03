@@ -46,4 +46,4 @@ function dw2pdf_export(allConfig,overriddenConfig){
 	//NOTE: if additional options/features needs to be added (e.g. dialog to choose export type, set book_title etc) then here is the place for that, before calling the export ajax
 	export_call();
 			
-}
+};
