@@ -59,7 +59,13 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin {
         $ns = getNS($id);
         $title = substr($match,strpos($match,'|')+1,-2);
         $link = '?do=export_pdfns&book_ns=' . $ns . '&book_title=' . $title;
-        $title = substr($title,0,strpos($title,'&'));
+
+        // check if there is an ampersand in the title
+        $amp = strpos($title,'&');
+        if ($amp !== false) {
+            $title = substr($title,0,$amp);
+        }
+
         return array('link' => $link, 'title' => sprintf($this->getLang('export_ns'),$ns,$title),$state, $pos);
     }
 
