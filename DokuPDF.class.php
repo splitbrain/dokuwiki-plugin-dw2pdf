@@ -77,7 +77,7 @@ class DokuPDF extends mpdf {
      * making sure that only cached file paths are passed to mpdf. It also
      * takes care of checking image ACls.
      */
-    function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false){
+    function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false, $interpolation = false){
         global $conf;
 
         // build regex to parse URL back to media info
@@ -141,7 +141,7 @@ class DokuPDF extends mpdf {
             }
         }
 
-        return parent::_getImage($file, $firsttime, $allowvector, $orig_srcpath);
+        return parent::_getImage($file, $firsttime, $allowvector, $orig_srcpath, $interpolation);
     }
 
 }
