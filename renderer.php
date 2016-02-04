@@ -184,7 +184,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         global $conf;
         $old = $conf['mailguard'];
         $conf['mailguard'] = 'none';
-        parent::emaillink($address, $name);
+        parent::emaillink($address, $name, $returnonly);
         $conf['mailguard'] = $old;
     }
 
