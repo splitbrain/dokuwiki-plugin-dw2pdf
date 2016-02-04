@@ -104,7 +104,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * // modified copy of parent function
      * @see Doku_Renderer_xhtml::locallink
      */
-    function locallink($hash, $name = null) {
+    function locallink($hash, $name = null, $returnonly = false) {
         global $ID;
         $name  = $this->_getLinkTitle($name, $hash, $isImage);
         $hash  = $this->_headerToLink($hash);
