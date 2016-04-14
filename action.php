@@ -325,6 +325,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $body_start .= '<div class="dokuwiki">';
 
         // insert the cover page
+        $template['cover'] = $this->page_depend_replacements($template['cover'], $ID);
         $body_start .= $template['cover'];
 
         $mpdf->WriteHTML($body_start, 2, true, false); //start body html
