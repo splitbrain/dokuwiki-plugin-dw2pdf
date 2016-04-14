@@ -325,7 +325,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $body_start .= '<div class="dokuwiki">';
 
         // insert the cover page
-        $template['cover'] = $this->page_depend_replacements($template['cover'], $ID);
         $body_start .= $template['cover'];
 
         $mpdf->WriteHTML($body_start, 2, true, false); //start body html
@@ -496,6 +495,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if(file_exists($coverfile)) {
             $output['cover'] = file_get_contents($coverfile);
             $output['cover'] = str_replace(array_keys($replace), array_values($replace), $output['cover']);
+            $output['cover'] = $this->page_depend_replacements($output['cover'], $ID);
             $output['cover'] .= '<pagebreak />';
         }
 
@@ -505,6 +505,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $output['back'] = '<pagebreak />';
             $output['back'] .= file_get_contents($backfile);
             $output['back'] = str_replace(array_keys($replace), array_values($replace), $output['back']);
+            $output['back'] = $this->page_depend_replacements($output['back'], $ID);
         }
 
         // citation box
