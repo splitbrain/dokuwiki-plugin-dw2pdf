@@ -159,6 +159,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             }
 
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
+            /** @deprecated  April 2016 replaced by localStorage version of Bookcreator*/
             //is in Bookmanager of bookcreator plugin a title given?
             $title = $INPUT->str('pdfbook_title'); //DEPRECATED
             $title = $INPUT->str('book_title', $title, true);
@@ -167,6 +168,30 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 return false;
             } else {
                 $list = explode("|", $_COOKIE['list-pagelist']);
+            }
+
+        } elseif($INPUT->has('selection')) {
+            //handle Bookcreator requests based at localStorage
+//            if(!checkSecurityToken()) {
+//                http_status(403);
+//                print $this->getLang('empty');
+//                exit();
+//            }
+
+            $json = new JSON(JSON_LOOSE_TYPE);
+            $list = $json->decode($INPUT->post->str('selection', '', true));
+            if(!is_array($list) || empty($list)) {
+                http_status(400);
+                print $this->getLang('empty');
+                exit();
+            }
+
+            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
+            $title = $INPUT->str('book_title', $title, true);
+            if(empty($title)) {
+                http_status(400);
+                print $this->getLang('needtitle');
+                exit();
             }
 
         } else {
@@ -355,11 +380,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $cnt = count($this->list);
         for($n = 0; $n < $cnt; $n++) {
             $page = $this->list[$n];
+            $filename = wikiFN($page, $REV);
+
+            if(!file_exists($filename)) {
+                continue;
+            }
 
             // set global pageid to the rendered page
             $ID = $page;
 
-            $pagehtml = p_cached_output(wikiFN($page, $REV), 'dw2pdf', $page);
+            $pagehtml = p_cached_output($filename, 'dw2pdf', $page);
             $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
             if($n < ($cnt - 1)) {
                 $pagehtml .= '<pagebreak />';
@@ -416,6 +446,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         } else {
             header('Content-Disposition: inline; filename="' . $filename . '.pdf";');
         }
+
+        //Bookcreator uses jQuery.fileDownload.js, which requires a cookie.
+        header('Set-Cookie: fileDownload=true; path=/');
 
         //try to send file, and exit if done
         http_sendfile($cachefile);
