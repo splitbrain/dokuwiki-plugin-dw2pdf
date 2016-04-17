@@ -1,7 +1,7 @@
 base    dw2pdf
 author  Andreas Gohr and Luigi Micco
 email   l.micco@tiscali.it
-date    2015-09-02
+date    2016-04-17
 name    Dw2Pdf plugin
 desc    DokuWiki to PDF converter
 url     https://www.dokuwiki.org/plugin:dw2pdf
