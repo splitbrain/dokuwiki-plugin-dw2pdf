@@ -201,6 +201,30 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         $list = array_map('cleanID', $list);
+
+        $skippedpages = array();
+        foreach($list as $index => $pageid) {
+            if(auth_quickaclcheck($pageid) < AUTH_READ) {
+                $skippedpages[] = $pageid;
+                unset($list[$index]);
+            }
+        }
+        $list = array_filter($list); //removes also pages mentioned '0'
+
+        //if selection contains forbidden pages throw (overridable) warning
+        if(!$INPUT->bool('book_skipforbiddenpages') && !empty($skippedpages)) {
+            $msg = hsc(join(', ', $skippedpages));
+            if($INPUT->has('selection')) {
+                http_status(400);
+                print sprintf($this->getLang('forbidden'), $msg);
+                exit();
+            } else {
+                $this->showPageWithErrorMsg($event, 'forbidden', $msg);
+                return false;
+            }
+
+        }
+
         return array($title, $list);
     }
 
@@ -265,10 +289,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Set error notification and reload page again
      *
      * @param Doku_Event $event
-     * @param string     $msglangkey key of translation key
+     * @param string $msglangkey key of translation key
+     * @param string $replacement
      */
-    private function showPageWithErrorMsg(Doku_Event $event, $msglangkey) {
-        msg($this->getLang($msglangkey), -1);
+    private function showPageWithErrorMsg(Doku_Event $event, $msglangkey, $replacement=null) {
+        if(empty($replacement)) {
+            $msg = $this->getLang($msglangkey);
+        } else {
+            $msg = sprintf($this->getLang($msglangkey), $replacement);
+        }
+        msg($msg, -1);
 
         $event->data = 'show';
         $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
@@ -377,9 +407,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $keep = $ID;
 
         // loop over all pages
-        $cnt = count($this->list);
-        for($n = 0; $n < $cnt; $n++) {
-            $page = $this->list[$n];
+        $counter = 0;
+        $no_pages = count($this->list);
+        foreach($this->list as $page) {
+            $counter++;
             $filename = wikiFN($page, $REV);
 
             if(!file_exists($filename)) {
@@ -391,7 +422,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
             $pagehtml = p_cached_output($filename, 'dw2pdf', $page);
             $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
-            if($n < ($cnt - 1)) {
+            if($counter < $no_pages) {
                 $pagehtml .= '<pagebreak />';
             }
 
