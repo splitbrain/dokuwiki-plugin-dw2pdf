@@ -14,15 +14,19 @@ first page of a document. If a file is does not exist the next more generic
 one will be tried. Eg. if You don't differ between even and odd pages,
 just the header.html is used.
 
+  * ''header.html'' -- Header for all pages
   * ''header_odd.html'' -- Header for odd pages
   * ''header_even.html'' -- Header for even pages
   * ''header_first.html'' -- Header for the first page
-  * ''header.html'' -- Header for all pages
+
+  * ''footer.html'' -- Footer for all pages
   * ''footer_odd.html'' -- Footer for odd pages
   * ''footer_even.html'' -- Footer for even pages
   * ''footer_first.html'' -- Footer for the first page
-  * ''footer.html'' -- Footer for all pages
+
   * ''citation.html'' -- Citationbox to be printed after each article
+  * ''cover.html'' -- Added once before first page
+  * ''back.html'' -- Added once after last page
 
 You can use all HTML that is understood by mpdf
 (See http://mpdf1.com/manual/index.php?tid=256)
@@ -37,20 +41,24 @@ footer files.
 
   * ''@PAGE@'' -- current page number in the PDF
   * ''@PAGES@'' -- number of all pages in the PDF
-  * ''@ID@'' -- The article's pageID
   * ''@TITLE@'' -- The article's title
-  * ''@PAGEURL@'' -- URL to the article
   * ''@WIKI@'' -- The wiki's title
   * ''@WIKIURL@'' -- URL to the wiki
-  * ''@UPDATE@'' -- Time of the last update of the article
   * ''@DATE@'' -- time when the PDF was created (might be in the past if cached)
   * ''@BASE@'' -- the wiki base directory
   * ''@TPLBASE@'' -- the PDF template base directory (use to reference images)
-  * ''@QRCODE@'' -- QR code image pointing to the original page url
+
+//Remark about Bookcreator//:
+The page depended replacements are only for ''citation.html'' updated for every page.
+In the headers and footers the ID of the bookmanager page of the Bookcreator is applied.
+  * ''@ID@'' -- The article's pageID
+  * ''@PAGEURL@'' -- URL to the article
+  * ''@UPDATE@'' -- Time of the last update of the article
+  * ''@QRCODE@'' -- QR code image pointing to the original page url (requires an online generator, see config setting)
 
 ===== Styles =====
 
-Custom stylings can be provided in the following file:
+Custom stylings can be provided in the following file of your dw2pdf-template folder:
 
   * style.css
 

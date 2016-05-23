@@ -7,43 +7,58 @@
  *
  * @author Andreas Gohr <andi@splitbrain.org>
  */
-
+global $conf;
 if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'].'/dwpdf/'.rand(1,1000).'/');
 if(!defined('_MPDF_TTFONTDATAPATH')) define('_MPDF_TTFONTDATAPATH',$conf['cachedir'].'/mpdf_ttf/');
+
 require_once(dirname(__FILE__)."/mpdf/mpdf.php");
 
+/**
+ * Class DokuPDF
+ * Some DokuWiki specific extentions
+ */
 class DokuPDF extends mpdf {
 
-    function __construct(){
+    function __construct($pagesize='A4', $orientation='portrait'){
+        global $conf;
+
         io_mkdir_p(_MPDF_TTFONTDATAPATH);
         io_mkdir_p(_MPDF_TEMP_PATH);
 
+        $format = $pagesize;
+        if($orientation == 'landscape') {
+            $format .= '-L';
+        }
+
+        switch($conf['lang']) {
+            case 'zh':
+            case 'zh-tw':
+            case 'ja':
+            case 'ko':
+                $mode = '+aCJK';
+                break;
+            default:
+                $mode = 'UTF-8-s';
+
+        }
+
         // we're always UTF-8
-        parent::__construct('UTF-8-s');
-        $this->SetAutoFont(AUTOFONT_ALL);
+        parent::__construct($mode, $format);
+        $this->autoScriptToLang = true;
+        $this->baseScript = 1;
+        $this->autoVietnamese = true;
+        $this->autoArabic = true;
+        $this->autoLangToFont = true;
+
         $this->ignore_invalid_utf8 = true;
+        $this->tabSpaces = 4;
     }
 
     /**
      * Cleanup temp dir
      */
     function __destruct(){
-        $this->deletedir(_MPDF_TEMP_PATH);
-    }
-
-    /**
-     * Recursively delete a directory and its contents
-     *
-     * @link http://de3.php.net/manual/en/function.rmdir.php#108113
-     */
-    function deletedir($dir){
-        foreach(glob($dir . '/*') as $file) {
-            if(is_dir($file))
-                $this->deletedir($file);
-            else
-                @unlink($file);
-        }
-        @rmdir($dir);
+        io_rmdir(_MPDF_TEMP_PATH, true);
     }
 
     /**
@@ -62,8 +77,8 @@ class DokuPDF extends mpdf {
      * making sure that only cached file paths are passed to mpdf. It also
      * takes care of checking image ACls.
      */
-    function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false){
-        list($ext,$mime) = mimetype($file);
+    function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=false, $interpolation = false){
+        global $conf;
 
         // build regex to parse URL back to media info
         $re = preg_quote(ml('xxx123yyy','',true,'&',true),'/');
@@ -79,6 +94,7 @@ class DokuPDF extends mpdf {
         }
 
         // local files
+        $local = '';
         if(substr($file,0,9) == 'dw2pdf://'){
             // support local files passed from plugins
             $local = substr($file,9);
@@ -91,10 +107,11 @@ class DokuPDF extends mpdf {
         if(substr($mime,0,6) == 'image/'){
             if(!empty($media)){
                 // any size restrictions?
+                $w = $h = 0;
                 if(preg_match('/[\?&]w=(\d+)/',$file, $m)) $w = $m[1];
                 if(preg_match('/[\?&]h=(\d+)/',$file, $m)) $h = $m[1];
 
-                if(preg_match('/^https?:\/\//',$media)){
+                if(media_isexternal($media)){
                     $local = media_get_from_URL($media,$ext,-1);
                     if(!$local) $local = $media; // let mpdf try again
                 }else{
@@ -114,7 +131,7 @@ class DokuPDF extends mpdf {
                         $local = media_resize_image($local,$ext,$w,$h);
                     }
                 }
-            }elseif(preg_match('/^https?:\/\//',$file)){ // fixed external URLs
+            }elseif(media_isexternal($file)){ // fixed external URLs
                 $local = media_get_from_URL($file,$ext,$conf['cachetime']);
             }
 
@@ -124,7 +141,7 @@ class DokuPDF extends mpdf {
             }
         }
 
-        return parent::_getImage($file, $firsttime, $allowvector, $orig_srcpath);
+        return parent::_getImage($file, $firsttime, $allowvector, $orig_srcpath, $interpolation);
     }
 
 }
