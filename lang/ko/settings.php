@@ -2,12 +2,12 @@
 
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * 
+ *
  * @author Myeongjin <aranet100@gmail.com>
  * @author wkdl <chobkwon@gmail.com>
  */
-$lang['pagesize']              = 'mPDF가 지원하는 용지 형식. 보통 <code>A4</code>나 <code>letter</code>입니다.';
-$lang['orientation']           = '용지 방향.';
+$lang['pagesize']              = 'mPDF가 지원하는 페이지 형식. 보통 <code>A4</code>나 <code>letter</code>입니다.';
+$lang['orientation']           = '페이지 방향.';
 $lang['orientation_o_portrait'] = '세로';
 $lang['orientation_o_landscape'] = '가로';
 $lang['doublesided']           = '양면 문서는 홀수 페이지를 추가하여 시작하고, 짝수 및 홀수 페이지의 쌍을 가지고 있습니다. 단면 문서는 홀수 페이지만을 가지고 있습니다.';
@@ -19,6 +19,6 @@ $lang['output']                = '어떻게 PDF를 사용자에게 제시되어�
 $lang['output_o_browser']      = '브라우저에서 보기';
 $lang['output_o_file']         = 'PDF 다운로드';
 $lang['usecache']              = 'PDF를 캐시해야 합니까? 보안 문제가 있으면 포함된 그림은 ACL을 확인되지 않고, 비활성화합니다.';
-$lang['usestyles']             = 'PDF 생성에 사용되어야 하는 어느 <code>style.css</code>나 <code>screen.css</code>의 플러그인의 쉼표로 구분된 목록을 제공할 수 있습니다. 기본적으로 <code>print.css</code>와 <code>pdf.css</code>만 사용됩니다.';
+$lang['usestyles']             = 'PDF 생성에 사용되어야 하는 <code>style.css</code>나 <code>screen.css</code> 중 하나의 플러그인의 쉼표로 구분된 목록을 제공할 수 있습니다. 기본적으로 <code>print.css</code>와 <code>pdf.css</code>만 사용됩니다.';
 $lang['qrcodesize']            = '포함된 QR 코드의 크기. (픽셀로 <code><i>너비</i><b>x</b><i>높이</i></code>) 비활성화하려면 비우세요';
 $lang['showexportbutton']      = 'PDF 내보내기 버튼 보이기 (템플릿이 지원하고, 템플릿이 허용할 때만)';
