@@ -74,6 +74,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // hard work only when no cache available
         if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
+            // generating the pdf may take a long time for larger wikis / namespaces with many pages
+            set_time_limit(0);
+
             $this->generatePDF($cache->cache, $title);
         }
 
