@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitaa138001db6bc140374d2773a3383aec
+class ComposerStaticInit2a3b9ed9878302b108133ef9357d76bc
 {
     public static $files = array (
         'db356362850385d08a5381de2638b5fd' => __DIR__ . '/..' . '/mpdf/mpdf/src/functions.php',
@@ -45,9 +45,9 @@ class ComposerStaticInitaa138001db6bc140374d2773a3383aec
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitaa138001db6bc140374d2773a3383aec::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitaa138001db6bc140374d2773a3383aec::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitaa138001db6bc140374d2773a3383aec::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit2a3b9ed9878302b108133ef9357d76bc::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit2a3b9ed9878302b108133ef9357d76bc::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit2a3b9ed9878302b108133ef9357d76bc::$classMap;
 
         }, null, ClassLoader::class);
     }
