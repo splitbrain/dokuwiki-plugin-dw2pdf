@@ -1,0 +1,12 @@
+{
+    "name": "splitbrain/dw2pdf",
+    "authors": [
+        {
+            "name": "Andreas Gohr",
+            "email": "andi@splitbrain.org"
+        }
+    ],
+    "require": {
+        "mpdf/mpdf": "dev-development"
+    }
+}
