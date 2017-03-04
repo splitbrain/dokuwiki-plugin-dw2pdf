@@ -293,7 +293,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // initialize PDF library
         require_once(dirname(__FILE__) . "/DokuPDF.class.php");
 
-        $mpdf = new DokuPDF($this->getExportConfig('pagesize'), $this->getExportConfig('orientation'));
+        $mpdf = new DokuPDF($this->getExportConfig('pagesize'),
+                            $this->getExportConfig('orientation'),
+                            $this->getExportConfig('font-size'));
 
         // let mpdf fix local links
         $self = parse_url(DOKU_URL);
@@ -730,6 +732,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // decide on the paper setup from param or config
         $this->exportConfig['pagesize'] = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
         $this->exportConfig['orientation'] = $INPUT->str('orientation', $this->getConf('orientation'), true);
+
+        // decide on the font-size from param or config
+        $this->exportConfig['font-size'] = $INPUT->str('font-size', $this->getConf('font-size'), true);
 
         $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
         $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';

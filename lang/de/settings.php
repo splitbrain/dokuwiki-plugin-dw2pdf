@@ -10,6 +10,7 @@ $lang['pagesize']              = 'Ein von mPDF unterstütztes Seitenformat. Norm
 $lang['orientation']           = 'Die Seiten-Ausrichtung';
 $lang['orientation_o_portrait'] = 'Hochformat';
 $lang['orientation_o_landscape'] = 'Querformat';
+$lang['font-size']             = 'Die Schriftgröße für normalen Text in Punkten.';
 $lang['doublesided']           = 'Doppelseitige Dokumente beginnen mit einer ungeraden Seite und werden fortgeführt mit Paaren von geraden und ungeraden Seiten. Einseitige Dokumente haben nur ungerade Seiten.';
 $lang['toc']                   = 'Hinzufügen eines automatisch generierten Inhaltsverzeichnisses am Anfand der PDF-Datei (Anmerkungen: kann dazu führen, dass eine leere Seite eingefügt wird, damit der Text bei einer ungeraden Seitenzahl beginnt; das Inhaltsverzeichnis selbst wird bei der Seitennummerierung nicht mitgezählt)';
 $lang['toclevels']             = 'Oberste Ebene und maximale Tiefe des Inhaltsverzeichnisses. Standardmäßig werden die Werte aus der Wiki-Konfiguration <a href="#config___toptoclevel">toptoclevel</a> und <a href="#config___maxtoclevel">maxtoclevel</a> benutzt. Format: <code><i>&lt;top&gt;</i>-<i>&lt;max&gt;</i></code>';
