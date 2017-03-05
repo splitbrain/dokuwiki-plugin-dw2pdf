@@ -416,23 +416,18 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '</body>';
             $html .= '</html>';
         }
-          error_log('isDebug:'.($isDebug ? 'yes' : 'no'));
+
         //Return html for debugging
         if($isDebug) {
-            error_log('entered');
             if($INPUT->str('debughtml', 'text', true) == 'html') {
-                error_log('enteredhtml');
-
                 echo $html;
             } else {
                 header('Content-Type: text/plain; charset=utf-8');
-                error_log('enteredtext');
-
                 echo $html;
             }
             exit();
         };
-             error_log('to caching no exit..');
+
         // write to cache file
         $mpdf->Output($cachefile, 'F');
     }
