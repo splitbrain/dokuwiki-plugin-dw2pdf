@@ -19,7 +19,7 @@ require_once(dirname(__FILE__)."/mpdf/mpdf.php");
  */
 class DokuPDF extends mpdf {
 
-    function __construct($pagesize='A4', $orientation='portrait'){
+    function __construct($pagesize='A4', $orientation='portrait', $fontsize){
         global $conf;
 
         io_mkdir_p(_MPDF_TTFONTDATAPATH);
@@ -43,7 +43,7 @@ class DokuPDF extends mpdf {
         }
 
         // we're always UTF-8
-        parent::__construct($mode, $format);
+        parent::__construct($mode, $format, $fontsize);
         $this->autoScriptToLang = true;
         $this->baseScript = 1;
         $this->autoVietnamese = true;
