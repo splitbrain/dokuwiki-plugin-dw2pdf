@@ -1,4 +1,5 @@
 <?php
+$meta['attachment']   = array('onoff');
 $meta['pagesize']         = array('string');
 $meta['orientation']      = array('multichoice', '_choices' => array('portrait', 'landscape'));
 $meta['font-size']        = array('numeric');

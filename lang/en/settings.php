@@ -6,6 +6,7 @@
 
 // for the configuration manager
 
+$lang['attachment']       = 'Embed linked media';
 $lang['pagesize']                = 'The page format as supported by mPDF. Usually <code>A4</code> or <code>letter</code>.';
 $lang['orientation']             = 'The page orientation.';
 $lang['orientation_o_portrait']  = 'Portrait';

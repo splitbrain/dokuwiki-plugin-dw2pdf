@@ -1,5 +1,6 @@
 <?php
 
+$lang["mediatitle"] = "Attachment: %s";
 $lang['export_pdf_button'] = "Export to PDF";
 $lang['needtitle']         = "Please provide a title.";
 $lang['needns']            = "Please provide an existing namespace.";

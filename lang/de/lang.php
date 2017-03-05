@@ -11,3 +11,4 @@ $lang['needns']                = 'Bitte geben Sie einen vorhandenen Namensraum a
 $lang['empty']                 = 'Sie haben noch keine Seiten gewählt.';
 $lang['tocheader']             = 'Inhaltsverzeichnis';
 $lang['export_ns']             = 'Exportiere Namensraum "%s:" in Datei %s.pdf';
+$lang["mediatitle"] = "Anhang: %s";
