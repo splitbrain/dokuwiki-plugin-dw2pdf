@@ -219,6 +219,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             . $this->getExportConfig('template')
             . $this->getExportConfig('pagesize')
             . $this->getExportConfig('orientation')
+            . $this->getExportConfig('font-size')
             . $this->getExportConfig('doublesided')
             . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
             . $title;
