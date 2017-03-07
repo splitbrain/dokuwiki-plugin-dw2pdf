@@ -21159,7 +21159,7 @@ function printbuffer($arrayaux,$blockstate=0,$is_table=false,$table_draft=false,
 
 	// Remove empty items // mPDF 6
 	for($i=$array_size-1; $i > 0; $i--) {
-		if (empty($arrayaux[$i][0]) && $arrayaux[$i][16]!=='0' && empty($arrayaux[$i][7])) {
+		if (empty($arrayaux[$i][0]) && $arrayaux[$i][0]!=='0' && $arrayaux[$i][16]!=='0' && empty($arrayaux[$i][7])) {
 			unset($arrayaux[$i]);
 		}
 	}
