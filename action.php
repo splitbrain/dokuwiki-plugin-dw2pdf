@@ -508,6 +508,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     protected function load_template($title) {
         global $ID;
+        global $REV;   // required for additional replacement variables
         global $conf;
 
         // this is what we'll return
@@ -554,6 +555,27 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             '@BASE@'    => DOKU_BASE,
             '@TPLBASE@' => DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/'
         );
+
+        // get page content
+        $rawfile = wikiFN($ID,$REV);
+        $rawpagetext = io_readWikiPage($rawfile,$ID,$REV);
+        //get variable definitions for replacement
+        $data = array();
+        if (preg_match('/<pdfvars[^>]*>([^<]*)<\/pdfvars>/', $rawpagetext, $data) > 0) {
+            //split entries
+            $data = array_pop($data);
+            $data = preg_split('/[\r\n]+/', $data, -1, PREG_SPLIT_NO_EMPTY);
+            
+            //process wiki-data
+            foreach ($data as $entry) {
+                //normal variable definition
+                $item = explode("=", trim($entry));
+                if (count($item) === 2) {
+                    // add var to array
+                    $replace[("@" . trim($item[0]) . "@")] = $item[1];
+                }
+            }
+        }
 
         // set HTML element
         $html = str_replace(array_keys($replace), array_values($replace), $html);
