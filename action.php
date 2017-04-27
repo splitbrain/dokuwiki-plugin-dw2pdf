@@ -373,7 +373,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $styles .= 'div.dw2pdf-landscape { page:landscape-page }';
         $styles .= '@page portrait-page { size:portrait }';
         $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
-		$styles .= $this->load_css();
+        $styles .= $this->load_css();
         
         $mpdf->WriteHTML($styles, 1);
 
