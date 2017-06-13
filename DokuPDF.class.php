@@ -19,7 +19,7 @@ require_once __DIR__ . '/vendor/autoload.php';
  */
 class DokuPDF extends \Mpdf\Mpdf {
 
-    function __construct($pagesize = 'A4', $orientation = 'portrait') {
+    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11) {
         global $conf;
 
         io_mkdir_p(_MPDF_TTFONTDATAPATH);
@@ -46,7 +46,8 @@ class DokuPDF extends \Mpdf\Mpdf {
         parent::__construct(
             array(
                 'mode' => $mode,
-                'format' => $format
+                'format' => $format,
+                'fontsize' => $fontsize
             )
         );
         $this->autoScriptToLang = true;

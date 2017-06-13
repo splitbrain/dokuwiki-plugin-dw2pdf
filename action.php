@@ -24,13 +24,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     protected $exportConfig = null;
     protected $tpl;
+    protected $title;
     protected $list = array();
 
     /**
      * Constructor. Sets the correct template
+     * 
+     * @param string $title
      */
-    public function __construct() {
-        $this->tpl = $this->getExportConfig('template');
+    public function __construct($title=null) {
+        $this->tpl   = $this->getExportConfig('template');
+        $this->title = $title ? $title : '';
     }
 
     /**
@@ -60,7 +64,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if(auth_quickaclcheck($ID) < AUTH_READ) return false;
 
         if($data = $this->collectExportPages($event)) {
-            list($title, $this->list) = $data;
+            list($this->title, $this->list) = $data;
         } else {
             return false;
         }
@@ -70,15 +74,18 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // prepare cache and its dependencies
         $depends = array();
-        $cache = $this->prepareCache($title, $depends);
+        $cache = $this->prepareCache($depends);
 
-        // hard work only when no cache available
-        if(!$this->getConf('usecache') || !$cache->useCache($depends)) {
-            $this->generatePDF($cache->cache, $title);
+        // hard work only when no cache available or needed for debugging
+        if(!$this->getConf('usecache') || $this->getExportConfig('isDebug') || !$cache->useCache($depends)) {
+            // generating the pdf may take a long time for larger wikis / namespaces with many pages
+            set_time_limit(0);
+
+            $this->generatePDF($cache->cache);
         }
 
         // deliver the file
-        $this->sendPDFFile($cache->cache, $title);
+        $this->sendPDFFile($cache->cache);
         return true;
     }
 
@@ -100,15 +107,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         if($ACT == 'export_pdf') {
             $list[0] = $ID;
-            $title = $INPUT->str('pdftitle'); //DEPRECATED
-            $title = $INPUT->str('book_title', $title, true);
-            if(empty($title)) {
-                $title = p_get_first_heading($ID);
+            $this->title = $INPUT->str('pdftitle'); //DEPRECATED
+            $this->title = $INPUT->str('book_title', $this->title, true);
+            if(empty($this->title)) {
+                $this->title = p_get_first_heading($ID);
             }
 
         } elseif($ACT == 'export_pdfns') {
             //check input for title and ns
-            if(!$title = $INPUT->str('book_title')) {
+            if(!$this->title = $INPUT->str('book_title')) {
                 $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
             }
@@ -161,9 +168,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
             /** @deprecated  April 2016 replaced by localStorage version of Bookcreator*/
             //is in Bookmanager of bookcreator plugin a title given?
-            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
-            $title = $INPUT->str('book_title', $title, true);
-            if(empty($title)) {
+            $this->title = $INPUT->str('pdfbook_title'); //DEPRECATED
+            $this->title = $INPUT->str('book_title', $this->title, true);
+            if(empty($this->title)) {
                 $this->showPageWithErrorMsg($event, 'needtitle');
                 return false;
             } else {
@@ -186,9 +193,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 exit();
             }
 
-            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
-            $title = $INPUT->str('book_title', $title, true);
-            if(empty($title)) {
+            $this->title = $INPUT->str('pdfbook_title'); //DEPRECATED
+            $this->title = $INPUT->str('book_title', $this->title, true);
+            if(empty($this->title)) {
                 http_status(400);
                 print $this->getLang('needtitle');
                 exit();
@@ -201,17 +208,40 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         $list = array_map('cleanID', $list);
-        return array($title, $list);
+
+        $skippedpages = array();
+        foreach($list as $index => $pageid) {
+            if(auth_quickaclcheck($pageid) < AUTH_READ) {
+                $skippedpages[] = $pageid;
+                unset($list[$index]);
+            }
+        }
+        $list = array_filter($list); //removes also pages mentioned '0'
+
+        //if selection contains forbidden pages throw (overridable) warning
+        if(!$INPUT->bool('book_skipforbiddenpages') && !empty($skippedpages)) {
+            $msg = hsc(join(', ', $skippedpages));
+            if($INPUT->has('selection')) {
+                http_status(400);
+                print sprintf($this->getLang('forbidden'), $msg);
+                exit();
+            } else {
+                $this->showPageWithErrorMsg($event, 'forbidden', $msg);
+                return false;
+            }
+
+        }
+
+        return array($this->title, $list);
     }
 
     /**
      * Prepare cache
      *
-     * @param string $title
      * @param array  $depends (reference) array with dependencies
      * @return cache
      */
-    protected function prepareCache($title, &$depends) {
+    protected function prepareCache(&$depends) {
         global $REV;
 
         $cachekey = join(',', $this->list)
@@ -219,9 +249,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             . $this->getExportConfig('template')
             . $this->getExportConfig('pagesize')
             . $this->getExportConfig('orientation')
+            . $this->getExportConfig('font-size')
             . $this->getExportConfig('doublesided')
             . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
-            . $title;
+            . $this->title;
         $cache = new cache($cachekey, '.dw2.pdf');
 
         $dependencies = array();
@@ -265,10 +296,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Set error notification and reload page again
      *
      * @param Doku_Event $event
-     * @param string     $msglangkey key of translation key
+     * @param string $msglangkey key of translation key
+     * @param string $replacement
      */
-    private function showPageWithErrorMsg(Doku_Event $event, $msglangkey) {
-        msg($this->getLang($msglangkey), -1);
+    private function showPageWithErrorMsg(Doku_Event $event, $msglangkey, $replacement=null) {
+        if(empty($replacement)) {
+            $msg = $this->getLang($msglangkey);
+        } else {
+            $msg = sprintf($this->getLang($msglangkey), $replacement);
+        }
+        msg($msg, -1);
 
         $event->data = 'show';
         $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
@@ -278,9 +315,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Build a pdf from the html
      *
      * @param string $cachefile
-     * @param string $title
      */
-    protected function generatePDF($cachefile, $title) {
+    protected function generatePDF($cachefile) {
         global $ID;
         global $REV;
         global $INPUT;
@@ -293,7 +329,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // initialize PDF library
         require_once(dirname(__FILE__) . "/DokuPDF.class.php");
 
-        $mpdf = new DokuPDF($this->getExportConfig('pagesize'), $this->getExportConfig('orientation'));
+        $mpdf = new DokuPDF($this->getExportConfig('pagesize'),
+                            $this->getExportConfig('orientation'),
+                            $this->getExportConfig('font-size'));
 
         // let mpdf fix local links
         $self = parse_url(DOKU_URL);
@@ -304,7 +342,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $mpdf->setBasePath($url);
 
         // Set the title
-        $mpdf->SetTitle($title);
+        $mpdf->SetTitle($this->title);
 
         // some default document settings
         //note: double-sided document, starts at an odd page (first page is a right-hand side page)
@@ -321,7 +359,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         // load the template
-        $template = $this->load_template($title);
+        $template = $this->load_template();
 
         // prepare HTML header styles
         $html = '';
@@ -329,15 +367,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '<html><head>';
             $html .= '<style type="text/css">';
         }
-        $styles = $this->load_css();
-        $styles .= '@page { size:auto; ' . $template['page'] . '}';
+        
+        $styles = '@page { size:auto; ' . $template['page'] . '}';
         $styles .= '@page :first {' . $template['first'] . '}';
 
         $styles .= '@page landscape-page { size:landscape }';
         $styles .= 'div.dw2pdf-landscape { page:landscape-page }';
         $styles .= '@page portrait-page { size:portrait }';
         $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
-
+        $styles .= $this->load_css();
+        
         $mpdf->WriteHTML($styles, 1);
 
         if($isDebug) {
@@ -377,9 +416,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $keep = $ID;
 
         // loop over all pages
-        $cnt = count($this->list);
-        for($n = 0; $n < $cnt; $n++) {
-            $page = $this->list[$n];
+        $counter = 0;
+        $no_pages = count($this->list);
+        foreach($this->list as $page) {
+            $counter++;
             $filename = wikiFN($page, $REV);
 
             if(!file_exists($filename)) {
@@ -391,7 +431,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
             $pagehtml = p_cached_output($filename, 'dw2pdf', $page);
             $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
-            if($n < ($cnt - 1)) {
+            if($counter < $no_pages) {
                 $pagehtml .= '<pagebreak />';
             }
 
@@ -432,15 +472,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * @param string $cachefile
-     * @param string $title
      */
-    protected function sendPDFFile($cachefile, $title) {
+    protected function sendPDFFile($cachefile) {
         header('Content-Type: application/pdf');
         header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
         header('Pragma: public');
         http_conditionalRequest(filemtime($cachefile));
 
-        $filename = rawurlencode(cleanID(strtr($title, ':/;"', '    ')));
+        $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
         if($this->getConf('output') == 'file') {
             header('Content-Disposition: attachment; filename="' . $filename . '.pdf";');
         } else {
@@ -466,10 +505,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Load the various template files and prepare the HTML/CSS for insertion
      *
-     * @param string $title
      * @return array
      */
-    protected function load_template($title) {
+    protected function load_template() {
         global $ID;
         global $conf;
 
@@ -510,7 +548,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $replace = array(
             '@PAGE@'    => '{PAGENO}',
             '@PAGES@'   => '{nbpg}', //see also $mpdf->pagenumSuffix = ' / '
-            '@TITLE@'   => hsc($title),
+            '@TITLE@'   => hsc($this->title),
             '@WIKI@'    => $conf['title'],
             '@WIKIURL@' => DOKU_URL,
             '@DATE@'    => dformat(time()),
@@ -730,6 +768,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // decide on the paper setup from param or config
         $this->exportConfig['pagesize'] = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
         $this->exportConfig['orientation'] = $INPUT->str('orientation', $this->getConf('orientation'), true);
+
+        // decide on the font-size from param or config
+        $this->exportConfig['font-size'] = $INPUT->str('font-size', $this->getConf('font-size'), true);
 
         $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
         $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
