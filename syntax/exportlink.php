@@ -78,7 +78,7 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin {
      * @return  boolean                 rendered correctly? (however, returned value is not used at the moment)
      */
     public function render($mode, Doku_Renderer $renderer, $data) {
-        if($mode == 'xhtml') {
+        if($mode == 'xhtml' && !is_a($renderer,'renderer_plugin_dw2pdf')) {
             $renderer->internallink($data['link'],$data['title']);
             return true;
         }
