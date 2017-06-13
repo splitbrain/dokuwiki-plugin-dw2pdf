@@ -13,6 +13,18 @@ Please refer to http://www.dokuwiki.org/plugins for additional info
 on how to install plugins in DokuWiki.
 
 ----
+
+Notes on updating the mpdf library. The library is installed by composer
+but results are checked into the plugin repository. Similar to what we do
+in DokuWiki core. Because mpdf has some dependencies that are already
+satisfied in DokuWiki core, they do not need to be installed by the plugin
+again. To do so we declare them as replaced in the composer.json. The
+.gitignore is used to skip checking in unneeded library files like examples
+etc.
+
+Updating should be done via composer update --no-dev --prefer-dist
+
+----
 Copyright (C) Andreas Gohr <gohr@cosmocode.de>,
               Luigi Micco <l.micco@tiscali.it>
 

@@ -8,5 +8,8 @@
     ],
     "require": {
         "mpdf/mpdf": "dev-development"
+    },
+    "replace": {
+        "paragonie/random_compat": "*"
     }
 }
