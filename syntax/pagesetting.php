@@ -51,6 +51,10 @@ class syntax_plugin_dw2pdf_pagesetting extends DokuWiki_Syntax_Plugin {
      */
     public function connectTo($mode) {
         $this->Lexer->addSpecialPattern('~~PDF:(?:LANDSCAPE|PORTRAIT)~~', $mode, 'plugin_dw2pdf_pagesetting');
+
+        // this I put here, because it doesnt have sense to create whole new class just for this line
+        // but if things change ...
+		$this->Lexer->addSpecialPattern('<pdfvars[^>]*>[^<]*</pdfvars>' , $mode, 'plugin_dw2pdf_pagesetting');
     }
 
     /**
