@@ -618,6 +618,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             array($this, 'replacedate'),
             $content
         );
+        
+        // @UPDATE(<date>[, <format>])@
+        $content = preg_replace_callback(
+            '/@UPDATE\((.*?)(?:,\s*(.*?))?\)@/',
+            array($this, 'replacedate'),
+            $content
+        );
 
         return $content;
     }
