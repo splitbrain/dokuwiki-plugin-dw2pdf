@@ -45,8 +45,6 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
                 if(preg_match('/[\?&]w=(\d+)/', $file, $m)) $w = $m[1];
                 if(preg_match('/[\?&]h=(\d+)/', $file, $m)) $h = $m[1];
 
-                dbglog($media, __FILE__ . ': ' . __LINE__);
-                dbglog(media_isexternal($media), __FILE__ . ': ' . __LINE__);
                 if(media_isexternal($media)) {
                     $local = media_get_from_URL($media, $ext, -1);
                     if(!$local) $local = $media; // let mpdf try again
