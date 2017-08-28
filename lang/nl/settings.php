@@ -2,17 +2,19 @@
 
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * 
+ *
  * @author Gerrit Uitslag <klapinklapin@gmail.com>
  * @author mprins <mprins@users.sf.net>
  * @author Wouter Wijsman <wwijsman@live.nl>
  * @author Johan Wijnker <johan@wijnker.eu>
  * @author Peter van Diest <peter.van.diest@xs4all.nl>
+ * @author mark prins <mprins@users.sf.net>
  */
 $lang['pagesize']              = 'Het pagina formaat zoals dat door mPDF wordt ondersteund. Normaliter <code>A4</code> of <code>letter</code>.';
 $lang['orientation']           = 'Pagina oriëntatie.';
 $lang['orientation_o_portrait'] = 'Staand';
 $lang['orientation_o_landscape'] = 'Liggend';
+$lang['font-size']             = 'De tekstgrootte voor normale tekst in pt.';
 $lang['doublesided']           = 'Dubbelzijdige documenten starten met oneven pagina, en heeft paren van oneven en even pagina\'s. Enkelzijdig document heeft alleen oneven pagina\'s.';
 $lang['toc']                   = 'Voeg een automatisch gegenereerde inhoudsopgave toe aan PDF (let op: Dit kan lege pagina\'s toevoegen indien gestart op een oneven genummerde pagina. De inhoudsopgave wordt altijd toegevoegd op een even genummerde pagina. Pagina\'s van de inhoudsopgave krijgen geen paginanummers)';
 $lang['toclevels']             = 'Definieer bovenste niveau en maximaal onderliggende niveau\'s welke aan de inhoudsopgave worden toegevoegd.
