@@ -54,11 +54,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return bool
      */
     public function convert(Doku_Event $event) {
-        global $ACT;
         global $ID;
 
         // our event?
-        if(($ACT != 'export_pdfbook') && ($ACT != 'export_pdf') && ($ACT != 'export_pdfns')) return false;
+        if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return false;
 
         // check user's rights
         if(auth_quickaclcheck($ID) < AUTH_READ) return false;
