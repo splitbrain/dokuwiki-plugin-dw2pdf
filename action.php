@@ -29,7 +29,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * Constructor. Sets the correct template
-     * 
+     *
      * @param string $title
      */
     public function __construct($title=null) {
@@ -80,8 +80,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if(!$this->getConf('usecache') || $this->getExportConfig('isDebug') || !$cache->useCache($depends)) {
             // generating the pdf may take a long time for larger wikis / namespaces with many pages
             set_time_limit(0);
+            try {
+                $this->generatePDF($cache->cache);
+            } catch (Mpdf\MpdfException $e) {
+                //prevent act_export()
+                $ACT = 'show';
+                msg($e->getMessage(), -1);
+                return false;
+            }
 
-            $this->generatePDF($cache->cache);
         }
 
         // deliver the file
@@ -367,7 +374,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '<html><head>';
             $html .= '<style type="text/css">';
         }
-        
+
         $styles = '@page { size:auto; ' . $template['page'] . '}';
         $styles .= '@page :first {' . $template['first'] . '}';
 
@@ -376,7 +383,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $styles .= '@page portrait-page { size:portrait }';
         $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
         $styles .= $this->load_css();
-        
+
         $mpdf->WriteHTML($styles, 1);
 
         if($isDebug) {
