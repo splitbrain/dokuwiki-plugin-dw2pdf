@@ -96,7 +96,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         return true;
     }
 
-
     /**
      * Obtain list of pages and title, based on url parameters
      *
@@ -243,16 +242,60 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * Get $meta['relations'] for the given page and revision
+     *
+     * @param        $id
+     * @param string $rev
+     * @return mixed
+     */
+    protected function getMetaRelation($id, $rev='') {
+        //current revision
+        if ($rev == '') return p_get_metadata($id, 'relation');
+
+        // get instructions
+        $instructions = p_cached_instructions(wikiFN($id, $rev),false,$id);
+
+        // set up the renderer
+        $renderer = new Doku_Renderer_metadata();
+
+        // loop through the instructions
+        foreach ($instructions as $instruction){
+            //execute only relation['media'] and relation['haspart'] functions
+            if ($instruction[0] != 'locallink' &&
+                $instruction[0] != 'internallink' &&
+                $instruction[0] != 'externallink' &&
+                $instruction[0] != 'interwikilink' &&
+                $instruction[0] != 'windowssharelink' &&
+                $instruction[0] != 'emaillink' &&
+                $instruction[0] != 'internalmedia' &&
+                $instruction[0] != 'rss') continue;
+
+            // execute the callback against the renderer
+            call_user_func_array(array(&$renderer, $instruction[0]), (array) $instruction[1]);
+        }
+
+        return $renderer->meta['relation'];
+    }
+
+    /**
      * Prepare cache
      *
      * @param array  $depends (reference) array with dependencies
      * @return cache
      */
     protected function prepareCache(&$depends) {
-        global $REV;
+        global $REV, $DATE_AT, $ACT;
+
+        if ($ACT == 'export_pdf') { //only one page is exported
+            $rev = $REV;
+            $date_at = $DATE_AT;
+        } else { //we are exporting entre namespace, ommit revisions
+            $rev = $date_at = '';
+        }
 
         $cachekey = join(',', $this->list)
-            . $REV
+            . $rev
+            . $date_at
             . $this->getExportConfig('template')
             . $this->getExportConfig('pagesize')
             . $this->getExportConfig('orientation')
@@ -264,13 +307,22 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         $dependencies = array();
         foreach($this->list as $pageid) {
-            $relations = p_get_metadata($pageid, 'relation');
+            $relations = $this->getMetaRelation($pageid, $rev);
 
             if(is_array($relations)) {
                 if(array_key_exists('media', $relations) && is_array($relations['media'])) {
                     foreach($relations['media'] as $mediaid => $exists) {
                         if($exists) {
-                            $dependencies[] = mediaFN($mediaid);
+                            $rev = '';
+                            if ($DATE_AT) {
+                                $medialog     = new MediaChangeLog($mediaid);
+                                $medialog_rev = $medialog->getLastRevisionAt($DATE_AT);
+                                if($medialog_rev !== false) {
+                                    $rev = $medialog_rev;
+                                }
+                            }
+
+                            $dependencies[] = mediaFN($mediaid, $rev);
                         }
                     }
                 }
@@ -319,14 +371,51 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * Returns the parsed Wikitext in dw2pdf for the given id and revision
+     *
+     * @param string     $id  page id
+     * @param string|int $rev revision timestamp or empty string
+     * @param string     $date_at
+     * @return null|string
+     */
+    protected function p_wiki_dw2pdf($id, $rev = '', $date_at = '') {
+        $file = wikiFN($id, $rev);
+
+        if(!file_exists($file)) return '';
+
+        //ensure $id is in global $ID (needed for parsing)
+        global $ID;
+        $keep = $ID;
+        $ID   = $id;
+
+        $ret  = '';
+
+        if($rev || $date_at) {
+            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at); //no caching on old revisions
+        } else {
+            $ret = p_cached_output($file, 'dw2pdf', $id);
+        }
+
+        //restore ID (just in case)
+        $ID = $keep;
+
+        return $ret;
+    }
+
+    /**
      * Build a pdf from the html
      *
      * @param string $cachefile
      */
     protected function generatePDF($cachefile) {
-        global $ID;
-        global $REV;
-        global $INPUT;
+        global $ID, $REV, $INPUT, $DATE_AT, $ACT;
+
+        if ($ACT == 'export_pdf') { //only one page is exported
+            $rev = $REV;
+            $date_at = $DATE_AT;
+        } else { //we are exporting entre namespace, ommit revisions
+            $rev = $date_at = '';
+        }
 
         //some shortcuts to export settings
         $hasToC = $this->getExportConfig('hasToC');
@@ -427,16 +516,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $no_pages = count($this->list);
         foreach($this->list as $page) {
             $counter++;
-            $filename = wikiFN($page, $REV);
-
-            if(!file_exists($filename)) {
-                continue;
-            }
 
             // set global pageid to the rendered page
             $ID = $page;
 
-            $pagehtml = p_cached_output($filename, 'dw2pdf', $page);
+            //$pagehtml = p_cached_output($filename, 'dw2pdf', $page);
+            $pagehtml = $this->p_wiki_dw2pdf($ID, $rev, $date_at);
+            //file doesn't exists
+            if($pagehtml == '') {
+                continue;
+            }
             $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
             if($counter < $no_pages) {
                 $pagehtml .= '<pagebreak />';
@@ -602,7 +691,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return string
      */
     protected function page_depend_replacements($raw, $id) {
-        global $REV;
+        global $REV, $DATE_AT;
 
         // generate qr code for this page using google infographics api
         $qr_code = '';
@@ -614,7 +703,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // prepare replacements
         $replace['@ID@']      = $id;
         $replace['@UPDATE@']  = dformat(filemtime(wikiFN($id, $REV)));
-        $replace['@PAGEURL@'] = wl($id, ($REV) ? array('rev' => $REV) : false, true, "&");
+
+        $params = array();
+        if($DATE_AT) {
+            $params['at'] = $DATE_AT;
+        } elseif($REV) {
+            $params['rev'] = $REV;
+        }
+        $replace['@PAGEURL@'] = wl($id, $params, true, "&");
         $replace['@QRCODE@']  = $qr_code;
 
         $content = str_replace(array_keys($replace), array_values($replace), $raw);
@@ -645,7 +741,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
         return strftime($match[2], strtotime($match[1]));
     }
-
 
     /**
      * Load all the style sheets and apply the needed replacements
@@ -864,11 +959,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function addbutton(Doku_Event $event) {
-        global $ID, $REV;
+        global $ID, $REV, $DATE_AT;
 
         if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
             $params = array('do' => 'export_pdf');
-            if($REV) {
+            if($DATE_AT) {
+                $params['at'] = $DATE_AT;
+            } elseif($REV) {
                 $params['rev'] = $REV;
             }
 
