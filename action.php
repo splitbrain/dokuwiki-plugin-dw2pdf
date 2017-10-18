@@ -56,6 +56,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function convert(Doku_Event $event) {
         global $ACT;
         global $ID;
+        global $REV, $DATE_AT;
 
         // our event?
         if(($ACT != 'export_pdfbook') && ($ACT != 'export_pdf') && ($ACT != 'export_pdfns')) return false;
@@ -72,16 +73,27 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // it's ours, no one else's
         $event->preventDefault();
 
-        // prepare cache and its dependencies
-        $depends = array();
-        $cache = $this->prepareCache($depends);
+        $generateNewPdf = false;
+        if ($REV || $DATE_AT) {
+            $tempFilename = tempnam('/tmp', 'dw2pdf_');
+            $generateNewPdf = true;
+        } else {
+            // prepare cache and its dependencies
+            $depends = array();
+            $cache = $this->prepareCache($depends);
+            $tempFilename = $cache->cache;
+        }
 
         // hard work only when no cache available or needed for debugging
-        if(!$this->getConf('usecache') || $this->getExportConfig('isDebug') || !$cache->useCache($depends)) {
+        $generateNewPdf = $generateNewPdf
+                       || !$this->getConf('usecache')
+                       || $this->getExportConfig('isDebug')
+                       || !$cache->useCache($depends);
+        if($generateNewPdf) {
             // generating the pdf may take a long time for larger wikis / namespaces with many pages
             set_time_limit(0);
             try {
-                $this->generatePDF($cache->cache);
+                $this->generatePDF($tempFilename);
             } catch (Mpdf\MpdfException $e) {
                 //prevent act_export()
                 $ACT = 'show';
@@ -92,7 +104,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         // deliver the file
-        $this->sendPDFFile($cache->cache);
+        $this->sendPDFFile($tempFilename);
         return true;
     }
 
@@ -284,18 +296,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return cache
      */
     protected function prepareCache(&$depends) {
-        global $REV, $DATE_AT, $ACT;
-
-        if ($ACT == 'export_pdf') { //only one page is exported
-            $rev = $REV;
-            $date_at = $DATE_AT;
-        } else { //we are exporting entre namespace, ommit revisions
-            $rev = $date_at = '';
-        }
+        global $REV;
 
         $cachekey = join(',', $this->list)
-            . $rev
-            . $date_at
+            . $REV
             . $this->getExportConfig('template')
             . $this->getExportConfig('pagesize')
             . $this->getExportConfig('orientation')
@@ -307,22 +311,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         $dependencies = array();
         foreach($this->list as $pageid) {
-            $relations = $this->getMetaRelation($pageid, $rev);
+            $relations = p_get_metadata($pageid, 'relation');
 
             if(is_array($relations)) {
                 if(array_key_exists('media', $relations) && is_array($relations['media'])) {
                     foreach($relations['media'] as $mediaid => $exists) {
                         if($exists) {
-                            $rev = '';
-                            if ($DATE_AT) {
-                                $medialog     = new MediaChangeLog($mediaid);
-                                $medialog_rev = $medialog->getLastRevisionAt($DATE_AT);
-                                if($medialog_rev !== false) {
-                                    $rev = $medialog_rev;
-                                }
-                            }
-
-                            $dependencies[] = mediaFN($mediaid, $rev);
+                            $dependencies[] = mediaFN($mediaid);
                         }
                     }
                 }
