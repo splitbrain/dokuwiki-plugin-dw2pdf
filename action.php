@@ -56,7 +56,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function convert(Doku_Event $event) {
         global $ACT;
         global $ID;
-        global $REV, $DATE_AT;
+        global $REV, $DATE_AT, $conf;
 
         // our event?
         if(($ACT != 'export_pdfbook') && ($ACT != 'export_pdf') && ($ACT != 'export_pdfns')) return false;
@@ -73,22 +73,20 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // it's ours, no one else's
         $event->preventDefault();
 
-        $generateNewPdf = false;
-        if ($REV || $DATE_AT) {
-            $tempFilename = tempnam('/tmp', 'dw2pdf_');
+        if ($ACT === 'export_pdf' && ($REV || $DATE_AT)) {
+            $tempFilename = tempnam($conf['tmpdir'], 'dw2pdf_');
             $generateNewPdf = true;
         } else {
             // prepare cache and its dependencies
             $depends = array();
             $cache = $this->prepareCache($depends);
             $tempFilename = $cache->cache;
+            $generateNewPdf = !$this->getConf('usecache')
+                || $this->getExportConfig('isDebug')
+                || !$cache->useCache($depends);
         }
 
         // hard work only when no cache available or needed for debugging
-        $generateNewPdf = $generateNewPdf
-                       || !$this->getConf('usecache')
-                       || $this->getExportConfig('isDebug')
-                       || !$cache->useCache($depends);
         if($generateNewPdf) {
             // generating the pdf may take a long time for larger wikis / namespaces with many pages
             set_time_limit(0);
