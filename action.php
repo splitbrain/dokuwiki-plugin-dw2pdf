@@ -76,6 +76,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if ($ACT === 'export_pdf' && ($REV || $DATE_AT)) {
             $tempFilename = tempnam($conf['tmpdir'], 'dw2pdf_');
             $generateNewPdf = true;
+            $isTempFile = true;
         } else {
             // prepare cache and its dependencies
             $depends = array();
@@ -84,6 +85,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $generateNewPdf = !$this->getConf('usecache')
                 || $this->getExportConfig('isDebug')
                 || !$cache->useCache($depends);
+            $isTempFile = false;
         }
 
         // hard work only when no cache available or needed for debugging
@@ -103,6 +105,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         // deliver the file
         $this->sendPDFFile($tempFilename);
+        if ($isTempFile) {
+            unlink($tempFilename);
+        }
         return true;
     }
 
