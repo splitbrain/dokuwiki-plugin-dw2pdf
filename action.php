@@ -257,42 +257,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Get $meta['relations'] for the given page and revision
-     *
-     * @param        $id
-     * @param string $rev
-     * @return mixed
-     */
-    protected function getMetaRelation($id, $rev='') {
-        //current revision
-        if ($rev == '') return p_get_metadata($id, 'relation');
-
-        // get instructions
-        $instructions = p_cached_instructions(wikiFN($id, $rev),false,$id);
-
-        // set up the renderer
-        $renderer = new Doku_Renderer_metadata();
-
-        // loop through the instructions
-        foreach ($instructions as $instruction){
-            //execute only relation['media'] and relation['haspart'] functions
-            if ($instruction[0] != 'locallink' &&
-                $instruction[0] != 'internallink' &&
-                $instruction[0] != 'externallink' &&
-                $instruction[0] != 'interwikilink' &&
-                $instruction[0] != 'windowssharelink' &&
-                $instruction[0] != 'emaillink' &&
-                $instruction[0] != 'internalmedia' &&
-                $instruction[0] != 'rss') continue;
-
-            // execute the callback against the renderer
-            call_user_func_array(array(&$renderer, $instruction[0]), (array) $instruction[1]);
-        }
-
-        return $renderer->meta['relation'];
-    }
-
-    /**
      * Prepare cache
      *
      * @param array  $depends (reference) array with dependencies
