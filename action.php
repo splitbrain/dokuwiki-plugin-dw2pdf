@@ -479,12 +479,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         header('Pragma: public');
         http_conditionalRequest(filemtime($cachefile));
         global $INPUT;
-        if ($INPUT->has('outputTarget')) {
-            $outputTarget = $INPUT->str('outputTarget');
-        }
-        if (empty($outputTarget)) {
-            $outputTarget = $this->getConf('output');
-        }
+        $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
 
         $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
         if($outputTarget === 'file') {
