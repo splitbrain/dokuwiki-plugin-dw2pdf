@@ -29,7 +29,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
     /**
      * Constructor. Sets the correct template
-     * 
+     *
      * @param string $title
      */
     public function __construct($title=null) {
@@ -45,6 +45,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function register(Doku_Event_Handler $controller) {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert', array());
         $controller->register_hook('TEMPLATE_PAGETOOLS_DISPLAY', 'BEFORE', $this, 'addbutton', array());
+        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'addsvgbutton', array());
     }
 
     /**
@@ -367,7 +368,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '<html><head>';
             $html .= '<style type="text/css">';
         }
-        
+
         $styles = '@page { size:auto; ' . $template['page'] . '}';
         $styles .= '@page :first {' . $template['first'] . '}';
 
@@ -376,7 +377,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $styles .= '@page portrait-page { size:portrait }';
         $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
         $styles .= $this->load_css();
-        
+
         $mpdf->WriteHTML($styles, 1);
 
         if($isDebug) {
@@ -876,5 +877,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 ) +
                 array_slice($event->data['items'], -1, 1, true);
         }
+    }
+
+    /**
+     * Add 'export pdf' button to page tools, new SVG based mechanism
+     *
+     * @param Doku_Event $event
+     */
+    public function addsvgbutton(Doku_Event $event) {
+        if($event->data['view'] != 'page') return;
+        array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
     }
 }
