@@ -22,7 +22,7 @@
 }
 /*Keep pagetool icon on left side for rtl languages*/
 [dir=rtl] #dokuwiki__pagetools ul li a.export_pdf:hover,
-#dokuwiki__pagetools ul li a.export_pdf:active,
-#dokuwiki__pagetools ul li a.export_pdf:focus {
+[dir=rtl] #dokuwiki__pagetools ul li a.export_pdf:active,
+[dir=rtl] #dokuwiki__pagetools ul li a.export_pdf:focus {
     background-position: left -45px;
 }
