@@ -479,9 +479,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
         header('Pragma: public');
         http_conditionalRequest(filemtime($cachefile));
+        global $INPUT;
+        $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
 
         $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
-        if($this->getConf('output') == 'file') {
+        if($outputTarget === 'file') {
             header('Content-Disposition: attachment; filename="' . $filename . '.pdf";');
         } else {
             header('Content-Disposition: inline; filename="' . $filename . '.pdf";');
