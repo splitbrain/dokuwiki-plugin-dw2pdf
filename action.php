@@ -55,11 +55,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return bool
      */
     public function convert(Doku_Event $event) {
-        global $ACT;
         global $ID;
 
         // our event?
-        if(($ACT != 'export_pdfbook') && ($ACT != 'export_pdf') && ($ACT != 'export_pdfns')) return false;
+        if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return false;
 
         // check user's rights
         if(auth_quickaclcheck($ID) < AUTH_READ) return false;
@@ -98,7 +97,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return string|bool
      */
     protected function collectExportPages(Doku_Event $event) {
-        global $ACT;
         global $ID;
         global $INPUT;
         global $conf;
@@ -106,7 +104,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // list of one or multiple pages
         $list = array();
 
-        if($ACT == 'export_pdf') {
+        if($event->data == 'export_pdf') {
             $list[0] = $ID;
             $this->title = $INPUT->str('pdftitle'); //DEPRECATED
             $this->title = $INPUT->str('book_title', $this->title, true);
@@ -114,7 +112,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $this->title = p_get_first_heading($ID);
             }
 
-        } elseif($ACT == 'export_pdfns') {
+        } elseif($event->data == 'export_pdfns') {
             //check input for title and ns
             if(!$this->title = $INPUT->str('book_title')) {
                 $this->showPageWithErrorMsg($event, 'needtitle');
