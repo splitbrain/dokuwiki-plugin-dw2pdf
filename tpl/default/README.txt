@@ -46,7 +46,9 @@ footer files.
   * ''@WIKIURL@'' -- URL to the wiki
   * ''@DATE@'' -- time when the PDF was created (might be in the past if cached)
   * ''@BASE@'' -- the wiki base directory
+  * ''@INC@'' -- the absolute wiki install directory on the filesystem
   * ''@TPLBASE@'' -- the PDF template base directory (use to reference images)
+  * ''@TPLINC@'' -- the absolute path to the PDF template directory on the filesystem
 
 //Remark about Bookcreator//:
 The page depended replacements are only for ''citation.html'' updated for every page.

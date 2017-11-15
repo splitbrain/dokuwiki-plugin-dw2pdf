@@ -554,7 +554,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             '@WIKIURL@' => DOKU_URL,
             '@DATE@'    => dformat(time()),
             '@BASE@'    => DOKU_BASE,
-            '@TPLBASE@' => DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/'
+            '@INC@'     => DOKU_INC,
+            '@TPLBASE@' => DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
+            '@TPLINC@'  => DOKU_INC . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/'
         );
 
         // set HTML element
