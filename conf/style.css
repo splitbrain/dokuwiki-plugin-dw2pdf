@@ -21,6 +21,9 @@ table.inline {
 table.inline td, th {
     border: 1px solid #808080;
 }
+th {
+    text-align: left;
+}
 
 pre {
     background-color: #eeeeee;
