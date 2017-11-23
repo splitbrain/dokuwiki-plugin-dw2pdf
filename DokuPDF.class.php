@@ -19,6 +19,13 @@ require __DIR__ . '/DokuImageProcessorDecorator.class.php';
  */
 class DokuPDF extends \Mpdf\Mpdf {
 
+    /**
+     * DokuPDF constructor.
+     *
+     * @param string $pagesize
+     * @param string $orientation
+     * @param int $fontsize
+     */
     function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11) {
         global $conf;
 
@@ -71,6 +78,9 @@ class DokuPDF extends \Mpdf\Mpdf {
 
     /**
      * Decode all paths, since DokuWiki uses XHTML compliant URLs
+     *
+     * @param string $path
+     * @param string $basepath
      */
     function GetFullPath(&$path, $basepath = '') {
         $path = htmlspecialchars_decode($path);
