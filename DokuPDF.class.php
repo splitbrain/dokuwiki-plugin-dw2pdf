@@ -9,7 +9,6 @@
  */
 global $conf;
 if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
-if(!defined('_MPDF_TTFONTDATAPATH')) define('_MPDF_TTFONTDATAPATH', $conf['cachedir'] . '/mpdf_ttf/');
 
 require_once __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/DokuImageProcessorDecorator.class.php';
@@ -20,10 +19,16 @@ require __DIR__ . '/DokuImageProcessorDecorator.class.php';
  */
 class DokuPDF extends \Mpdf\Mpdf {
 
+    /**
+     * DokuPDF constructor.
+     *
+     * @param string $pagesize
+     * @param string $orientation
+     * @param int $fontsize
+     */
     function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11) {
         global $conf;
 
-        io_mkdir_p(_MPDF_TTFONTDATAPATH);
         io_mkdir_p(_MPDF_TEMP_PATH);
 
         $format = $pagesize;
@@ -50,6 +55,7 @@ class DokuPDF extends \Mpdf\Mpdf {
                 'format' => $format,
                 'fontsize' => $fontsize,
                 'ImageProcessorClass' => DokuImageProcessorDecorator::class,
+                'tempDir' => _MPDF_TEMP_PATH //$conf['tmpdir'] . '/tmp/dwpdf'
             )
         );
 
@@ -72,6 +78,9 @@ class DokuPDF extends \Mpdf\Mpdf {
 
     /**
      * Decode all paths, since DokuWiki uses XHTML compliant URLs
+     *
+     * @param string $path
+     * @param string $basepath
      */
     function GetFullPath(&$path, $basepath = '') {
         $path = htmlspecialchars_decode($path);
