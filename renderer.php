@@ -59,6 +59,10 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         global $ID;
 
         $hid = $this->_headerToLink($text, true);
+
+        //only add items within global configured levels (doesn't check the pdf toc settings)
+        $this->toc_additem($hid, $text, $level);
+
         $check = false;
         $pid = sectionID($ID, $check);
         $hid = $pid . '__' . $hid;
@@ -74,11 +78,11 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
             $step = $level - $this->lastheadlevel;
 
-            if ($step > 0) 
+            if ($step > 0)
             	$this->current_bookmark_level += 1;
             else if ($step <0)  {
             	$this->current_bookmark_level -= 1;
-                if ($this->current_bookmark_level < 0) 
+                if ($this->current_bookmark_level < 0)
                     $this->current_bookmark_level = 0;
             }
 
