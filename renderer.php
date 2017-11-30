@@ -61,7 +61,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param int $level
      * @param int $pos
      */
-    function header($text, $level, $pos) {
+    public function header($text, $level, $pos) {
         if(!$text) return; //skip empty headlines
         global $ID;
 
@@ -74,36 +74,38 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $pid = sectionID($ID, $check);
         $hid = $pid . '__' . $hid;
 
-            // add PDF bookmark
+        // add PDF bookmark
         $bookmark = '';
         $bmlevel = $this->actioninstance->getExportConfig('maxbookmarks');
-        if($bmlevel && $bmlevel >= $level){
+        if($bmlevel && $bmlevel >= $level) {
             // PDF readers choke on invalid nested levels
 
-            if ($this->lastheadlevel == -1)
-            	$this->lastheadlevel = $level;
+            if($this->lastheadlevel == -1) {
+                $this->lastheadlevel = $level;
+            }
 
             $step = $level - $this->lastheadlevel;
 
-            if ($step > 0)
-            	$this->current_bookmark_level += 1;
-            else if ($step <0)  {
-            	$this->current_bookmark_level -= 1;
-                if ($this->current_bookmark_level < 0)
+            if($step > 0) {
+                $this->current_bookmark_level += 1;
+            } elseif($step < 0) {
+                $this->current_bookmark_level -= 1;
+                if($this->current_bookmark_level < 0) {
                     $this->current_bookmark_level = 0;
+                }
             }
 
             $this->lastheadlevel = $level;
 
-            $bookmark = '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($this->current_bookmark_level).'" />';
+            $bookmark = '<bookmark content="' . $this->_xmlEntities($text) . '" level="' . ($this->current_bookmark_level) . '" />';
         }
 
         // print header
-        $this->doc .= DOKU_LF."<h$level>$bookmark";
+        $this->doc .= DOKU_LF . "<h$level>$bookmark";
         $this->doc .= "<a name=\"$hid\">";
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
-        $this->doc .= "</h$level>".DOKU_LF;
+        $this->doc .= "</h$level>" . DOKU_LF;
     }
 
     /**
