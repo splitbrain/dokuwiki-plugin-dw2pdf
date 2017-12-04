@@ -660,7 +660,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 DOKU_INC . 'lib/styles/print.css'
                     => DOKU_BASE . 'lib/styles/',
             ),
-            css_pluginstyles('all'),
             $this->css_pluginPDFstyles(),
             array(
                 DOKU_PLUGIN . 'dw2pdf/conf/style.css'
@@ -708,13 +707,21 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         foreach($plugins as $p) {
             if(in_array($p, $usestyle)) {
                 $list[DOKU_PLUGIN . "$p/screen.css"] = DOKU_BASE . "lib/plugins/$p/";
+                $list[DOKU_PLUGIN . "$p/screen.less"] = DOKU_BASE . "lib/plugins/$p/";
+
                 $list[DOKU_PLUGIN . "$p/style.css"] = DOKU_BASE . "lib/plugins/$p/";
+                $list[DOKU_PLUGIN . "$p/style.less"] = DOKU_BASE . "lib/plugins/$p/";
             }
+
+            $list[DOKU_PLUGIN . "$p/all.css"] = DOKU_BASE . "lib/plugins/$p/";
+            $list[DOKU_PLUGIN . "$p/all.less"] = DOKU_BASE . "lib/plugins/$p/";
 
             if(file_exists(DOKU_PLUGIN . "$p/pdf.css")) {
                 $list[DOKU_PLUGIN . "$p/pdf.css"] = DOKU_BASE . "lib/plugins/$p/";
+                $list[DOKU_PLUGIN . "$p/pdf.less"] = DOKU_BASE . "lib/plugins/$p/";
             } else {
                 $list[DOKU_PLUGIN . "$p/print.css"] = DOKU_BASE . "lib/plugins/$p/";
+                $list[DOKU_PLUGIN . "$p/print.less"] = DOKU_BASE . "lib/plugins/$p/";
             }
         }
         return $list;
