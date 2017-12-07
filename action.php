@@ -756,8 +756,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return int
      */
     public function _pagenamesort($a, $b) {
-        if($a['id'] <= $b['id']) return -1;
-        if($a['id'] > $b['id']) return 1;
+        // do not sort numbers before namespace separators
+        $aID = str_replace(':', '/', $a['id']);
+        $bID = str_replace(':', '/', $b['id']);
+        if($aID <= $bID) return -1;
+        if($aID > $bID) return 1;
         return 0;
     }
 
