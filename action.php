@@ -470,20 +470,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '<tocpagebreak>';
         }
 
-        // store original pageid
-        $keep = $ID;
-
         // loop over all pages
         $counter = 0;
         $no_pages = count($this->list);
         foreach($this->list as $page) {
             $counter++;
 
-            // set global pageid to the rendered page
-            $ID = $page;
-
-            //$pagehtml = p_cached_output($filename, 'dw2pdf', $page);
-            $pagehtml = $this->p_wiki_dw2pdf($ID, $rev, $date_at);
+            $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at);
             //file doesn't exists
             if($pagehtml == '') {
                 continue;
@@ -498,8 +491,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $html .= $pagehtml;
             }
         }
-        //restore ID
-        $ID = $keep;
 
         // insert the back page
         $body_end = $template['back'];
