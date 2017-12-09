@@ -954,7 +954,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function addsvgbutton(Doku_Event $event) {
-        if($event->data['view'] != 'page') return;
+        global $INFO;
+        if($event->data['view'] != 'page' || !$this->getConf('showexportbutton')) {
+            return;
+        }
+
+        if(!$INFO['exists']) {
+            return;
+        }
+
         array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
     }
 }
