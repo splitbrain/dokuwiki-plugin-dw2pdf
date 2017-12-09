@@ -118,7 +118,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return string|bool
      */
     protected function collectExportPages(Doku_Event $event) {
-        global $ID;
+        global $ID, $REV;
         global $INPUT;
         global $conf;
 
@@ -131,6 +131,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $this->title = $INPUT->str('book_title', $this->title, true);
             if(empty($this->title)) {
                 $this->title = p_get_first_heading($ID);
+            }
+
+            $filename = wikiFN($ID, $REV);
+            if(!file_exists($filename)) {
+                $this->showPageWithErrorMsg($event, 'notexist');
+                return false;
             }
 
         } elseif($event->data == 'export_pdfns') {
