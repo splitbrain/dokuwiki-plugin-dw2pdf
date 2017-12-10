@@ -14,8 +14,10 @@ if (!defined('DOKU_INC')) die();
  */
 class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
-    private $lastheadlevel = -1;
-    private $current_bookmark_level = 0;
+    private $lastHeaderLevel = -1;
+    private $originalHeaderLevel = 0;
+    private $difference = 0;
+
     /**
      * Stores action instance
      *
@@ -58,7 +60,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * Simplified header printing with PDF bookmarks
      *
      * @param string $text
-     * @param int $level
+     * @param int $level from 1 (highest) to 6 (lowest)
      * @param int $pos
      */
     public function header($text, $level, $pos) {
@@ -76,28 +78,11 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
         // add PDF bookmark
         $bookmark = '';
-        $bmlevel = $this->actioninstance->getExportConfig('maxbookmarks');
-        if($bmlevel && $bmlevel >= $level) {
-            // PDF readers choke on invalid nested levels
-
-            if($this->lastheadlevel == -1) {
-                $this->lastheadlevel = $level;
-            }
-
-            $step = $level - $this->lastheadlevel;
-
-            if($step > 0) {
-                $this->current_bookmark_level += 1;
-            } elseif($step < 0) {
-                $this->current_bookmark_level -= 1;
-                if($this->current_bookmark_level < 0) {
-                    $this->current_bookmark_level = 0;
-                }
-            }
-
-            $this->lastheadlevel = $level;
-
-            $bookmark = '<bookmark content="' . $this->_xmlEntities($text) . '" level="' . ($this->current_bookmark_level) . '" />';
+        $maxbookmarklevel = $this->actioninstance->getExportConfig('maxbookmarks');
+        // 0: off, 1-6: show down to this level
+        if($maxbookmarklevel && $maxbookmarklevel >= $level) {
+            $bookmarklevel = $this->calculateBookmarklevel($level);
+            $bookmark = '<bookmark content="' . $this->_xmlEntities($text) . '" level="' . ($bookmarklevel) . '" />';
         }
 
         // print header
@@ -106,6 +91,36 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
         $this->doc .= "</h$level>" . DOKU_LF;
+    }
+
+    /**
+     * Bookmark levels might increase maximal +1 per level.
+     * (note: levels start at 1, bookmarklevels at 0)
+     *
+     * @param int $level 1 (highest) to 6 (lowest)
+     * @return int
+     */
+    protected function calculateBookmarklevel($level) {
+        if($this->lastHeaderLevel == -1) {
+            $this->lastHeaderLevel = $level;
+        }
+        $step = $level - $this->lastHeaderLevel;
+        if($step > 1) {
+            $this->difference = $this->difference + ($step - 1);
+        }
+        if($step < 0 ) {
+            $this->difference = min($this->difference, $level - $this->originalHeaderLevel);
+            $this->difference = max($this->difference, 0);
+        }
+
+        $bookmarklevel = $level - $this->difference;
+
+        if($step > 1) {
+            $this->originalHeaderLevel = $bookmarklevel;
+        }
+
+        $this->lastHeaderLevel = $level;
+        return $bookmarklevel - 1; //zero indexed
     }
 
     /**
