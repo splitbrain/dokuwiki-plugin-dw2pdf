@@ -7,7 +7,7 @@
  */
 
 // must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
+if(!defined('DOKU_INC')) die();
 
 /**
  * Render xhtml suitable as input for mpdf library
@@ -51,7 +51,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param $format
      * @return bool
      */
-    public function canRender($format){
+    public function canRender($format) {
         if($format == 'xhtml') return true;
         return false;
     }
@@ -108,7 +108,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         if($step > 1) {
             $this->difference = $this->difference + ($step - 1);
         }
-        if($step < 0 ) {
+        if($step < 0) {
             $this->difference = min($this->difference, $level - $this->originalHeaderLevel);
             $this->difference = max($this->difference, 0);
         }
@@ -137,14 +137,14 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      */
     function locallink($hash, $name = null, $returnonly = false) {
         global $ID;
-        $name  = $this->_getLinkTitle($name, $hash, $isImage);
-        $hash  = $this->_headerToLink($hash);
-        $title = $ID.' ↵';
+        $name = $this->_getLinkTitle($name, $hash, $isImage);
+        $hash = $this->_headerToLink($hash);
+        $title = $ID . ' ↵';
 
         $check = false;
         $pid = sectionID($ID, $check);
 
-        $this->doc .= '<a href="#'. $pid . '__' . $hash.'" title="'.$title.'" class="wikilink1">';
+        $this->doc .= '<a href="#' . $pid . '__' . $hash . '" title="' . $title . '" class="wikilink1">';
         $this->doc .= $name;
         $this->doc .= '</a>';
     }
@@ -161,17 +161,17 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param bool   $render    should the media be embedded inline or just linked
      * @return string
      */
-    function _media ($src, $title=NULL, $align=NULL, $width=NULL,
-                      $height=NULL, $cache=NULL, $render = true) {
+    function _media($src, $title = NULL, $align = NULL, $width = NULL,
+                    $height = NULL, $cache = NULL, $render = true) {
 
         $out = '';
-        if($align == 'center'){
+        if($align == 'center') {
             $out .= '<div align="center" style="text-align: center">';
         }
 
-        $out .= parent::_media ($src, $title, $align, $width, $height, $cache, $render);
+        $out .= parent::_media($src, $title, $align, $width, $height, $cache, $render);
 
-        if($align == 'center'){
+        if($align == 'center') {
             $out .= '</div>';
         }
 
@@ -193,7 +193,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param array $link
      * @return string
      */
-    function _formatLink($link){
+    function _formatLink($link) {
 
         // for internal links contains the title the pageid
         if(in_array($link['title'], $this->actioninstance->getExportedPages())) {
@@ -204,18 +204,17 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
             $link['url'] = "#" . $pid . '__' . $hash;
         }
 
-
         // prefix interwiki links with interwiki icon
-        if($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/',$link['class'],$m)){
-            if(file_exists(DOKU_INC.'lib/images/interwiki/'.$m[1].'.png')){
-                $img = DOKU_BASE.'lib/images/interwiki/'.$m[1].'.png';
-            }elseif(file_exists(DOKU_INC.'lib/images/interwiki/'.$m[1].'.gif')){
-                $img = DOKU_BASE.'lib/images/interwiki/'.$m[1].'.gif';
-            }else{
-                $img = DOKU_BASE.'lib/images/interwiki.png';
+        if($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/', $link['class'], $m)) {
+            if(file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.png')) {
+                $img = DOKU_BASE . 'lib/images/interwiki/' . $m[1] . '.png';
+            } elseif(file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.gif')) {
+                $img = DOKU_BASE . 'lib/images/interwiki/' . $m[1] . '.gif';
+            } else {
+                $img = DOKU_BASE . 'lib/images/interwiki.png';
             }
 
-            $link['name'] = '<img src="'.$img.'" width="16" height="16" style="vertical-align: center" class="'.$link['class'].'" />'.$link['name'];
+            $link['name'] = '<img src="' . $img . '" width="16" height="16" style="vertical-align: center" class="' . $link['class'] . '" />' . $link['name'];
         }
         return parent::_formatLink($link);
     }
