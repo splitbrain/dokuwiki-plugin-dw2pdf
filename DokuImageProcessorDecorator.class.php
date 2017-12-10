@@ -42,8 +42,10 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
             if(!empty($media)) {
                 // any size restrictions?
                 $w = $h = 0;
+                $rev = '';
                 if(preg_match('/[\?&]w=(\d+)/', $file, $m)) $w = $m[1];
                 if(preg_match('/[\?&]h=(\d+)/', $file, $m)) $h = $m[1];
+                if(preg_match('/[&\?]rev=(\d+)/', $file, $m)) $rev = $m[1];
 
                 if(media_isexternal($media)) {
                     $local = media_get_from_URL($media, $ext, -1);
@@ -54,7 +56,7 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
                     if(auth_quickaclcheck(getNS($media) . ':X') < AUTH_READ) {
                         $file = '';
                     }
-                    $local = mediaFN($media);
+                    $local = mediaFN($media, $rev);
                 }
 
                 //handle image resizing/cropping

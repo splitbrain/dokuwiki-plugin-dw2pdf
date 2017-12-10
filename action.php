@@ -56,6 +56,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     public function convert(Doku_Event $event) {
         global $ID;
+        global $REV, $DATE_AT, $conf;
 
         // our event?
         if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return false;
@@ -72,23 +73,43 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // it's ours, no one else's
         $event->preventDefault();
 
-        // prepare cache and its dependencies
-        $depends = array();
-        $cache = $this->prepareCache($depends);
+        if ($ACT === 'export_pdf' && ($REV || $DATE_AT)) {
+            $tempFilename = tempnam($conf['tmpdir'], 'dw2pdf_');
+            $generateNewPdf = true;
+            $isTempFile = true;
+        } else {
+            // prepare cache and its dependencies
+            $depends = array();
+            $cache = $this->prepareCache($depends);
+            $tempFilename = $cache->cache;
+            $generateNewPdf = !$this->getConf('usecache')
+                || $this->getExportConfig('isDebug')
+                || !$cache->useCache($depends);
+            $isTempFile = false;
+        }
 
         // hard work only when no cache available or needed for debugging
-        if(!$this->getConf('usecache') || $this->getExportConfig('isDebug') || !$cache->useCache($depends)) {
+        if($generateNewPdf) {
             // generating the pdf may take a long time for larger wikis / namespaces with many pages
             set_time_limit(0);
+            try {
+                $this->generatePDF($tempFilename);
+            } catch (Mpdf\MpdfException $e) {
+                //prevent act_export()
+                $ACT = 'show';
+                msg($e->getMessage(), -1);
+                return false;
+            }
 
-            $this->generatePDF($cache->cache);
         }
 
         // deliver the file
-        $this->sendPDFFile($cache->cache);
+        $this->sendPDFFile($tempFilename);
+        if ($isTempFile) {
+            unlink($tempFilename);
+        }
         return true;
     }
-
 
     /**
      * Obtain list of pages and title, based on url parameters
@@ -311,14 +332,51 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * Returns the parsed Wikitext in dw2pdf for the given id and revision
+     *
+     * @param string     $id  page id
+     * @param string|int $rev revision timestamp or empty string
+     * @param string     $date_at
+     * @return null|string
+     */
+    protected function p_wiki_dw2pdf($id, $rev = '', $date_at = '') {
+        $file = wikiFN($id, $rev);
+
+        if(!file_exists($file)) return '';
+
+        //ensure $id is in global $ID (needed for parsing)
+        global $ID;
+        $keep = $ID;
+        $ID   = $id;
+
+        $ret  = '';
+
+        if($rev || $date_at) {
+            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at); //no caching on old revisions
+        } else {
+            $ret = p_cached_output($file, 'dw2pdf', $id);
+        }
+
+        //restore ID (just in case)
+        $ID = $keep;
+
+        return $ret;
+    }
+
+    /**
      * Build a pdf from the html
      *
      * @param string $cachefile
      */
     protected function generatePDF($cachefile) {
-        global $ID;
-        global $REV;
-        global $INPUT;
+        global $ID, $REV, $INPUT, $DATE_AT, $ACT;
+
+        if ($ACT == 'export_pdf') { //only one page is exported
+            $rev = $REV;
+            $date_at = $DATE_AT;
+        } else { //we are exporting entre namespace, ommit revisions
+            $rev = $date_at = '';
+        }
 
         //some shortcuts to export settings
         $hasToC = $this->getExportConfig('hasToC');
@@ -411,24 +469,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $html .= '<tocpagebreak>';
         }
 
-        // store original pageid
-        $keep = $ID;
-
         // loop over all pages
         $counter = 0;
         $no_pages = count($this->list);
         foreach($this->list as $page) {
             $counter++;
-            $filename = wikiFN($page, $REV);
 
-            if(!file_exists($filename)) {
+            $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at);
+            //file doesn't exists
+            if($pagehtml == '') {
                 continue;
             }
-
-            // set global pageid to the rendered page
-            $ID = $page;
-
-            $pagehtml = p_cached_output($filename, 'dw2pdf', $page);
             $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
             if($counter < $no_pages) {
                 $pagehtml .= '<pagebreak />';
@@ -439,8 +490,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $html .= $pagehtml;
             }
         }
-        //restore ID
-        $ID = $keep;
 
         // insert the back page
         $body_end = $template['back'];
@@ -598,7 +647,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return string
      */
     protected function page_depend_replacements($raw, $id) {
-        global $REV;
+        global $REV, $DATE_AT;
 
         // generate qr code for this page using google infographics api
         $qr_code = '';
@@ -610,7 +659,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // prepare replacements
         $replace['@ID@']      = $id;
         $replace['@UPDATE@']  = dformat(filemtime(wikiFN($id, $REV)));
-        $replace['@PAGEURL@'] = wl($id, ($REV) ? array('rev' => $REV) : false, true, "&");
+
+        $params = array();
+        if($DATE_AT) {
+            $params['at'] = $DATE_AT;
+        } elseif($REV) {
+            $params['rev'] = $REV;
+        }
+        $replace['@PAGEURL@'] = wl($id, $params, true, "&");
         $replace['@QRCODE@']  = $qr_code;
 
         $content = str_replace(array_keys($replace), array_values($replace), $raw);
@@ -641,7 +697,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
         return strftime($match[2], strtotime($match[1]));
     }
-
 
     /**
      * Load all the style sheets and apply the needed replacements
@@ -870,11 +925,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function addbutton(Doku_Event $event) {
-        global $ID, $REV;
+        global $ID, $REV, $DATE_AT;
 
         if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
             $params = array('do' => 'export_pdf');
-            if($REV) {
+            if($DATE_AT) {
+                $params['at'] = $DATE_AT;
+            } elseif($REV) {
                 $params['rev'] = $REV;
             }
 
