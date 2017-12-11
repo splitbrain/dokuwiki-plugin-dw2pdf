@@ -26,6 +26,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     protected $tpl;
     protected $title;
     protected $list = array();
+    protected $onetimefile = false;
 
     /**
      * Constructor. Sets the correct template
@@ -35,6 +36,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function __construct($title=null) {
         $this->tpl   = $this->getExportConfig('template');
         $this->title = $title ? $title : '';
+    }
+
+    /**
+     * Delete cached files that were for one-time use
+     */
+    public function __destruct() {
+        if($this->onetimefile) {
+            unlink($this->onetimefile);
+        }
     }
 
     /**
@@ -70,18 +80,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         if($event->data === 'export_pdf' && ($REV || $DATE_AT)) {
-            $tempFilename = tempnam($conf['tmpdir'], 'dw2pdf_');
+            $cachefile = tempnam($conf['tmpdir'] . '/dwpdf', 'dw2pdf_');
+            $this->onetimefile = $cachefile;
             $generateNewPdf = true;
-            $isTempFile = true;
         } else {
             // prepare cache and its dependencies
             $depends = array();
             $cache = $this->prepareCache($depends);
-            $tempFilename = $cache->cache;
+            $cachefile = $cache->cache;
             $generateNewPdf = !$this->getConf('usecache')
                 || $this->getExportConfig('isDebug')
                 || !$cache->useCache($depends);
-            $isTempFile = false;
         }
 
         // hard work only when no cache available or needed for debugging
@@ -89,7 +98,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             // generating the pdf may take a long time for larger wikis / namespaces with many pages
             set_time_limit(0);
             try {
-                $this->generatePDF($tempFilename, $event);
+                $this->generatePDF($cachefile, $event);
             } catch(Mpdf\MpdfException $e) {
                 if($INPUT->has('selection')) {
                     http_status(400);
@@ -108,11 +117,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $event->preventDefault(); // after prevent, $event->data cannot be changed
 
         // deliver the file
-        $this->sendPDFFile($tempFilename);
-        if($isTempFile) {
-            unlink($tempFilename);
-        }
-
+        $this->sendPDFFile($cachefile);  //exits
     }
 
     /**
