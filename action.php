@@ -52,22 +52,21 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Do the HTML to PDF conversion work
      *
      * @param Doku_Event $event
-     * @return bool
      */
     public function convert(Doku_Event $event) {
         global $ID, $REV, $DATE_AT;
         global $conf, $INPUT;
 
         // our event?
-        if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return false;
+        if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return;
 
         // check user's rights
-        if(auth_quickaclcheck($ID) < AUTH_READ) return false;
+        if(auth_quickaclcheck($ID) < AUTH_READ) return;
 
         if($data = $this->collectExportPages($event)) {
             list($this->title, $this->list) = $data;
         } else {
-            return false;
+            return;
         }
 
         if($event->data === 'export_pdf' && ($REV || $DATE_AT)) {
@@ -101,7 +100,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                     $event->data = 'show';
                     msg($e->getMessage(), -1);
                     $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
-                    return false;
+                    return;
                 }
             }
         }
@@ -114,7 +113,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             unlink($tempFilename);
         }
 
-        return true;
     }
 
     /**
@@ -377,6 +375,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Build a pdf from the html
      *
      * @param string $cachefile
+     * @param Doku_Event $event
      */
     protected function generatePDF($cachefile, $event) {
         global $REV, $INPUT, $DATE_AT;
@@ -406,7 +405,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if($self['port']) {
             $url .= ':' . $self['port'];
         }
-        $mpdf->setBasePath($url);
+        $mpdf->SetBasePath($url);
 
         // Set the title
         $mpdf->SetTitle($this->title);
