@@ -24,8 +24,13 @@ class MenuItem extends AbstractItem {
      */
     public function __construct() {
         parent::__construct();
-        global $REV;
-        if($REV) $this->params['rev'] = $REV;
+        global $REV, $DATE_AT;
+
+        if($DATE_AT) {
+            $this->params['at'] = $DATE_AT;
+        } elseif($REV) {
+            $this->params['rev'] = $REV;
+        }
     }
 
     /**

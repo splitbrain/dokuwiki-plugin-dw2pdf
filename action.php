@@ -26,6 +26,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     protected $tpl;
     protected $title;
     protected $list = array();
+    protected $onetimefile = false;
 
     /**
      * Constructor. Sets the correct template
@@ -35,6 +36,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function __construct($title=null) {
         $this->tpl   = $this->getExportConfig('template');
         $this->title = $title ? $title : '';
+    }
+
+    /**
+     * Delete cached files that were for one-time use
+     */
+    public function __destruct() {
+        if($this->onetimefile) {
+            unlink($this->onetimefile);
+        }
     }
 
     /**
@@ -52,40 +62,35 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Do the HTML to PDF conversion work
      *
      * @param Doku_Event $event
-     * @return bool
      */
     public function convert(Doku_Event $event) {
-        global $ID;
-        global $REV, $DATE_AT, $conf;
+        global $ID, $REV, $DATE_AT;
+        global $conf, $INPUT;
 
         // our event?
-        if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return false;
+        if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return;
 
         // check user's rights
-        if(auth_quickaclcheck($ID) < AUTH_READ) return false;
+        if(auth_quickaclcheck($ID) < AUTH_READ) return;
 
         if($data = $this->collectExportPages($event)) {
             list($this->title, $this->list) = $data;
         } else {
-            return false;
+            return;
         }
 
-        // it's ours, no one else's
-        $event->preventDefault();
-
-        if ($ACT === 'export_pdf' && ($REV || $DATE_AT)) {
-            $tempFilename = tempnam($conf['tmpdir'], 'dw2pdf_');
+        if($event->data === 'export_pdf' && ($REV || $DATE_AT)) {
+            $cachefile = tempnam($conf['tmpdir'] . '/dwpdf', 'dw2pdf_');
+            $this->onetimefile = $cachefile;
             $generateNewPdf = true;
-            $isTempFile = true;
         } else {
             // prepare cache and its dependencies
             $depends = array();
             $cache = $this->prepareCache($depends);
-            $tempFilename = $cache->cache;
+            $cachefile = $cache->cache;
             $generateNewPdf = !$this->getConf('usecache')
                 || $this->getExportConfig('isDebug')
                 || !$cache->useCache($depends);
-            $isTempFile = false;
         }
 
         // hard work only when no cache available or needed for debugging
@@ -93,22 +98,26 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             // generating the pdf may take a long time for larger wikis / namespaces with many pages
             set_time_limit(0);
             try {
-                $this->generatePDF($tempFilename);
-            } catch (Mpdf\MpdfException $e) {
-                //prevent act_export()
-                $ACT = 'show';
-                msg($e->getMessage(), -1);
-                return false;
+                $this->generatePDF($cachefile, $event);
+            } catch(Mpdf\MpdfException $e) {
+                if($INPUT->has('selection')) {
+                    http_status(400);
+                    print $e->getMessage();
+                    exit();
+                } else {
+                    //prevent act_export()
+                    $event->data = 'show';
+                    msg($e->getMessage(), -1);
+                    $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
+                    return;
+                }
             }
-
         }
+
+        $event->preventDefault(); // after prevent, $event->data cannot be changed
 
         // deliver the file
-        $this->sendPDFFile($tempFilename);
-        if ($isTempFile) {
-            unlink($tempFilename);
-        }
-        return true;
+        $this->sendPDFFile($cachefile);  //exits
     }
 
     /**
@@ -118,7 +127,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return string|bool
      */
     protected function collectExportPages(Doku_Event $event) {
-        global $ID;
+        global $ID, $REV;
         global $INPUT;
         global $conf;
 
@@ -131,6 +140,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $this->title = $INPUT->str('book_title', $this->title, true);
             if(empty($this->title)) {
                 $this->title = p_get_first_heading($ID);
+            }
+
+            $filename = wikiFN($ID, $REV);
+            if(!file_exists($filename)) {
+                $this->showPageWithErrorMsg($event, 'notexist');
+                return false;
             }
 
         } elseif($event->data == 'export_pdfns') {
@@ -349,8 +364,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $keep = $ID;
         $ID   = $id;
 
-        $ret  = '';
-
         if($rev || $date_at) {
             $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at); //no caching on old revisions
         } else {
@@ -367,11 +380,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Build a pdf from the html
      *
      * @param string $cachefile
+     * @param Doku_Event $event
      */
-    protected function generatePDF($cachefile) {
-        global $ID, $REV, $INPUT, $DATE_AT, $ACT;
+    protected function generatePDF($cachefile, $event) {
+        global $REV, $INPUT, $DATE_AT;
 
-        if ($ACT == 'export_pdf') { //only one page is exported
+        if ($event->data == 'export_pdf') { //only one page is exported
             $rev = $REV;
             $date_at = $DATE_AT;
         } else { //we are exporting entre namespace, ommit revisions
@@ -396,7 +410,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if($self['port']) {
             $url .= ':' . $self['port'];
         }
-        $mpdf->setBasePath($url);
+        $mpdf->SetBasePath($url);
 
         // Set the title
         $mpdf->SetTitle($this->title);
@@ -954,7 +968,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function addsvgbutton(Doku_Event $event) {
-        if($event->data['view'] != 'page') return;
+        global $INFO;
+        if($event->data['view'] != 'page' || !$this->getConf('showexportbutton')) {
+            return;
+        }
+
+        if(!$INFO['exists']) {
+            return;
+        }
+
         array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
     }
 }

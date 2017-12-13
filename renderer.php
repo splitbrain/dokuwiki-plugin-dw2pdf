@@ -45,6 +45,9 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
     /**
      * Make available as XHTML replacement renderer
+     *
+     * @param $format
+     * @return bool
      */
     public function canRender($format){
         if($format == 'xhtml') return true;
@@ -53,6 +56,10 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
     /**
      * Simplified header printing with PDF bookmarks
+     *
+     * @param string $text
+     * @param int $level
+     * @param int $pos
      */
     function header($text, $level, $pos) {
         if(!$text) return; //skip empty headlines
@@ -102,10 +109,13 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     /**
      * Render a page local link
      *
+     * // modified copy of parent function
+     *
      * @param string $hash hash link identifier
      * @param string $name name for the link
+     * @param bool $returnonly
+     * @return string|void
      *
-     * // modified copy of parent function
      * @see Doku_Renderer_xhtml::locallink
      */
     function locallink($hash, $name = null, $returnonly = false) {
@@ -124,6 +134,15 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
     /**
      * Wrap centered media in a div to center it
+     *
+     * @param string $src       media ID
+     * @param string $title     descriptive text
+     * @param string $align     left|center|right
+     * @param int    $width     width of media in pixel
+     * @param int    $height    height of media in pixel
+     * @param string $cache     cache|recache|nocache
+     * @param bool   $render    should the media be embedded inline or just linked
+     * @return string
      */
     function _media ($src, $title=NULL, $align=NULL, $width=NULL,
                       $height=NULL, $cache=NULL, $render = true) {
@@ -144,16 +163,19 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
     /**
      * hover info makes no sense in PDFs, so drop acronyms
+     *
+     * @param string $acronym
      */
     function acronym($acronym) {
         $this->doc .= $this->_xmlEntities($acronym);
     }
 
-
     /**
      * reformat links if needed
+     *
+     * @param array $link
+     * @return string
      */
-
     function _formatLink($link){
 
         // for internal links contains the title the pageid
@@ -183,6 +205,11 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
     /**
      * no obfuscation for email addresses
+     *
+     * @param string $address
+     * @param null $name
+     * @param bool $returnonly
+     * @return string|void
      */
     function emaillink($address, $name = NULL, $returnonly = false) {
         global $conf;
