@@ -7,15 +7,17 @@
  */
 
 // must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
+if(!defined('DOKU_INC')) die();
 
 /**
  * Render xhtml suitable as input for mpdf library
  */
 class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
-    private $lastheadlevel = -1;
-    private $current_bookmark_level = 0;
+    private $lastHeaderLevel = -1;
+    private $originalHeaderLevel = 0;
+    private $difference = 0;
+
     /**
      * Stores action instance
      *
@@ -49,7 +51,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param $format
      * @return bool
      */
-    public function canRender($format){
+    public function canRender($format) {
         if($format == 'xhtml') return true;
         return false;
     }
@@ -58,10 +60,10 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * Simplified header printing with PDF bookmarks
      *
      * @param string $text
-     * @param int $level
+     * @param int $level from 1 (highest) to 6 (lowest)
      * @param int $pos
      */
-    function header($text, $level, $pos) {
+    public function header($text, $level, $pos) {
         if(!$text) return; //skip empty headlines
         global $ID;
 
@@ -74,36 +76,51 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $pid = sectionID($ID, $check);
         $hid = $pid . '__' . $hid;
 
-            // add PDF bookmark
+        // add PDF bookmark
         $bookmark = '';
-        $bmlevel = $this->actioninstance->getExportConfig('maxbookmarks');
-        if($bmlevel && $bmlevel >= $level){
-            // PDF readers choke on invalid nested levels
-
-            if ($this->lastheadlevel == -1)
-            	$this->lastheadlevel = $level;
-
-            $step = $level - $this->lastheadlevel;
-
-            if ($step > 0)
-            	$this->current_bookmark_level += 1;
-            else if ($step <0)  {
-            	$this->current_bookmark_level -= 1;
-                if ($this->current_bookmark_level < 0)
-                    $this->current_bookmark_level = 0;
-            }
-
-            $this->lastheadlevel = $level;
-
-            $bookmark = '<bookmark content="'.$this->_xmlEntities($text).'" level="'.($this->current_bookmark_level).'" />';
+        $maxbookmarklevel = $this->actioninstance->getExportConfig('maxbookmarks');
+        // 0: off, 1-6: show down to this level
+        if($maxbookmarklevel && $maxbookmarklevel >= $level) {
+            $bookmarklevel = $this->calculateBookmarklevel($level);
+            $bookmark = '<bookmark content="' . $this->_xmlEntities($text) . '" level="' . ($bookmarklevel) . '" />';
         }
 
         // print header
-        $this->doc .= DOKU_LF."<h$level>$bookmark";
+        $this->doc .= DOKU_LF . "<h$level>$bookmark";
         $this->doc .= "<a name=\"$hid\">";
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
-        $this->doc .= "</h$level>".DOKU_LF;
+        $this->doc .= "</h$level>" . DOKU_LF;
+    }
+
+    /**
+     * Bookmark levels might increase maximal +1 per level.
+     * (note: levels start at 1, bookmarklevels at 0)
+     *
+     * @param int $level 1 (highest) to 6 (lowest)
+     * @return int
+     */
+    protected function calculateBookmarklevel($level) {
+        if($this->lastHeaderLevel == -1) {
+            $this->lastHeaderLevel = $level;
+        }
+        $step = $level - $this->lastHeaderLevel;
+        if($step > 1) {
+            $this->difference = $this->difference + ($step - 1);
+        }
+        if($step < 0) {
+            $this->difference = min($this->difference, $level - $this->originalHeaderLevel);
+            $this->difference = max($this->difference, 0);
+        }
+
+        $bookmarklevel = $level - $this->difference;
+
+        if($step > 1) {
+            $this->originalHeaderLevel = $bookmarklevel;
+        }
+
+        $this->lastHeaderLevel = $level;
+        return $bookmarklevel - 1; //zero indexed
     }
 
     /**
@@ -120,14 +137,14 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      */
     function locallink($hash, $name = null, $returnonly = false) {
         global $ID;
-        $name  = $this->_getLinkTitle($name, $hash, $isImage);
-        $hash  = $this->_headerToLink($hash);
-        $title = $ID.' ↵';
+        $name = $this->_getLinkTitle($name, $hash, $isImage);
+        $hash = $this->_headerToLink($hash);
+        $title = $ID . ' ↵';
 
         $check = false;
         $pid = sectionID($ID, $check);
 
-        $this->doc .= '<a href="#'. $pid . '__' . $hash.'" title="'.$title.'" class="wikilink1">';
+        $this->doc .= '<a href="#' . $pid . '__' . $hash . '" title="' . $title . '" class="wikilink1">';
         $this->doc .= $name;
         $this->doc .= '</a>';
     }
@@ -144,17 +161,17 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param bool   $render    should the media be embedded inline or just linked
      * @return string
      */
-    function _media ($src, $title=NULL, $align=NULL, $width=NULL,
-                      $height=NULL, $cache=NULL, $render = true) {
+    function _media($src, $title = NULL, $align = NULL, $width = NULL,
+                    $height = NULL, $cache = NULL, $render = true) {
 
         $out = '';
-        if($align == 'center'){
+        if($align == 'center') {
             $out .= '<div align="center" style="text-align: center">';
         }
 
-        $out .= parent::_media ($src, $title, $align, $width, $height, $cache, $render);
+        $out .= parent::_media($src, $title, $align, $width, $height, $cache, $render);
 
-        if($align == 'center'){
+        if($align == 'center') {
             $out .= '</div>';
         }
 
@@ -176,7 +193,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param array $link
      * @return string
      */
-    function _formatLink($link){
+    function _formatLink($link) {
 
         // for internal links contains the title the pageid
         if(in_array($link['title'], $this->actioninstance->getExportedPages())) {
@@ -187,18 +204,17 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
             $link['url'] = "#" . $pid . '__' . $hash;
         }
 
-
         // prefix interwiki links with interwiki icon
-        if($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/',$link['class'],$m)){
-            if(file_exists(DOKU_INC.'lib/images/interwiki/'.$m[1].'.png')){
-                $img = DOKU_BASE.'lib/images/interwiki/'.$m[1].'.png';
-            }elseif(file_exists(DOKU_INC.'lib/images/interwiki/'.$m[1].'.gif')){
-                $img = DOKU_BASE.'lib/images/interwiki/'.$m[1].'.gif';
-            }else{
-                $img = DOKU_BASE.'lib/images/interwiki.png';
+        if($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/', $link['class'], $m)) {
+            if(file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.png')) {
+                $img = DOKU_BASE . 'lib/images/interwiki/' . $m[1] . '.png';
+            } elseif(file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.gif')) {
+                $img = DOKU_BASE . 'lib/images/interwiki/' . $m[1] . '.gif';
+            } else {
+                $img = DOKU_BASE . 'lib/images/interwiki.png';
             }
 
-            $link['name'] = '<img src="'.$img.'" width="16" height="16" style="vertical-align: center" class="'.$link['class'].'" />'.$link['name'];
+            $link['name'] = '<img src="' . $img . '" width="16" height="16" style="vertical-align: center" class="' . $link['class'] . '" />' . $link['name'];
         }
         return parent::_formatLink($link);
     }
