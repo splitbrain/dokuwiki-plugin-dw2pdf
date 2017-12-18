@@ -8,6 +8,7 @@
 $lang['export_pdf_button']     = 'Exportera till PDF';
 $lang['needtitle']             = 'Vad god fyll i rubrik';
 $lang['needns']                = 'Var god fyll i en existerande namnrymd';
+$lang['notexist']              = 'Den begärda sidan existerar inte.';
 $lang['empty']                 = 'Du har inte valt några sidor än.';
 $lang['tocheader']             = 'Innehållsföreteckning';
 $lang['export_ns']             = 'Exportera namnrymd "%s:" till filen %s.pdf';
