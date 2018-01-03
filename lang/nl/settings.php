@@ -3,12 +3,11 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author mark prins <mprins@users.sf.net>
  * @author Gerrit Uitslag <klapinklapin@gmail.com>
- * @author mprins <mprins@users.sf.net>
  * @author Wouter Wijsman <wwijsman@live.nl>
  * @author Johan Wijnker <johan@wijnker.eu>
  * @author Peter van Diest <peter.van.diest@xs4all.nl>
- * @author mark prins <mprins@users.sf.net>
  */
 $lang['pagesize']              = 'Het pagina formaat zoals dat door mPDF wordt ondersteund. Normaliter <code>A4</code> of <code>letter</code>.';
 $lang['orientation']           = 'Pagina oriëntatie.';
