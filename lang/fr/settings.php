@@ -3,10 +3,9 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Schplurtz le Déboulonné <schplurtz@laposte.net>
  * @author NicolasFriedli <nicolas@theologique.ch>
  * @author Fabrice Dejaigher <fabrice@chtiland.com>
- * @author Schplurtz le Déboulonné <schplurtz@laposte.net>
- * @author Nicolas Friedli <nicolas@theologique.ch>
  * @author tuxun <tuxuntrash@gmail.com>
  * @author olinuxx/trebmuh <trebmuh@tuxfamily.org>
  */
