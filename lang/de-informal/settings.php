@@ -3,11 +3,12 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Sebastian Engel <mail@engel-s.de>
  * @author Thomas Templin <templin@gnuwhv.de>
  * @author F. Mueller-Donath <j.felix@mueller-donath.de>
  */
 $lang['pagesize']              = 'Ein von mPDF unterstütztes Seitenformat. Normalerweise <code>A4</code> oder <code>letter</code>.';
-$lang['orientation']           = 'Die Seiten-Ausrichtung';
+$lang['orientation']           = 'Die Seiten-Ausrichtung.';
 $lang['orientation_o_portrait'] = 'Hochformat';
 $lang['orientation_o_landscape'] = 'Querformat';
 $lang['font-size']             = 'Die Schriftgröße für normalen Text in Punkten.';
