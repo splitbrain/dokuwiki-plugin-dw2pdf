@@ -67,7 +67,7 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
                         $local = media_resize_image($local, $ext, $w, $h);
                     }
                 }
-            } elseif(media_isexternal($file)) { // fixed external URLs
+            } elseif(!file_exists($local) && media_isexternal($file)) { // fixed external URLs
                 $local = media_get_from_URL($file, $ext, $conf['cachetime']);
             }
 
