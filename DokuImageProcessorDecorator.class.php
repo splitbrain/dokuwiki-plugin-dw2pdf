@@ -11,6 +11,13 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
      * takes care of checking image ACls.
      */
     public function getImage (&$file, $firsttime = true, $allowvector = true, $orig_srcpath = false, $interpolation = false) {
+        list($file, $orig_srcpath) = self::adjustGetImageLinks($file, $orig_srcpath);
+
+        return parent::getImage($file, $firsttime, $allowvector, $orig_srcpath, $interpolation);
+    }
+
+
+    public static function adjustGetImageLinks($file, $orig_srcpath) {
         global $conf;
 
         // build regex to parse URL back to media info
@@ -67,7 +74,7 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
                         $local = media_resize_image($local, $ext, $w, $h);
                     }
                 }
-            } elseif(media_isexternal($file)) { // fixed external URLs
+            } elseif(!file_exists($local) && media_isexternal($file)) { // fixed external URLs
                 $local = media_get_from_URL($file, $ext, $conf['cachetime']);
             }
 
@@ -77,6 +84,6 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
             }
         }
 
-        return parent::getImage($file, $firsttime, $allowvector, $orig_srcpath, $interpolation);
+        return [$file, $orig_srcpath];
     }
 }
