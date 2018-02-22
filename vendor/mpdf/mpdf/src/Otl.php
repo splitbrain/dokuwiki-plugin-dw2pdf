@@ -4,9 +4,12 @@ namespace Mpdf;
 
 use Mpdf\Css\TextVars;
 use Mpdf\Fonts\FontCache;
+
 use Mpdf\Shaper\Indic;
 use Mpdf\Shaper\Myanmar;
 use Mpdf\Shaper\Sea;
+
+use Mpdf\Utils\UtfString;
 
 class Otl
 {
@@ -1181,7 +1184,7 @@ class Otl
 				}
 				$newchar_data[$ectr] = ['bidi_class' => $this->schOTLdata[$sch][$i]['bidi_type'], 'uni' => $this->schOTLdata[$sch][$i]['uni']];
 				$newgroup .= $this->schOTLdata[$sch][$i]['group'];
-				$e.=code2utf($this->schOTLdata[$sch][$i]['uni']);
+				$e .= UtfString::code2utf($this->schOTLdata[$sch][$i]['uni']);
 				if (isset($this->mpdf->CurrentFont['subset'])) {
 					$this->mpdf->CurrentFont['subset'][$this->schOTLdata[$sch][$i]['uni']] = $this->schOTLdata[$sch][$i]['uni'];
 				}
@@ -1191,7 +1194,6 @@ class Otl
 		$this->OTLdata['GPOSinfo'] = $newGPOSinfo;
 		$this->OTLdata['char_data'] = $newchar_data;
 		$this->OTLdata['group'] = $newgroup;
-
 
 		// This leaves OTLdata::GPOSinfo, ::bidi_type, & ::group
 
@@ -2903,10 +2905,10 @@ class Otl
 			// not in $this->arabLeftJoining i.e. not a char which can join to the next one
 			if (isset($chars[$n]) && isset($this->arabLeftJoining[hexdec($chars[$n])])) {
 				// if in the middle of Syriac words
-				if (isset($chars[$i + 1]) && preg_match('/[\x{0700}-\x{0745}]/u', code2utf(hexdec($chars[$n]))) && preg_match('/[\x{0700}-\x{0745}]/u', code2utf(hexdec($chars[$i + 1]))) && isset($this->arabGlyphs[$char][4])) {
+				if (isset($chars[$i + 1]) && preg_match('/[\x{0700}-\x{0745}]/u', UtfString::code2utf(hexdec($chars[$n]))) && preg_match('/[\x{0700}-\x{0745}]/u', UtfString::code2utf(hexdec($chars[$i + 1]))) && isset($this->arabGlyphs[$char][4])) {
 					$retk = 4;
 				} // if at the end of Syriac words
-				elseif (!isset($chars[$i + 1]) || !preg_match('/[\x{0700}-\x{0745}]/u', code2utf(hexdec($chars[$i + 1])))) {
+				elseif (!isset($chars[$i + 1]) || !preg_match('/[\x{0700}-\x{0745}]/u', UtfString::code2utf(hexdec($chars[$i + 1])))) {
 					// if preceding base character IS (00715|00716|0072A)
 					if (strpos('0715|0716|072A', $chars[$n]) !== false && isset($this->arabGlyphs[$char][6])) {
 						$retk = 6;
@@ -4941,7 +4943,7 @@ class Otl
 		$cctr = 0;
 		$rtl_content = 0x0;
 		foreach ($chardata as $cd) {
-			$e.=code2utf($cd['char']);
+			$e .= UtfString::code2utf($cd['char']);
 			$group .= $cd['group'];
 			if ($useGPOS && is_array($cd['GPOSinfo'])) {
 				$GPOS[$cctr] = $cd['GPOSinfo'];
@@ -5614,7 +5616,6 @@ class Otl
 			}
 		}
 
-
 		// L2. From the highest level found in the text to the lowest odd level on each line, including intermediate levels not actually present in the text, reverse any contiguous sequence of characters that are at that level or higher.
 		for ($j = $maxlevel; $j > 0; $j--) {
 			$ordarray = [];
@@ -5650,8 +5651,6 @@ class Otl
 		$cOTLdata = [];
 		$chunkorder = [];
 
-
-
 		$nc = -1; // New chunk order ID
 		$chunkid = -1;
 
@@ -5664,7 +5663,7 @@ class Otl
 				$cOTLdata[$nc]['group'] = '';
 			}
 			if ($carac['uni'] != 0xFFFC) {   // Object replacement character (65532)
-				$content[$nc] .= code2utf($carac['uni']);
+				$content[$nc] .= UtfString::code2utf($carac['uni']);
 				$cOTLdata[$nc]['group'] .= $carac['group'];
 				if (!empty($carac['GPOSinfo'])) {
 					if (isset($carac['GPOSinfo'])) {
@@ -5783,7 +5782,7 @@ class Otl
 
 	public function trimOTLdata(&$cOTLdata, $Left = true, $Right = true)
 	{
-		$len = count($cOTLdata['char_data']);
+		$len = $cOTLdata['char_data'] === null ? 0 : count($cOTLdata['char_data']);
 		$nLeft = 0;
 		$nRight = 0;
 		for ($i = 0; $i < $len; $i++) {

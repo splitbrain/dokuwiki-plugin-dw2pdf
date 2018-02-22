@@ -1,12 +1,25 @@
+mPDF 7.0.x
+===========================
+
+* Allow passing file content or file path to `SetAssociatedFiles` (#558)
+* Allowed ^1.4 and ^2.0 of paragon/random_compat to allow wider usage
+* Fix of undefined _getImage function (#539)
+* Code cleanup
+* Better writable rights for temp dir validation (#534)
+* Fix displaying dollar character in footer with core fonts (#520)
+* Fixed missed code2utf call (#531)
+* Refactored and cleaned-up classes and subnamespaces
+
+
 mPDF 7.0.0
 ===========================
 
-### 22/03/2016
+### 19/10/2017
 
 Backward incompatible changes
 -----------------------------
 
-- PHP `^5.6 || ~7.0.0 || ~7.1.0` is required.
+- PHP `^5.6 || ~7.0.0 || ~7.1.0 || ~7.2.0` is required.
 - Entire project moved under `Mpdf` namespace
     - Practically all classes renamed to use `PascalCase` and named to be more verbose
     - Changed directory structure to comply to `PSR-4`
@@ -32,6 +45,12 @@ Backward incompatible changes
 - Moved global `_testIntersect`, `_testIntersectCircle` and `calc_bezier_bbox` fucntions inside `Svg` class as private methods.
     - Changed names to camelCase without underscores and to `computeBezierBoundingBox`
 - Security: Embedded files via `<annotation>` custom tag must be explicitly allowed via `allowAnnotationFiles` configuration key
+- `fontDir` property of Mpdf class is private and must be accessed via configuration variable with array of paths or `AddFontDirectory` method
+- QR code `<barcode>` element now treats `\r\n` and `\n` as actual line breaks
+- cURL is prefered over socket when downloading images.
+- Removed globally defined functions from `functions.php` in favor of `\Mpdf\Utils` classes `PdfDate` and `UtfString`.
+    - Unused global functions were removed entirely.
+
 
 Removed features
 ----------------
@@ -46,9 +65,10 @@ Removed features
 - `_MPDF_TTFONTDATAPATH` in  favor of `tempDir` configuration variable
 - `_MPDFK` constant in favor of `\Mpdf\Mpdf::SCALE` class constant
 - `FONT_DESCRIPTOR` constant in favor of `fontDescriptor` configuration variable
-- `_MPDF_SYSTEM_TTFONTS` constant in favor of `fontDir` configuration variable with multiple paths
+- `_MPDF_SYSTEM_TTFONTS` constant in favor of `fontDir` configuration variable with array of paths or `AddFontDirectory` method
 - HTML output of error messages and debugs
 - Formerly deprecated methods
+
 
 Fixes and code enhancements
 ----------------------------
@@ -58,6 +78,8 @@ Fixes and code enhancements
 - Converted arrays to short syntax
 - Refactored and tested color handling with potential conversion fixes in `hsl*()` color definitions
 - Refactored `Barcode` class with separate class in `Mpdf\Barcode` namespace for each barcode type
+- Fixed colsum calculation for different locales (by @flow-control in #491)
+- Image type guessing from content separated to its own class
 
 
 New features
@@ -86,6 +108,15 @@ New features
 - Custom watermark angle with `watermarkAngle` configuration variable
 - Custom document properties (idea by @zarubik in #142)
 - PDF/A-3 associated files + additional xmp rdf (by @chab in #130)
+- Additional font directories can be added via `addFontDir` method
+- Introduced `cleanup` method which restores original `mb_` encoding settings (see #421)
+- QR code `<barcode>` element now treats `\r\n` and `\n` as actual line breaks
+- Customizable following of 3xx HTTP redirects, validation of SSL certificates, cURL timeout.
+    - `curlFollowLocation`
+    - `curlAllowUnsafeSslRequests`
+    - `curlTimeout`
+- QR codes can be generated without a border using `disableborder="1"` HTML attribute in `<barcode>` tag
+
 
 Git repository enhancements
 ---------------------------
@@ -140,17 +171,17 @@ mPDF 6.0
 
 New features / Improvements
 ---------------------------
-Support for OpenTypeLayout tables / features for complex scripts and Advances Typography.
-Improved bidirectional text handling.
-Improved line-breaking, including for complex scripts e.g. Lao, Thai and Khmer.
-Updated page-breaking options.
-Automatic language mark-up and font selection using autoScriptToLang and autoLangToFont.
-Kashida for text-justification in arabic scripts.
-Index collation for non-ASCII characters.
-Index mark-up allowing control over layout using CSS.
-{PAGENO} and {nbpg} can use any of the number types as in list-style e.g. set in `<pagebreak>` using pagenumstyle.
-CSS support for lists.
-Default stylesheet - mpdf.css - updated.
+- Support for OpenTypeLayout tables / features for complex scripts and Advances Typography.
+- Improved bidirectional text handling.
+- Improved line-breaking, including for complex scripts e.g. Lao, Thai and Khmer.
+- Updated page-breaking options.
+- Automatic language mark-up and font selection using autoScriptToLang and autoLangToFont.
+- Kashida for text-justification in arabic scripts.
+- Index collation for non-ASCII characters.
+- Index mark-up allowing control over layout using CSS.
+- `{PAGENO}` and `{nbpg}` can use any of the number types as in list-style e.g. set in `<pagebreak>` using pagenumstyle.
+- CSS support for lists.
+- Default stylesheet - `mpdf.css` - updated.
 
 Added CSS support
 -----------------

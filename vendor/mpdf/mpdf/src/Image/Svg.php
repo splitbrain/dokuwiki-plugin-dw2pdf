@@ -11,6 +11,7 @@ use Mpdf\Mpdf;
 use Mpdf\Otl;
 use Mpdf\SizeConverter;
 use Mpdf\Ucdn;
+use Mpdf\Utils\UtfString;
 
 /**
  * SVG class modified for mPDF version >= 6.0
@@ -62,6 +63,11 @@ class Svg
 	 * @var \Mpdf\Language\ScriptToLanguageInterface
 	 */
 	public $scriptToLanguage;
+
+	/**
+	 * @var \Mpdf\Image\ImageProcessor
+	 */
+	private $imageProcessor;
 
 	/**
 	 * Holds content of SVG fonts defined in image
@@ -170,6 +176,7 @@ class Svg
 		Mpdf $mpdf,
 		Otl $otl,
 		CssManager $cssManager,
+		ImageProcessor $imageProcessor,
 		SizeConverter $sizeConverter,
 		ColorConverter $colorConverter,
 		LanguageToFontInterface $languageToFont,
@@ -179,6 +186,7 @@ class Svg
 		$this->mpdf = $mpdf;
 		$this->otl = $otl;
 		$this->cssManager = $cssManager;
+		$this->imageProcessor = $imageProcessor;
 		$this->sizeConverter = $sizeConverter;
 		$this->colorConverter = $colorConverter;
 		$this->languageToFont = $languageToFont;
@@ -274,7 +282,7 @@ class Svg
 
 		// Image file (does not allow vector images i.e. WMF/SVG)
 		// mPDF 6 Added $this->mpdf->interpolateImages
-		$info = $this->mpdf->_getImage($srcpath, true, false, $orig_srcpath, $this->mpdf->interpolateImages);
+		$info = $this->imageProcessor->getImage($srcpath, true, false, $orig_srcpath, $this->mpdf->interpolateImages);
 		if (!$info) {
 			return;
 		}
@@ -3039,7 +3047,7 @@ class Svg
 		$a = preg_split('/<(.*?)>/ms', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
 		foreach ($a as $i => $e) {
 			if ($i % 2 == 0) {
-				$e = strcode2utf($e);
+				$e = UtfString::strcode2utf($e);
 				$e = $this->mpdf->lesser_entity_decode($e);
 
 				$earr = $this->mpdf->UTF8StringToArray($e, false);
@@ -3092,7 +3100,7 @@ class Svg
 					if (isset($chardata[$sch])) {
 						$s = '';
 						for ($j = 0; $j < count($chardata[$sch]); $j++) {
-							$s .= code2utf($chardata[$sch][$j]['uni']);
+							$s .= UtfString::code2utf($chardata[$sch][$j]['uni']);
 						}
 						// ZZZ99 Undo lesser_entity_decode as above - but only for <>&
 						$s = str_replace("&", "&amp;", $s);
