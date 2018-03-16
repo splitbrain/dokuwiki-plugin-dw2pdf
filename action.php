@@ -486,15 +486,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // loop over all pages
         $counter = 0;
         $no_pages = count($this->list);
-        foreach($this->list as $page) {
+        foreach($this->list as $pageid) {
             $counter++;
 
-            $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at);
+            $pagehtml = $this->p_wiki_dw2pdf($pageid, $rev, $date_at);
             //file doesn't exists
             if($pagehtml == '') {
                 continue;
             }
-            $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
+            $pagehtml .= $this->page_depend_replacements($template['cite'], $pageid);
             if($counter < $no_pages) {
                 $pagehtml .= '<pagebreak />';
             }
