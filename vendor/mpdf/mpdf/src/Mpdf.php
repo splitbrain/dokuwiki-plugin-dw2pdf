@@ -17,7 +17,7 @@ use Mpdf\Conversion;
 use Mpdf\Css\Border;
 use Mpdf\Css\TextVars;
 
-use Mpdf\Image\ImageProcessor;
+use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
 
 use Mpdf\Language\LanguageToFont;
 use Mpdf\Language\ScriptToLanguage;

@@ -1,5 +1,7 @@
 <?php
 
+namespace dokuwiki\plugin\dw2pdf;
+
 class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
 
     /**
