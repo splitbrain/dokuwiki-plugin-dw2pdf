@@ -12,11 +12,14 @@ under the [GNU GPL v2 licence](LICENSE.txt).
 Requirements
 ============
 
-**mPDF 7.0** requires PHP `^5.6 || ~7.0.0 || ~7.1.0`. PHP `mbstring` and `gd` extensions have to be loaded.
+**mPDF 7.0** requires PHP `^5.6 || ~7.0.0 || ~7.1.0 || ~7.2.0`. PHP `mbstring` and `gd` extensions have to be loaded.
 
 Additional extensions may be required for some advanced features such as `zlib` for compression of output and
 embedded resources such as fonts, `bcmath` for generating barcodes or `xml` for character set conversion
 and SVG handling.
+
+mPDF has some problems with fetching external HTTP resources with single threaded servers such as `php -S`. A proper
+server such as nginx (php-fpm) or Apache is recommended.
 
 Support us
 ==========
@@ -61,6 +64,8 @@ It is recommended to set one's own temporary directory via `tempDir` configurati
 The directory must have write permissions (mode `775` is recommended) for users using mPDF
 (typically `cli`, `webserver`, `fpm`).
 
+**Warning:** mPDF will clean up old temporary files in the temporary directory. Choose a path dedicated to mPDF only.
+
 
 ```php
 <?php
@@ -84,10 +89,12 @@ Online manual
 
 Online manual is available at https://mpdf.github.io/.
 
+For general questions or troubleshooting please use the [mpdf tag](https://stackoverflow.com/questions/tagged/mpdf) at Stack Overflow (and not the project's issue tracker).
+
 Contributing
 ============
 
-See [CONTRIBUTING.md](https://github.com/mpdf/mpdf/blob/development/.github/CONTRIBUTING.md) file in the project.
+Please read before submitting issues and pull requests the [CONTRIBUTING.md](https://github.com/mpdf/mpdf/blob/development/.github/CONTRIBUTING.md) file.
 
 Unit Testing
 ============

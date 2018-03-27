@@ -3,6 +3,8 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../DokuImageProcessorDecorator.class.php';
 
+use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator;
+
 /**
  * General tests for the imagemap plugin
  *
@@ -55,7 +57,7 @@ class dw2pdf_getImage_test extends DokuWikiTest
     public function testGetImage($input_file, $input_orig_srcpath, $expected_file, $expected_orig_srcpath, $msg)
     {
 
-        list($actual_file, $actual_orig_srcpath) = \DokuImageProcessorDecorator::adjustGetImageLinks($input_file,
+        list($actual_file, $actual_orig_srcpath) = DokuImageProcessorDecorator::adjustGetImageLinks($input_file,
             $input_orig_srcpath);
 
         $this->assertEquals($expected_file, $actual_file,  '$file ' . $msg);

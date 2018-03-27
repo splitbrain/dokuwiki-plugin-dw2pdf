@@ -3,6 +3,7 @@
 namespace Mpdf\Conversion;
 
 use Mpdf\Mpdf;
+use Mpdf\Utils\UtfString;
 
 class DecToOther
 {
@@ -23,10 +24,11 @@ class DecToOther
 		// From docPageNum: font is not set, so no check
 		$nstr = (string) $num;
 		$rnum = '';
+		$len = strlen($nstr);
 
-		for ($i = 0; $i < strlen($nstr); $i++) {
+		for ($i = 0; $i < $len; $i++) {
 			if (!$check || $this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], $cp + ((int) $nstr[$i]))) {
-				$rnum .= code2utf($cp + (int) $nstr[$i]);
+				$rnum .= UtfString::code2utf($cp + (int) $nstr[$i]);
 			} else {
 				$rnum .= $nstr[$i];
 			}

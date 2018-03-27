@@ -31,14 +31,14 @@
 
 	"require": {
 
-		"php": "^5.6 || ~7.0.0 || ~7.1.0",
+		"php": "^5.6 || ~7.0.0 || ~7.1.0 || ~7.2.0",
 
 		"ext-gd": "*",
 		"ext-mbstring": "*",
 
 		"psr/log": "^1.0",
 		"setasign/fpdi": "1.6.*",
-		"paragonie/random_compat": "^2.0"
+		"paragonie/random_compat": "^1.4|^2.0"
 
 	},
 
@@ -63,10 +63,18 @@
 
 		"psr-4": {
 			"Mpdf\\": "src/"
+		}
+
+	},
+
+	"autoload-dev": {
+
+		"psr-4": {
+			"Mpdf\\": "tests/Mpdf"
 		},
 
 		"files": [
-			"src/functions.php"
+			"src/functions-dev.php"
 		]
 
 	},

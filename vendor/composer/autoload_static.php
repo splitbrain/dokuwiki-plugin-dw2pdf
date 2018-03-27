@@ -6,10 +6,6 @@ namespace Composer\Autoload;
 
 class ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04
 {
-    public static $files = array (
-        'db356362850385d08a5381de2638b5fd' => __DIR__ . '/..' . '/mpdf/mpdf/src/functions.php',
-    );
-
     public static $prefixLengthsPsr4 = array (
         'P' => 
         array (

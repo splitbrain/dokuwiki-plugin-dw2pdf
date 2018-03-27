@@ -1,5 +1,7 @@
 <?php
 
+namespace dokuwiki\plugin\dw2pdf;
+
 class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
 
     /**
@@ -62,8 +64,10 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
                     //check permissions (namespace only)
                     if(auth_quickaclcheck(getNS($media) . ':X') < AUTH_READ) {
                         $file = '';
+                        $local = '';
+                    } else {
+                        $local = mediaFN($media, $rev);
                     }
-                    $local = mediaFN($media, $rev);
                 }
 
                 //handle image resizing/cropping
