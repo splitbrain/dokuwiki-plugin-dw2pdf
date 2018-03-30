@@ -1,8 +1,6 @@
 vendor/composer/autoload_files.php
 vendor/mpdf/mpdf/src/functions.php
 
-vendor/mpdf/mpdf
-
 mpdf/CHANGELOG.txt
 mpdf/CREDITS.txt
 mpdf/LICENSE.txt
