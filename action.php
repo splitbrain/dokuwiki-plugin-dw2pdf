@@ -748,7 +748,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         if(function_exists('css_parseless')) {
             // apply pattern replacements
-            $styleini = css_styleini($conf['template']);
+            if (function_exists('css_styleini')) {
+                // compatiblity layer for pre-Greebo releases of DokuWiki
+                $styleini = css_styleini($conf['template']);
+            } else {
+                // Greebo functionality
+                $styleUtils = new \dokuwiki\StyleUtils();
+                $styleini = $styleUtils->cssStyleini($conf['template']);
+            }
             $css = css_applystyle($css, $styleini['replacements']);
 
             // parse less
