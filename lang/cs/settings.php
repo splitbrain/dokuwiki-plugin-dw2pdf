@@ -2,13 +2,15 @@
 
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * 
+ *
+ * @author Kamil Nešetřil <kamil.nesetril@volny.cz>
  * @author Jaroslav Lichtblau <jlichtblau@seznam.cz>
  */
 $lang['pagesize']              = 'The page format as supported by mPDF. Usually <code>A4</code> or <code>letter</code>.';
 $lang['orientation']           = 'The page orientation.';
 $lang['orientation_o_portrait'] = 'Portrait';
 $lang['orientation_o_landscape'] = 'Landscape';
+$lang['font-size']             = 'Velikost fontu normálního písma v bodech.';
 $lang['doublesided']           = 'Dvoustránkový dokument začíná přidáním liché strany a obsahuje páry sudých a lichých stran. Jednostránkový dokument obsahuje pouze liché strany.';
 $lang['toc']                   = 'Vložit automaticky vytvořený Obsah do PDF (poznámka: může způsobit přidání prázdných stránek při začátku na liché straně, obsah je vždy na sudé straně a nemá žádné vlastní číslo strany)';
 $lang['toclevels']             = 'Určit horní úroveň a maximální hloubku podúrovní přidaných do Obsahu. Výchozí použité úrovně Obsahu wiki jsou <a href="#config___toptoclevel">toptoclevel</a> a <a href="#config___maxtoclevel">maxtoclevel</a>. Formát: <code><i>&lt;top&gt;</i>-<i>&lt;max&gt;</i></code>';
