@@ -543,7 +543,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         global $INPUT;
         $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
 
-        $filename = 'Unknown';
+        $filename = 'unknown';
         if(!empty($this->title)) {
             $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
         }
