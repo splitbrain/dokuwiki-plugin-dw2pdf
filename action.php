@@ -548,7 +548,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
 
         $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
-
         if($outputTarget === 'file') {
             header('Content-Disposition: attachment; filename="' . $filename . '.pdf";');
         } else {
