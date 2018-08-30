@@ -141,6 +141,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             if(empty($this->title)) {
                 $this->title = p_get_first_heading($ID);
             }
+            // use page name if title is still empty
+            if(empty($this->title)) {
+                $this->title = noNS($ID);
+            }
 
             $filename = wikiFN($ID, $REV);
             if(!file_exists($filename)) {
@@ -543,10 +547,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         global $INPUT;
         $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
 
-        $filename = 'unknown';
-        if(!empty($this->title)) {
-            $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
-        }
+        $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
 
         if($outputTarget === 'file') {
             header('Content-Disposition: attachment; filename="' . $filename . '.pdf";');
