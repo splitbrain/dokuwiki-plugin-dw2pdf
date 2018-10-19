@@ -352,9 +352,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param string     $id  page id
      * @param string|int $rev revision timestamp or empty string
      * @param string     $date_at
+     * @param int        $bookmark_indent_level bookmarks indentation level
      * @return null|string
      */
-    protected function p_wiki_dw2pdf($id, $rev = '', $date_at = '') {
+    protected function p_wiki_dw2pdf($id, $rev = '', $date_at = '', $bookmark_indent_level = 0) {
         $file = wikiFN($id, $rev);
 
         if(!file_exists($file)) return '';
@@ -364,8 +365,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $keep = $ID;
         $ID   = $id;
 
-        if($rev || $date_at) {
-            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at); //no caching on old revisions
+        if($rev || $date_at || $bookmark_indent_level) {
+            $ret = p_render(  //no caching on old revisions or indented bookmarks
+                'dw2pdf',
+                array_merge(
+                    array(array('set_bookmark_indent_level', array($bookmark_indent_level))),
+                    p_get_instructions(io_readWikiPage($file, $id, $rev))
+                ),
+                $info, $date_at
+            );
         } else {
             $ret = p_cached_output($file, 'dw2pdf', $id);
         }
@@ -486,10 +494,21 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // loop over all pages
         $counter = 0;
         $no_pages = count($this->list);
+        $hierarchy = $INPUT->bool('book_hierarchy');
+        $bookmark_indent_level = 0;
+        $base_namespace = NULL;
+        $startpage_re = '~(?:^|:)' . preg_quote($GLOBALS['conf']['start'], '~') . '$~';
         foreach($this->list as $page) {
             $counter++;
 
-            $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at);
+            if ($hierarchy)
+            {
+              $namespace = array_slice(explode(':', preg_replace($startpage_re, '', $page)), 0, -1);
+              if ($base_namespace !== array_slice($namespace, 0, count($base_namespace)))
+                $base_namespace = $namespace;
+              $bookmark_indent_level = count($namespace) - count($base_namespace);
+            }
+            $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at, $bookmark_indent_level);
             //file doesn't exists
             if($pagehtml == '') {
                 continue;
