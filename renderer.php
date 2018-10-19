@@ -26,10 +26,22 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     private $actioninstance = null;
 
     /**
+     * Bookmarks must be indented with this level
+     *
+     * @var int
+     * @see self::set_bookmark_indent_level()
+     */
+    private $bookmark_indent_level = 0;
+
+    /**
      * load action plugin instance
      */
     public function __construct() {
         $this->actioninstance = plugin_load('action', 'dw2pdf');
+    }
+
+    public function set_bookmark_indent_level($level) {
+      $this->bookmark_indent_level = max(0, $level);
     }
 
     public function document_start() {
@@ -82,6 +94,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         // 0: off, 1-6: show down to this level
         if($maxbookmarklevel && $maxbookmarklevel >= $level) {
             $bookmarklevel = $this->calculateBookmarklevel($level);
+            $bookmarklevel += $this->bookmark_indent_level;
             $bookmark = '<bookmark content="' . $this->_xmlEntities($text) . '" level="' . ($bookmarklevel) . '" />';
         }
 
