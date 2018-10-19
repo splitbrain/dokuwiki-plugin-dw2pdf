@@ -835,6 +835,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // do not sort numbers before namespace separators
         $aID = str_replace(':', '/', $a['id']);
         $bID = str_replace(':', '/', $b['id']);
+
+        // and sort start pages before siblings
+        $startpage_re = '~(^|/)' . preg_quote($GLOBALS['conf']['start'], '~') . '$~';
+        $aID = preg_replace($startpage_re, '$1', $aID);
+        $bID = preg_replace($startpage_re, '$1', $bID);
+
         if($aID <= $bID) return -1;
         if($aID > $bID) return 1;
         return 0;
