@@ -948,7 +948,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function addbutton(Doku_Event $event) {
         global $ID, $REV, $DATE_AT;
 
-        if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
+        if(!$event->data['view'] == 'main') {
+            return;
+        }
+
+        if($this->getConf('showexportbutton')) {
             $params = array('do' => 'export_pdf');
             if($DATE_AT) {
                 $params['at'] = $DATE_AT;
@@ -964,6 +968,28 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                           . '<span>' . $this->getLang('export_pdf_button') . '</span>'
                           . '</a>'
                           . '</li>'
+                ) +
+                array_slice($event->data['items'], -1, 1, true);
+        }
+
+        if($this->getConf('showexportnsbutton') && getNS($ID)) {
+            $params = array('do' => 'export_pdf');
+            if($DATE_AT) {
+                $params['at'] = $DATE_AT;
+            } elseif($REV) {
+                $params['rev'] = $REV;
+            }
+            $params['book_ns'] = getNS($ID);
+            $params['book_title'] = noNS(getNS($ID));
+
+            // insert button at position before last (up to top)
+            $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
+                array('export_pdfns' =>
+                    '<li>'
+                    . '<a href="' . wl($ID, $params) . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdfns_button') . '">'
+                    . '<span>' . $this->getLang('export_pdfns_button') . '</span>'
+                    . '</a>'
+                    . '</li>'
                 ) +
                 array_slice($event->data['items'], -1, 1, true);
         }
