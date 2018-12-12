@@ -975,8 +975,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function addsvgbutton(Doku_Event $event) {
-        global $INFO;
-        if($event->data['view'] != 'page' || !$this->getConf('showexportbutton')) {
+        global $INFO, $ID;
+
+        if($event->data['view'] != 'page') {
             return;
         }
 
@@ -984,6 +985,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             return;
         }
 
-        array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
+        if( $this->getConf('showexportbutton') ) {
+            array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
+        }
+
+        if( $this->getConf('showexportnsbutton') && getNS($ID) ) {
+            array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuNSItem()]);
+        }
     }
 }

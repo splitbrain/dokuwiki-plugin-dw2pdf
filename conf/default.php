@@ -12,3 +12,4 @@ $conf['usecache']         = 1;
 $conf['usestyles']        = 'wrap,';
 $conf['qrcodesize']       = '120x120';
 $conf['showexportbutton'] = 1;
+$conf['showexportnsbutton'] = 0;
