@@ -3,9 +3,13 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author nero <dreamfox225@hotmail.com>
  * @author Mofe <mofe@me.com>
  * @author oott123 <ip.192.168.1.1@qq.com>
  */
+$lang['orientation']           = '页面方向。';
+$lang['orientation_o_portrait'] = '竖向';
+$lang['orientation_o_landscape'] = '横向';
 $lang['maxbookmarks']          = 'PDF 文件中需要有多少层书签？<small>（0：没有；5：全部）</small>';
 $lang['template']              = '使用哪个模板的格式来排版PDF的内容？';
 $lang['output']                = '怎样显示PDF文件？';
