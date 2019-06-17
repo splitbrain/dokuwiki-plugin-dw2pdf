@@ -179,6 +179,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $dir = utf8_encodeFN(str_replace(':', '/', $pdfnamespace));
             search($result, $conf['datadir'], 'search_allpages', $opts, $dir);
 
+            // exclude ids
+            $excludes = $INPUT->arr('excludes');
+            if (!empty($excludes)) {
+                $result = array_filter(array_map(function ($item) use ($excludes) {
+                    return array_search($item['id'], $excludes) === false ? $item : '';
+                }, $result));
+            }
+
             //sorting
             if(count($result) > 0) {
                 if($order == 'date') {
