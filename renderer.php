@@ -17,6 +17,8 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     private $lastHeaderLevel = -1;
     private $originalHeaderLevel = 0;
     private $difference = 0;
+    private $lastheadlevel = -1;
+    private $current_bookmark_level = 0;
 
     /**
      * Stores action instance
@@ -66,7 +68,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     public function header($text, $level, $pos) {
         if(!$text) return; //skip empty headlines
         global $ID;
-
+	
         $hid = $this->_headerToLink($text, true);
 
         //only add items within global configured levels (doesn't check the pdf toc settings)
@@ -75,22 +77,43 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $check = false;
         $pid = sectionID($ID, $check);
         $hid = $pid . '__' . $hid;
+	
+	// retrieve numbered headings option
+        $isnumberedheadings = $this->actioninstance->getExportConfig('headernumber');
 
+        $header_prefix = "";
+	if ($isnumberedheadings) {
+		if ($level > 1) {
+        	    if ($this->previous_level > $level) {
+	                for ($i=$level+1; $i<=$this->previous_level; $i++) {
+	                    $this->header_count[$i]=0;
+	                }
+	            }
+	        }
+        	$this->header_count[$level]++;
+
+        	// $header_prefix = "";
+	        for ($i=2; $i<=$level; $i++) {
+	            $header_prefix .= $this->header_count[$i].".";
+	 	}
+	}
+	
         // add PDF bookmark
         $bookmark = '';
         $maxbookmarklevel = $this->actioninstance->getExportConfig('maxbookmarks');
         // 0: off, 1-6: show down to this level
         if($maxbookmarklevel && $maxbookmarklevel >= $level) {
             $bookmarklevel = $this->calculateBookmarklevel($level);
-            $bookmark = '<bookmark content="' . $this->_xmlEntities($text) . '" level="' . ($bookmarklevel) . '" />';
+            $bookmark = '<bookmark content="' . $header_prefix." ".$this->_xmlEntities($text) . '" level="' . ($bookmarklevel) . '" />';
         }
 
         // print header
         $this->doc .= DOKU_LF . "<h$level>$bookmark";
-        $this->doc .= "<a name=\"$hid\">";
+        $this->doc .= $header_prefix." <a name=\"$hid\">";
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
         $this->doc .= "</h$level>" . DOKU_LF;
+        $this->previous_level = $level;
     }
 
     /**
