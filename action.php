@@ -510,8 +510,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
             $mpdf->WriteHTML($pagehtml, 2, false, false); //intermediate body html
             if($isDebug) {
-                $html .= $pagehtml;            }
-}
+		$html .= $pagehtml;
+	    }
+	}
 
         // insert the back page
         $body_end = $template['back'];
