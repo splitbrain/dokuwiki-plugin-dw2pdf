@@ -294,6 +294,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             . $this->getExportConfig('orientation')
             . $this->getExportConfig('font-size')
             . $this->getExportConfig('doublesided')
+            . $this->getExportConfig('headernumber')
             . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
             . $this->title;
         $cache = new cache($cachekey, '.dw2.pdf');
@@ -509,9 +510,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
             $mpdf->WriteHTML($pagehtml, 2, false, false); //intermediate body html
             if($isDebug) {
-                $html .= $pagehtml;
-            }
-        }
+                $html .= $pagehtml;            }
+}
 
         // insert the back page
         $body_end = $template['back'];
@@ -872,7 +872,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
         $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
 
-        $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
+        $headernumber = $INPUT->bool('headernumber', (bool) $this->getConf('headernumber'));
+	$this->exportConfig['headernumber'] = $headernumber ? '1' : '0';
+	
+	$hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
         $levels = array();
         if($hasToC) {
             $toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);
