@@ -19,6 +19,8 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     private $difference = 0;
     private $lastheadlevel = -1;
     private $current_bookmark_level = 0;
+    private static $header_count = [];
+    private static $previous_level = 0;
 
     /**
      * Stores action instance
@@ -83,18 +85,18 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
         $header_prefix = "";
 	if ($isnumberedheadings) {
-		if ($level > 1) {
-        	    if ($this->previous_level > $level) {
-	                for ($i=$level+1; $i<=$this->previous_level; $i++) {
-	                    $this->header_count[$i]=0;
+		if ($level > 0) {
+        	    if (self::$previous_level > $level ) {
+	                for ($i=$level+1; $i<=self::$previous_level; $i++) {
+				self::$header_count[$i]=0;
 	                }
 	            }
 	        }
-        	$this->header_count[$level]++;
+		self::$header_count[$level]++;
 
         	// $header_prefix = "";
-	        for ($i=2; $i<=$level; $i++) {
-	            $header_prefix .= $this->header_count[$i].".";
+	        for ($i=1; $i<=$level; $i++) {
+	            $header_prefix .= self::$header_count[$i].".";
 	 	}
 	}
 	
@@ -113,7 +115,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
         $this->doc .= "</h$level>" . DOKU_LF;
-        $this->previous_level = $level;
+	self::$previous_level = $level;
     }
 
     /**
