@@ -691,7 +691,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $replace['@PAGEURL@'] = wl($id, $params, true, "&");
         $replace['@QRCODE@']  = $qr_code;
 
+        $content = '';
+
+        // let other plugins define their own replacements
+        $evdata = ['replace' => &$replace, 'content' => &$content];
+        $event = new Doku_Event('PLUGIN_DW2PDF_REPLACE', $evdata);
+        $event->advise_before();
+
         $content = str_replace(array_keys($replace), array_values($replace), $raw);
+
+        // plugins may post-process HTML, e.g to clean up unused replacements
+        $event->advise_after();
 
         // @DATE(<date>[, <format>])@
         $content = preg_replace_callback(
