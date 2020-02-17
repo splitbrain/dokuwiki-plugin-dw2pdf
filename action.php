@@ -629,6 +629,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             '@TPLBASE@' => DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
             '@TPLINC@'  => DOKU_INC . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/'
         );
+		
+		global $INFO;
+		$replace['@AUTHOR@'] = $INFO['meta']['contributor'][$INFO['user']];
 
         // set HTML element
         $html = str_replace(array_keys($replace), array_values($replace), $html);
