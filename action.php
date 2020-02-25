@@ -582,6 +582,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     protected function load_template() {
         global $ID;
         global $conf;
+        global $INFO;
 
         // this is what we'll return
         $output = array(
@@ -627,11 +628,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             '@BASE@'    => DOKU_BASE,
             '@INC@'     => DOKU_INC,
             '@TPLBASE@' => DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
-            '@TPLINC@'  => DOKU_INC . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/'
+            '@TPLINC@'  => DOKU_INC . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
+            '@AUTHOR@'  => $INFO['meta']['contributor'][$INFO['user']]
         );
-		
-		global $INFO;
-		$replace['@AUTHOR@'] = $INFO['meta']['contributor'][$INFO['user']];
 
         // set HTML element
         $html = str_replace(array_keys($replace), array_values($replace), $html);
