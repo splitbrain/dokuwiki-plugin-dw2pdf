@@ -850,12 +850,38 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return int
      */
     public function _pagenamesort($a, $b) {
-        // do not sort numbers before namespace separators
-        $aID = str_replace(':', '/', $a['id']);
-        $bID = str_replace(':', '/', $b['id']);
-        if($aID <= $bID) return -1;
-        if($aID > $bID) return 1;
-        return 0;
+        global $conf;
+
+        $partsA = explode(':', $a['id']);
+        $countA = count($partsA);
+        $partsB = explode(':', $b['id']);
+        $countB = count($partsB);
+
+        // less namespaces first
+        if ($countA != $countB) {
+            return $countA > $countB;
+        }
+
+        // compare namepsace by namespace
+        for ($i = 0; $i < $countA; $i++) {
+            $partA = $partsA[$i];
+            $partB = $partsB[$i];
+
+            // if both parts are the same, move on
+            if ($partA === $partB) continue;
+
+            // have we reached the page level?
+            if ($i === ($countA - 1)) {
+                // start page first
+                if ($partA == $conf['start']) return -1;
+                if ($partB == $conf['start']) return 1;
+            }
+
+            // simply compare
+            return strcmp($partA, $partB);
+        }
+
+        return strcmp($a['id'], $b['id']);
     }
 
     /**
