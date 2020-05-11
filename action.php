@@ -191,7 +191,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             if(count($result) > 0) {
                 if($order == 'date') {
                     usort($result, array($this, '_datesort'));
-                } elseif($order == 'pagename') {
+                } elseif ($order == 'pagename' || $order == 'natural') {
                     usort($result, array($this, '_pagenamesort'));
                 }
             }
@@ -880,10 +880,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
 
             // simply compare
-            return strcmp($partA, $partB);
+            return strnatcmp($partA, $partB);
         }
 
-        return strcmp($a['id'], $b['id']);
+        return strnatcmp($a['id'], $b['id']);
     }
 
     /**
