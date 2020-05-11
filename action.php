@@ -856,26 +856,28 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $countA = count($partsA);
         $partsB = explode(':', $b['id']);
         $countB = count($partsB);
+        $max = max($countA, $countB);
 
-        // less namespaces first
-        if ($countA != $countB) {
-            return $countA > $countB;
-        }
 
         // compare namepsace by namespace
-        for ($i = 0; $i < $countA; $i++) {
-            $partA = $partsA[$i];
-            $partB = $partsB[$i];
-
-            // if both parts are the same, move on
-            if ($partA === $partB) continue;
+        for ($i = 0; $i < $max; $i++) {
+            $partA = $partsA[$i] ?: null;
+            $partB = $partsB[$i] ?: null;
 
             // have we reached the page level?
-            if ($i === ($countA - 1)) {
+            if ($i === ($countA - 1) || $i === ($countB - 1)) {
                 // start page first
                 if ($partA == $conf['start']) return -1;
                 if ($partB == $conf['start']) return 1;
             }
+
+            // prefer page over namespace
+            if($partA === $partB) {
+                if (!isset($partsA[$i + 1])) return -1;
+                if (!isset($partsB[$i + 1])) return 1;
+                continue;
+            }
+
 
             // simply compare
             return strcmp($partA, $partB);
