@@ -191,7 +191,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             if(count($result) > 0) {
                 if($order == 'date') {
                     usort($result, array($this, '_datesort'));
-                } elseif($order == 'pagename') {
+                } elseif ($order == 'pagename' || $order == 'natural') {
                     usort($result, array($this, '_pagenamesort'));
                 }
             }
@@ -850,12 +850,40 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @return int
      */
     public function _pagenamesort($a, $b) {
-        // do not sort numbers before namespace separators
-        $aID = str_replace(':', '/', $a['id']);
-        $bID = str_replace(':', '/', $b['id']);
-        if($aID <= $bID) return -1;
-        if($aID > $bID) return 1;
-        return 0;
+        global $conf;
+
+        $partsA = explode(':', $a['id']);
+        $countA = count($partsA);
+        $partsB = explode(':', $b['id']);
+        $countB = count($partsB);
+        $max = max($countA, $countB);
+
+
+        // compare namepsace by namespace
+        for ($i = 0; $i < $max; $i++) {
+            $partA = $partsA[$i] ?: null;
+            $partB = $partsB[$i] ?: null;
+
+            // have we reached the page level?
+            if ($i === ($countA - 1) || $i === ($countB - 1)) {
+                // start page first
+                if ($partA == $conf['start']) return -1;
+                if ($partB == $conf['start']) return 1;
+            }
+
+            // prefer page over namespace
+            if($partA === $partB) {
+                if (!isset($partsA[$i + 1])) return -1;
+                if (!isset($partsB[$i + 1])) return 1;
+                continue;
+            }
+
+
+            // simply compare
+            return strnatcmp($partA, $partB);
+        }
+
+        return strnatcmp($a['id'], $b['id']);
     }
 
     /**
