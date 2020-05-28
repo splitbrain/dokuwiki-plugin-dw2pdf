@@ -3,11 +3,11 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
- * @author Paulo Ricardo Schopf <pschopf@gmail.com>
+ * @author Paulo Schopf <pschopf@gmail.com>
  * @author Rodrigo Pimenta <rodrigo.pimenta@gmail.com>
  */
-$lang['pagesize']              = 'O formato da página conforme suportado pelo mPDF. Geralmente <code>A4</code> ou <code>Carta</code>';
-$lang['orientation']           = 'Orientação da Página';
+$lang['pagesize']              = 'O formato da página conforme suportado pelo mPDF. Geralmente <code>A4</code> ou <code>Carta</code>.';
+$lang['orientation']           = 'Orientação da Página.';
 $lang['orientation_o_portrait'] = 'Retrato';
 $lang['orientation_o_landscape'] = 'Paisagem';
 $lang['font-size']             = 'O tamanho da fonte para textos normais.';
