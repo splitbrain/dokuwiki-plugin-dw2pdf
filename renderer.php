@@ -45,7 +45,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $pid = sectionID($ID, $check);
 
         $this->doc .= "<a name=\"{$pid}__\">";
-	$this->doc .= "</a>";
+        $this->doc .= "</a>";
 
         $this->header_count[1] = $this->actioninstance->getCurrentBookChapter();
     }
@@ -116,7 +116,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $this->doc .= $header_prefix."<a name=\"$hid\">";
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
-	$this->doc .= "</h$level>" . DOKU_LF;
+        $this->doc .= "</h$level>" . DOKU_LF;
 	$this->previous_level = $level;
     }
 

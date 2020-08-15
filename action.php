@@ -51,8 +51,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Return the value of currentBookChapter, which is the order of the file to be added in a book generation
      */
-    public function getCurrentBookChapter() {
-	return $this->currentBookChapter;
+    public function getCurrentBookChapter()
+    {
+        return $this->currentBookChapter;
     }
 
     /**
@@ -301,8 +302,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             . $this->getExportConfig('pagesize')
             . $this->getExportConfig('orientation')
             . $this->getExportConfig('font-size')
-	    . $this->getExportConfig('doublesided')
-	    . $this->getExportConfig('headernumber')
+            . $this->getExportConfig('doublesided')
+            . $this->getExportConfig('headernumber')
             . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
             . $this->title;
         $cache = new cache($cachekey, '.dw2.pdf');
@@ -504,8 +505,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $counter = 0;
         $no_pages = count($this->list);
         foreach($this->list as $page) {
-	    $this->currentBookChapter = $counter;
-	    $counter++;
+            $this->currentBookChapter = $counter;
+            $counter++;
 
             $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at);
             //file doesn't exists
@@ -918,10 +919,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $this->exportConfig['font-size'] = $INPUT->str('font-size', $this->getConf('font-size'), true);
 
         $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
-	$this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
-	
-	$headernumber = $INPUT->bool('headernumber', (bool) $this->getConf('headernumber'));
-	$this->exportConfig['headernumber'] = $headernumber ? '1' : '0';
+        $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
 
         $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
         $levels = array();
