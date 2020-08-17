@@ -6,7 +6,15 @@ namespace Composer\Autoload;
 
 class ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04
 {
+    public static $files = array (
+        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
+        's' => 
+        array (
+            'setasign\\Fpdi\\' => 14,
+        ),
         'P' => 
         array (
             'Psr\\Log\\' => 8,
@@ -15,9 +23,17 @@ class ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04
         array (
             'Mpdf\\' => 5,
         ),
+        'D' => 
+        array (
+            'DeepCopy\\' => 9,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
+        'setasign\\Fpdi\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/setasign/fpdi/src',
+        ),
         'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
@@ -26,16 +42,10 @@ class ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04
         array (
             0 => __DIR__ . '/..' . '/mpdf/mpdf/src',
         ),
-    );
-
-    public static $classMap = array (
-        'FPDF_TPL' => __DIR__ . '/..' . '/setasign/fpdi/fpdf_tpl.php',
-        'FPDI' => __DIR__ . '/..' . '/setasign/fpdi/fpdi.php',
-        'FilterASCII85' => __DIR__ . '/..' . '/setasign/fpdi/filters/FilterASCII85.php',
-        'FilterASCIIHexDecode' => __DIR__ . '/..' . '/setasign/fpdi/filters/FilterASCIIHexDecode.php',
-        'FilterLZW' => __DIR__ . '/..' . '/setasign/fpdi/filters/FilterLZW.php',
-        'fpdi_pdf_parser' => __DIR__ . '/..' . '/setasign/fpdi/fpdi_pdf_parser.php',
-        'pdf_context' => __DIR__ . '/..' . '/setasign/fpdi/pdf_context.php',
+        'DeepCopy\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
+        ),
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -43,7 +53,6 @@ class ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitb71fb58cdf4c29fb0d05b258cce42b04::$classMap;
 
         }, null, ClassLoader::class);
     }
