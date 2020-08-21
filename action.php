@@ -408,6 +408,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $hasToC = $this->getExportConfig('hasToC');
         $levels = $this->getExportConfig('levels');
         $isDebug = $this->getExportConfig('isDebug');
+        $watermark = $this->getExportConfig('watermark');
 
         // initialize PDF library
         require_once(dirname(__FILE__) . "/DokuPDF.class.php");
@@ -439,6 +440,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $mpdf->h2toc = $levels;
         } else {
             $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off');
+        }
+        
+        // Watermarker
+        if($watermark) {
+            $mpdf->SetWatermarkText($watermark);
+            $mpdf->showWatermarkText = true;
         }
 
         // load the template
@@ -913,6 +920,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
         $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
+        
+        $this->exportConfig['watermark'] = $INPUT->str('watermark', '');
 
         $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
         $levels = array();
