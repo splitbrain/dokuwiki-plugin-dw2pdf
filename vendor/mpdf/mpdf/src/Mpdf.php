@@ -10,6 +10,7 @@ use Mpdf\Conversion;
 use Mpdf\Css\Border;
 use Mpdf\Css\TextVars;
 
+use \dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
 use Mpdf\Log\Context as LogContext;
 
 use Mpdf\Fonts\MetricsGenerator;
@@ -938,7 +939,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 	private $remoteContentFetcher;
 
 	/**
-	 * @var \Mpdf\Image\ImageProcessor
+	 * @var ImageProcessor
 	 */
 	private $imageProcessor;
 
