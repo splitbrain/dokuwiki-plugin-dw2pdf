@@ -20,4 +20,6 @@ class P extends InlineTag
 		$this->mpdf->_saveTextBuffer("\n");
 		$this->mpdf->_saveTextBuffer("\n");
 		
+	}
+		
 }
