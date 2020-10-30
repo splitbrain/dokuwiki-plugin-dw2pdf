@@ -12,7 +12,7 @@ if(!defined('DOKU_INC')) die();
 /**
  * Render xhtml suitable as input for mpdf library
  */
-class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
+class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {    // see "\inc\parser\xhtml.php"
 
     private $lastHeaderLevel = -1;
     private $originalHeaderLevel = 0;
@@ -149,34 +149,38 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $this->doc .= '</a>';
     }
 
-    /**
-     * Wrap centered media in a div to center it
-     *
-     * @param string $src       media ID
-     * @param string $title     descriptive text
-     * @param string $align     left|center|right
-     * @param int    $width     width of media in pixel
-     * @param int    $height    height of media in pixel
-     * @param string $cache     cache|recache|nocache
-     * @param bool   $render    should the media be embedded inline or just linked
-     * @return string
-     */
-    function _media($src, $title = NULL, $align = NULL, $width = NULL,
-                    $height = NULL, $cache = NULL, $render = true) {
 
-        $out = '';
-        if($align == 'center') {
-            $out .= '<div align="center" style="text-align: center">';
+	
+    // Center-align images with their corresponding links
+    function internalmedia($src, $title = null, $align = null, $width = null,
+                           $height = null, $cache = null, $linking = null, $return = false) {
+        
+		$out = parent::internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+        
+		if($align == 'center') {
+			$out = '<div align="center" style="text-align: center">' .$out. '</div>';
         }
-
-        $out .= parent::_media($src, $title, $align, $width, $height, $cache, $render);
-
-        if($align == 'center') {
-            $out .= '</div>';
+		
+        if($return) return $out;
+        else $this->doc .= $out;
+    }	
+	
+	
+	// Center-align external images with their corresponding links
+	function externalmedia($src, $title = null, $align = null, $width = null,
+                           $height = null, $cache = null, $linking = null, $return = false) {
+        
+		$out = parent::externalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+        
+		if($align == 'center') {
+			$out = '<div align="center" style="text-align: center">' .$out. '</div>';
         }
+		
+        if($return) return $out;
+        else $this->doc .= $out;
+    }	
 
-        return $out;
-    }
+	
 
     /**
      * hover info makes no sense in PDFs, so drop acronyms
