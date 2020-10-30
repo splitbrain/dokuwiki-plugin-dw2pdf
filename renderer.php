@@ -12,7 +12,7 @@ if(!defined('DOKU_INC')) die();
 /**
  * Render xhtml suitable as input for mpdf library
  */
-class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {    // see "\inc\parser\xhtml.php"
+class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
     private $lastHeaderLevel = -1;
     private $originalHeaderLevel = 0;
