@@ -233,7 +233,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 //            }
 
             $json = new JSON(JSON_LOOSE_TYPE);
-            $list = $json->decode($INPUT->post->str('selection', '', true));
+            $list = $json->decode($INPUT->str('selection', '', true));
             if(!is_array($list) || empty($list)) {
                 http_status(400);
                 print $this->getLang('empty');
