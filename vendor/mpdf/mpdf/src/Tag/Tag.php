@@ -2,11 +2,13 @@
 
 namespace Mpdf\Tag;
 
+use Mpdf\Strict;
+
 use Mpdf\Cache;
 use Mpdf\Color\ColorConverter;
 use Mpdf\CssManager;
 use Mpdf\Form;
-use Mpdf\Image\ImageProcessor;
+use \dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
 use Mpdf\Language\LanguageToFontInterface;
 use Mpdf\Mpdf;
 use Mpdf\Otl;
@@ -15,6 +17,9 @@ use Mpdf\TableOfContents;
 
 abstract class Tag
 {
+
+	use Strict;
+
 	/**
 	 * @var \Mpdf\Mpdf
 	 */
@@ -56,7 +61,7 @@ abstract class Tag
 	protected $colorConverter;
 
 	/**
-	 * @var \Mpdf\Image\ImageProcessor
+	 * @var ImageProcessor
 	 */
 	protected $imageProcessor;
 
@@ -107,6 +112,12 @@ abstract class Tag
 	{
 		$tag = get_class($this);
 		return strtoupper(str_replace('Mpdf\Tag\\', '', $tag));
+	}
+
+	protected function getAlign($property)
+	{
+		$property = strtolower($property);
+		return array_key_exists($property, self::ALIGN) ? self::ALIGN[$property] : '';
 	}
 
 	abstract public function open($attr, &$ahtml, &$ihtml);
