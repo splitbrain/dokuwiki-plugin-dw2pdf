@@ -7,9 +7,6 @@
  * @author     Andreas Gohr <andi@splitbrain.org>
  */
 
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
-
 /**
  * Class action_plugin_dw2pdf
  *
@@ -124,7 +121,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * Obtain list of pages and title, based on url parameters
      *
      * @param Doku_Event $event
-     * @return string|bool
+     * @return array|false
      */
     protected function collectExportPages(Doku_Event $event) {
         global $ID, $REV;
@@ -232,8 +229,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 //                exit();
 //            }
 
-            $json = new JSON(JSON_LOOSE_TYPE);
-            $list = $json->decode($INPUT->str('selection', '', true));
+            $list = json_decode($INPUT->str('selection', '', true), true);
             if(!is_array($list) || empty($list)) {
                 http_status(400);
                 print $this->getLang('empty');
@@ -393,6 +389,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      *
      * @param string $cachefile
      * @param Doku_Event $event
+     * @throws \Mpdf\MpdfException
      */
     protected function generatePDF($cachefile, $event) {
         global $REV, $INPUT, $DATE_AT;
@@ -441,7 +438,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         } else {
             $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off');
         }
-        
+
         // Watermarker
         if($watermark) {
             $mpdf->SetWatermarkText($watermark);
@@ -545,7 +542,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 echo $html;
             }
             exit();
-        };
+        }
 
         // write to cache file
         $mpdf->Output($cachefile, 'F');
@@ -746,7 +743,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      */
     protected function load_css() {
         global $conf;
-        //reusue the CSS dispatcher functions without triggering the main function
+        //reuse the CSS dispatcher functions without triggering the main function
         define('SIMPLE_TEST', 1);
         require_once(DOKU_INC . 'lib/exe/css.php');
 
@@ -783,7 +780,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             } else {
                 // Greebo functionality
                 $styleUtils = new \dokuwiki\StyleUtils();
-                $styleini = $styleUtils->cssStyleini($conf['template']);
+                $styleini = $styleUtils->cssStyleini();
             }
             $css = css_applystyle($css, $styleini['replacements']);
 
@@ -898,12 +895,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Return settings read from:
+     * Collects settings from:
      *   1. url parameters
      *   2. plugin config
      *   3. global config
-     *
-     * @return array
      */
     protected function loadExportConfig() {
         global $INPUT;
@@ -920,7 +915,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         $doublesided = $INPUT->bool('doublesided', (bool) $this->getConf('doublesided'));
         $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
-        
+
         $this->exportConfig['watermark'] = $INPUT->str('watermark', '');
 
         $hasToC = $INPUT->bool('toc', (bool) $this->getConf('toc'));
