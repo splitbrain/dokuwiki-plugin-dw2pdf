@@ -19,10 +19,13 @@ class MenuItem extends AbstractItem {
     /** @var string icon file */
     protected $svg = __DIR__ . '/file-pdf.svg';
 
+    /** @var string template name */
+    protected $template = '';
+
     /**
      * MenuItem constructor.
      */
-    public function __construct() {
+    public function __construct($template = null) {
         parent::__construct();
         global $REV, $DATE_AT;
 
@@ -30,6 +33,11 @@ class MenuItem extends AbstractItem {
             $this->params['at'] = $DATE_AT;
         } elseif($REV) {
             $this->params['rev'] = $REV;
+        }
+
+        if(!is_null($template)) {
+            $this->template = $template;
+            $this->params['template'] = $template;
         }
     }
 
@@ -40,6 +48,13 @@ class MenuItem extends AbstractItem {
      */
     public function getLabel() {
         $hlp = plugin_load('action', 'dw2pdf');
-        return $hlp->getLang('export_pdf_button');
+
+        $suffix = '';
+
+        if(strlen($this->template) > 0) {
+            $suffix = ' ('.$this->template.')';
+        }
+
+        return $hlp->getLang('export_pdf_button').$suffix;
     }
 }

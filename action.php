@@ -31,7 +31,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param string $title
      */
     public function __construct($title=null) {
-        $this->tpl   = $this->getExportConfig('template');
+        $templates = explode(',', $this->getExportConfig('template'));
+        global $INPUT;
+        $requestedTemplate = $INPUT->str('template', $templates[0]); // exp
+
+        $this->tpl   = $requestedTemplate;
         $this->title = $title ? $title : '';
     }
 
@@ -1010,16 +1014,21 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $params['rev'] = $REV;
             }
 
-            // insert button at position before last (up to top)
-            $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
-                array('export_pdf' =>
-                          '<li>'
-                          . '<a href="' . wl($ID, $params) . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
-                          . '<span>' . $this->getLang('export_pdf_button') . '</span>'
-                          . '</a>'
-                          . '</li>'
-                ) +
-                array_slice($event->data['items'], -1, 1, true);
+            foreach($this->getExportConfig('template') AS $template){
+
+                $params['template'] = $template;
+
+                // insert button at position before last (up to top)
+                $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
+                    array('export_pdf_'.$template =>
+                              '<li>'
+                              . '<a href="' . wl($ID, $params) . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . ' ('. $template .'">'
+                              . '<span>' . $this->getLang('export_pdf_button') . '</span>'
+                              . '</a>'
+                              . '</li>'
+                    ) +
+                    array_slice($event->data['items'], -1, 1, true);
+            }
         }
     }
 
@@ -1038,6 +1047,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             return;
         }
 
-        array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
+        foreach(explode(',', $this->getExportConfig('template')) AS $template){
+            array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem($template)]);
+        }
     }
 }
