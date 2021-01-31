@@ -16,3 +16,4 @@ $lang['empty']                 = 'Er zijn nog geen pagina\'s geselecteerd.';
 $lang['tocheader']             = 'Inhoudsopgave';
 $lang['export_ns']             = 'Exporteren namespace "%s:" naar bestand %s.pdf';
 $lang['forbidden']             = 'Je hebt geen toegang tot deze pagina\'s: %s.<br/><br/>Gebruik de  optie \'Verboden pagina\'s overslaan\' om het boek te maken met de beschikbare pagina\'s.';
+$lang['missingbookcreator']     = 'De Bookcreator Plugin is niet geïnstalleerd of is uitgeschakeld';

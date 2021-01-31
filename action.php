@@ -10,7 +10,7 @@
 /**
  * Class action_plugin_dw2pdf
  *
- * Export hmtl content to pdf, for different url parameter configurations
+ * Export html content to pdf, for different url parameter configurations
  * DokuPDF which extends mPDF is used for generating the pdf from html.
  */
 class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
@@ -20,19 +20,20 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @var array
      */
     protected $exportConfig = null;
+    /** @var string template name, to use templates from dw2pdf/tpl/<template name> */
     protected $tpl;
+    /** @var string title of exported pdf */
     protected $title;
+    /** @var array list of pages inclued in exported pdf */
     protected $list = array();
+    /** @var bool|string path to temporary cachefile */
     protected $onetimefile = false;
 
     /**
      * Constructor. Sets the correct template
-     *
-     * @param string $title
      */
-    public function __construct($title=null) {
+    public function __construct() {
         $this->tpl   = $this->getExportConfig('template');
-        $this->title = $title ? $title : '';
     }
 
     /**
@@ -61,56 +62,50 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function convert(Doku_Event $event) {
-        global $ID, $REV, $DATE_AT;
+        global $REV, $DATE_AT;
         global $conf, $INPUT;
 
         // our event?
-        if(($event->data != 'export_pdfbook') && ($event->data != 'export_pdf') && ($event->data != 'export_pdfns')) return;
+        $allowedEvents = ['export_pdfbook', 'export_pdf', 'export_pdfns'];
+        if(!in_array($event->data, $allowedEvents)) return;
 
-        // check user's rights
-        if(auth_quickaclcheck($ID) < AUTH_READ) return;
+        try{
+            //collect pages and check permissions
+            list($this->title, $this->list) = $this->collectExportablePages($event);
 
-        if($data = $this->collectExportPages($event)) {
-            list($this->title, $this->list) = $data;
-        } else {
-            return;
-        }
+            if($event->data === 'export_pdf' && ($REV || $DATE_AT)) {
+                $cachefile = tempnam($conf['tmpdir'] . '/dwpdf', 'dw2pdf_');
+                $this->onetimefile = $cachefile;
+                $generateNewPdf = true;
+            } else {
+                // prepare cache and its dependencies
+                $depends = array();
+                $cache = $this->prepareCache($depends);
+                $cachefile = $cache->cache;
+                $generateNewPdf = !$this->getConf('usecache')
+                    || $this->getExportConfig('isDebug')
+                    || !$cache->useCache($depends);
+            }
 
-        if($event->data === 'export_pdf' && ($REV || $DATE_AT)) {
-            $cachefile = tempnam($conf['tmpdir'] . '/dwpdf', 'dw2pdf_');
-            $this->onetimefile = $cachefile;
-            $generateNewPdf = true;
-        } else {
-            // prepare cache and its dependencies
-            $depends = array();
-            $cache = $this->prepareCache($depends);
-            $cachefile = $cache->cache;
-            $generateNewPdf = !$this->getConf('usecache')
-                || $this->getExportConfig('isDebug')
-                || !$cache->useCache($depends);
-        }
-
-        // hard work only when no cache available or needed for debugging
-        if($generateNewPdf) {
-            // generating the pdf may take a long time for larger wikis / namespaces with many pages
-            set_time_limit(0);
-            try {
+            // hard work only when no cache available or needed for debugging
+            if($generateNewPdf) {
+                // generating the pdf may take a long time for larger wikis / namespaces with many pages
+                set_time_limit(0);
+                //may throw Mpdf\MpdfException as well
                 $this->generatePDF($cachefile, $event);
-            } catch(Mpdf\MpdfException $e) {
-                if($INPUT->has('selection')) {
-                    http_status(400);
-                    print $e->getMessage();
-                    exit();
-                } else {
-                    //prevent act_export()
-                    $event->data = 'show';
-                    msg($e->getMessage(), -1);
-                    $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
-                    return;
-                }
+            }
+        } catch(Exception $e) {
+            if($INPUT->has('selection')) {
+                http_status(400);
+                print $e->getMessage();
+                exit();
+            } else {
+                //prevent Action/Export()
+                msg($e->getMessage(), -1);
+                $event->data = 'redirect';
+                return;
             }
         }
-
         $event->preventDefault(); // after prevent, $event->data cannot be changed
 
         // deliver the file
@@ -118,47 +113,50 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Obtain list of pages and title, based on url parameters
+     * Obtain list of pages and title, for different methods of exporting the pdf.
+     *  - Return a title and selection, throw otherwise an exception
+     *  - Check permisions
      *
      * @param Doku_Event $event
      * @return array|false
+     * @throws Exception
      */
-    protected function collectExportPages(Doku_Event $event) {
+    protected function collectExportablePages(Doku_Event $event) {
         global $ID, $REV;
         global $INPUT;
-        global $conf;
+        global $conf, $lang;
 
         // list of one or multiple pages
         $list = array();
 
         if($event->data == 'export_pdf') {
+            if(auth_quickaclcheck($ID) < AUTH_READ) {  // set more specific denied message
+                throw new Exception($lang['accessdenied']);
+            }
             $list[0] = $ID;
-            $this->title = $INPUT->str('pdftitle'); //DEPRECATED
-            $this->title = $INPUT->str('book_title', $this->title, true);
-            if(empty($this->title)) {
-                $this->title = p_get_first_heading($ID);
+            $title = $INPUT->str('pdftitle'); //DEPRECATED
+            $title = $INPUT->str('book_title', $title, true);
+            if(empty($title)) {
+                $title = p_get_first_heading($ID);
             }
             // use page name if title is still empty
-            if(empty($this->title)) {
-                $this->title = noNS($ID);
+            if(empty($title)) {
+                $title = noNS($ID);
             }
 
             $filename = wikiFN($ID, $REV);
             if(!file_exists($filename)) {
-                $this->showPageWithErrorMsg($event, 'notexist');
-                return false;
+                throw new Exception($this->getLang('notexist'));
             }
 
         } elseif($event->data == 'export_pdfns') {
             //check input for title and ns
-            if(!$this->title = $INPUT->str('book_title')) {
-                $this->showPageWithErrorMsg($event, 'needtitle');
-                return false;
+            if(!$title = $INPUT->str('book_title')) {
+                throw new Exception($this->getLang('needtitle'));
             }
             $pdfnamespace = cleanID($INPUT->str('book_ns'));
             if(!@is_dir(dirname(wikiFN($pdfnamespace . ':dummy')))) {
-                $this->showPageWithErrorMsg($event, 'needns');
-                return false;
+                throw new Exception($this->getLang('needns'));
             }
 
             //sort order
@@ -212,14 +210,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         } elseif(isset($_COOKIE['list-pagelist']) && !empty($_COOKIE['list-pagelist'])) {
             /** @deprecated  April 2016 replaced by localStorage version of Bookcreator*/
             //is in Bookmanager of bookcreator plugin a title given?
-            $this->title = $INPUT->str('pdfbook_title'); //DEPRECATED
-            $this->title = $INPUT->str('book_title', $this->title, true);
-            if(empty($this->title)) {
-                $this->showPageWithErrorMsg($event, 'needtitle');
-                return false;
-            } else {
-                $list = explode("|", $_COOKIE['list-pagelist']);
+            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
+            $title = $INPUT->str('book_title', $title, true);
+            if(empty($title)) {
+                throw new Exception($this->getLang('needtitle'));
             }
+
+            $list = explode("|", $_COOKIE['list-pagelist']);
 
         } elseif($INPUT->has('selection')) {
             //handle Bookcreator requests based at localStorage
@@ -230,24 +227,35 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 //            }
 
             $list = json_decode($INPUT->str('selection', '', true), true);
-            if(!is_array($list) || empty($list)) {
-                http_status(400);
-                print $this->getLang('empty');
-                exit();
+            if (!is_array($list) || empty($list)) {
+                throw new Exception($this->getLang('empty'));
             }
 
-            $this->title = $INPUT->str('pdfbook_title'); //DEPRECATED
-            $this->title = $INPUT->str('book_title', $this->title, true);
-            if(empty($this->title)) {
-                http_status(400);
-                print $this->getLang('needtitle');
-                exit();
+            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
+            $title = $INPUT->str('book_title', $title, true);
+            if (empty($title)) {
+                throw new Exception($this->getLang('needtitle'));
+            }
+
+        } elseif($INPUT->has('savedselection')) {
+            //export a saved selection of the Bookcreator Plugin
+            if(plugin_isdisabled('bookcreator')) {
+                throw new Exception($this->getLang('missingbookcreator'));
+            }
+            /** @var action_plugin_bookcreator_handleselection $SelectionHandling */
+            $SelectionHandling = plugin_load('action', 'bookcreator_handleselection');
+            $savedselection = $SelectionHandling->loadSavedSelection($INPUT->str('savedselection'));
+            $title = $savedselection['title'];
+            $title = $INPUT->str('book_title', $title, true);
+            $list = $savedselection['selection'];
+
+            if(empty($title)) {
+                throw new Exception($this->getLang('needtitle'));
             }
 
         } else {
             //show empty bookcreator message
-            $this->showPageWithErrorMsg($event, 'empty');
-            return false;
+            throw new Exception($this->getLang('empty'));
         }
 
         $list = array_map('cleanID', $list);
@@ -259,23 +267,15 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 unset($list[$index]);
             }
         }
-        $list = array_filter($list); //removes also pages mentioned '0'
+        $list = array_filter($list, 'strlen'); //use of strlen() callback prevents removal of pagename '0'
 
         //if selection contains forbidden pages throw (overridable) warning
         if(!$INPUT->bool('book_skipforbiddenpages') && !empty($skippedpages)) {
             $msg = hsc(join(', ', $skippedpages));
-            if($INPUT->has('selection')) {
-                http_status(400);
-                print sprintf($this->getLang('forbidden'), $msg);
-                exit();
-            } else {
-                $this->showPageWithErrorMsg($event, 'forbidden', $msg);
-                return false;
-            }
-
+            throw new Exception(sprintf($this->getLang('forbidden'), $msg));
         }
 
-        return array($this->title, $list);
+        return array($title, $list);
     }
 
     /**
@@ -336,25 +336,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Set error notification and reload page again
-     *
-     * @param Doku_Event $event
-     * @param string $msglangkey key of translation key
-     * @param string $replacement
-     */
-    private function showPageWithErrorMsg(Doku_Event $event, $msglangkey, $replacement=null) {
-        if(empty($replacement)) {
-            $msg = $this->getLang($msglangkey);
-        } else {
-            $msg = sprintf($this->getLang($msglangkey), $replacement);
-        }
-        msg($msg, -1);
-
-        $event->data = 'show';
-        $_SERVER['REQUEST_METHOD'] = 'POST'; //clears url
-    }
-
-    /**
      * Returns the parsed Wikitext in dw2pdf for the given id and revision
      *
      * @param string     $id  page id
@@ -397,7 +378,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if ($event->data == 'export_pdf') { //only one page is exported
             $rev = $REV;
             $date_at = $DATE_AT;
-        } else { //we are exporting entre namespace, ommit revisions
+        } else { //we are exporting entire namespace, ommit revisions
             $rev = $date_at = '';
         }
 
