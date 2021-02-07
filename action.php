@@ -24,7 +24,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     protected $tpl;
     /** @var string title of exported pdf */
     protected $title;
-    /** @var array list of pages inclued in exported pdf */
+    /** @var array list of pages included in exported pdf */
     protected $list = array();
     /** @var bool|string path to temporary cachefile */
     protected $onetimefile = false;
