@@ -3,8 +3,8 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Schplurtz le Déboulonné <Schplurtz@laposte.net>
  * @author Hérisson grognon <dodoperso@laposte.net>
- * @author Schplurtz le Déboulonné <schplurtz@laposte.net>
  * @author NicolasFriedli <nicolas@theologique.ch>
  * @author Fabrice Dejaigher <fabrice@chtiland.com>
  * @author tuxun <tuxuntrash@gmail.com>
