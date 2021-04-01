@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author DrMaXX <drmaxxis@gmail.com>
  * @author Sebastian Engel <mail@engel-s.de>
  * @author Thomas Templin <templin@gnuwhv.de>
  * @author F. Mueller-Donath <j.felix@mueller-donath.de>
@@ -15,3 +16,4 @@ $lang['empty']                 = 'Du hastnoch keine Seiten gewählt.';
 $lang['tocheader']             = 'Inhaltsverzeichnis';
 $lang['export_ns']             = 'Exportiere Namensraum "%s:" in Datei %s.pdf';
 $lang['forbidden']             = 'Sie haben keine Berechtigung für folgende Seiten: %s.<br/><br/>Benutze die Option \'Seiten ohne Berechtigung auslassen\' um das Buch mit den verfügbaren Seiten zu erstellen.';
+$lang['missingbookcreator']    = 'Das Bookcreator Plugin ist nicht installiert oder deaktiviert';
