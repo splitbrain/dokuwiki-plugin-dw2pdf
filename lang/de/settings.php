@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Markus <mosesmami0@gmail.com>
  * @author Matthias Schulte <dokuwiki@lupo49.de>
  * @author Juergen-aus-Koeln <h-j-schuemmer@web.de>
  * @author F. Mueller-Donath <j.felix@mueller-donath.de>
@@ -17,9 +18,9 @@ $lang['toc']                   = 'Hinzufügen eines automatisch generierten Inha
 $lang['toclevels']             = 'Oberste Ebene und maximale Tiefe des Inhaltsverzeichnisses. Standardmäßig werden die Werte aus der Wiki-Konfiguration <a href="#config___toptoclevel">toptoclevel</a> und <a href="#config___maxtoclevel">maxtoclevel</a> benutzt. Format: <code><i>&lt;top&gt;</i>-<i>&lt;max&gt;</i></code>';
 $lang['maxbookmarks']          = 'Bis zu welcher Tiefe werden Lesezeichen angezeigt? (0=keine, 5=alle)';
 $lang['template']              = 'Welches Template soll zur Formatierung der PDFs verwendet werden?';
-$lang['output']                = 'So wird die Datei ausgegeben';
-$lang['output_o_browser']      = 'Browser';
-$lang['output_o_file']         = 'Datei herunterladen';
+$lang['output']                = 'Wie soll das PDF angezeigt werden?';
+$lang['output_o_browser']      = 'Im Browser anzeigen';
+$lang['output_o_file']         = 'PDF herunterladen';
 $lang['usecache']              = 'Sollen PDFs zwischengespeichert werden? Eingebettete Grafiken werden dann nicht hinsichtlich ihrer Zugriffsberechtigungen geprüft (sicherheitskritische Option). ';
 $lang['usestyles']             = 'Hier können komma-separiert Plugins angegeben werden, von denen die <code>style.css</code> oder <code>screen.css</code> für die PDF-Generierung verwendet werden sollen. Als Standard wird nur die <code>print.css</code> und <code>pdf.css</code> verwendet.';
 $lang['qrcodesize']            = 'Größe des eingebetteten QR-Codes (in Pixeln <code><i>width</i><b>x</b><i>height</i></code>. Leer lassen zum Deaktivieren.';
