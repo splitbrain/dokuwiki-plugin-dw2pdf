@@ -1,25 +1,29 @@
 <?php
 
+namespace dokuwiki\plugin\dw2pdf\test;
+
+use DokuWikiTest;
+
 /**
  * @group plugin_dw2pdf
  * @group plugins
  */
-class dw2pdf_action_pagenamesort_test extends DokuWikiTest
+class ActionPagenameSortTest extends DokuWikiTest
 {
 
     protected $pluginsEnabled = array('dw2pdf');
 
+    public function testDirectPagenameSort()
+    {
+        $action = new \action_plugin_dw2pdf();
 
-    public function testDirectPagenameSort() {
-        $action = new action_plugin_dw2pdf();
-
-        $this->assertLessThan(0, $action->_pagenamesort(['id'=>'bar'], ['id'=>'bar:start']));
-        $this->assertGreaterThan(0, $action->_pagenamesort(['id'=>'bar:bar'], ['id'=>'bar:start']));
+        $this->assertLessThan(0, $action->_pagenamesort(['id' => 'bar'], ['id' => 'bar:start']));
+        $this->assertGreaterThan(0, $action->_pagenamesort(['id' => 'bar:bar'], ['id' => 'bar:start']));
     }
 
     /**
-     * @see testPageNameSort
      * @return array
+     * @see testPageNameSort
      */
     public function providerPageNameSort()
     {
@@ -31,15 +35,15 @@ class dw2pdf_action_pagenamesort_test extends DokuWikiTest
                     'bar:start',
                     'bar:alpha',
                     'bar:bar',
-                ]
+                ],
             ],
             [
                 'pages and subspaces mixed',
                 [
                     'alpha',
                     'beta:foo',
-                    'gamma'
-                ]
+                    'gamma',
+                ],
             ],
             [
                 'full test',
@@ -82,7 +86,7 @@ class dw2pdf_action_pagenamesort_test extends DokuWikiTest
     {
         // prepare the array as expected in the sort function
         $prepared = [];
-        foreach($expected as $line) {
+        foreach ($expected as $line) {
             $prepared[] = ['id' => $line];
         }
 
@@ -91,7 +95,7 @@ class dw2pdf_action_pagenamesort_test extends DokuWikiTest
         shuffle($input);
 
         // run sort
-        $action = new action_plugin_dw2pdf();
+        $action = new \action_plugin_dw2pdf();
         usort($input, [$action, '_pagenamesort']);
 
         $this->assertSame($prepared, $input);

@@ -1,9 +1,9 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../DokuImageProcessorDecorator.class.php';
+namespace dokuwiki\plugin\dw2pdf\test;
 
 use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator;
+use DokuWikiTest;
 
 /**
  * General tests for the imagemap plugin
@@ -11,7 +11,7 @@ use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator;
  * @group plugin_dw2pdf
  * @group plugins
  */
-class dw2pdf_getImage_test extends DokuWikiTest
+class DokuImageProcessorTest extends DokuWikiTest
 {
 
     /**
@@ -19,7 +19,7 @@ class dw2pdf_getImage_test extends DokuWikiTest
      */
     public function provideGetImageTestdata() {
         global $conf;
-        $conf['mediadir'];
+
         return [
             [
                 DOKU_URL . 'lib/exe/fetch.php?tok=b0b7a3&media=http%3A%2F%2Fphp.net%2Fimages%2Fphp.gif',

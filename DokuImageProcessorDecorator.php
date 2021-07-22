@@ -2,6 +2,8 @@
 
 namespace dokuwiki\plugin\dw2pdf;
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
 
     /**
