@@ -807,6 +807,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 $list[DOKU_PLUGIN . "$p/print.less"] = DOKU_BASE . "lib/plugins/$p/";
             }
         }
+
+        // template support
+        foreach (['pdf.css', 'pdf.less', 'css/pdf.css', 'css/pdf.less', 'styles/pdf.css', 'styles/pdf.less'] as $file) {
+            if (file_exists(tpl_incdir() . $file)) {
+                $list[tpl_incdir() . $file] = tpl_basedir() . $file;
+            }
+        }
+
         return $list;
     }
 
