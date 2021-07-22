@@ -29,11 +29,11 @@ class DokuImageProcessorTest extends DokuWikiTest
                 'external image',
             ],
             [
-                DOKU_URL . 'lib/images/smileys/fixme.gif',
-                DOKU_REL . 'lib/images/smileys/fixme.gif',
-                DOKU_INC . 'lib/images/smileys/fixme.gif',
-                DOKU_INC . 'lib/images/smileys/fixme.gif',
-                'Replacement image / smiley',
+                DOKU_URL . 'lib/images/throbber.gif',
+                DOKU_REL . 'lib/images/throbber.gif',
+                DOKU_INC . 'lib/images/throbber.gif',
+                DOKU_INC . 'lib/images/throbber.gif',
+                'fixed standard image',
             ],
             [
                 DOKU_URL . 'lib/exe/fetch.php?media=wiki:dokuwiki-128.png',

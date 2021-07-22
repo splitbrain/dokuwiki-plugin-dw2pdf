@@ -30,7 +30,7 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
 
         // extract the real media from a fetch.php uri and determine mime
         if(preg_match("/^$re/", $file, $m) ||
-            preg_match('/[&\?]media=([^&\?]*)/', $file, $m)
+            preg_match('/[&?]media=([^&?]*)/', $file, $m)
         ) {
             $media = rawurldecode($m[1]);
             list($ext, $mime) = mimetype($media);
@@ -54,9 +54,9 @@ class DokuImageProcessorDecorator extends \Mpdf\Image\ImageProcessor {
                 // any size restrictions?
                 $w = $h = 0;
                 $rev = '';
-                if(preg_match('/[\?&]w=(\d+)/', $file, $m)) $w = $m[1];
-                if(preg_match('/[\?&]h=(\d+)/', $file, $m)) $h = $m[1];
-                if(preg_match('/[&\?]rev=(\d+)/', $file, $m)) $rev = $m[1];
+                if(preg_match('/[?&]w=(\d+)/', $file, $m)) $w = $m[1];
+                if(preg_match('/[?&]h=(\d+)/', $file, $m)) $h = $m[1];
+                if(preg_match('/[&?]rev=(\d+)/', $file, $m)) $rev = $m[1];
 
                 if(media_isexternal($media)) {
                     $local = media_get_from_URL($media, $ext, -1);
