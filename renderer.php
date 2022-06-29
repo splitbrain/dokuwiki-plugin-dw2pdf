@@ -63,7 +63,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param int $level from 1 (highest) to 6 (lowest)
      * @param int $pos
      */
-    public function header($text, $level, $pos) {
+    public function header($text, $level, $pos, $returnonly = false) {
         if(!$text) return; //skip empty headlines
         global $ID;
 
