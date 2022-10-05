@@ -197,7 +197,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
 
         // for internal links contains the title the pageid
         if(in_array($link['title'], $this->actioninstance->getExportedPages())) {
-            list(/* $url */, $hash) = explode('#', $link['url'], 2);
+            list(/* $url */, $hash) = array_pad(explode('#', $link['url'], 2), 2, '');
 
             $check = false;
             $pid = sectionID($link['title'], $check);
