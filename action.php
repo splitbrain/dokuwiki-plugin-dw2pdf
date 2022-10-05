@@ -398,7 +398,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // let mpdf fix local links
         $self = parse_url(DOKU_URL);
         $url = $self['scheme'] . '://' . $self['host'];
-        if($self['port']) {
+        if(!empty($self['port'])) {
             $url .= ':' . $self['port'];
         }
         $mpdf->SetBasePath($url);
@@ -573,13 +573,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         global $conf;
 
         // this is what we'll return
-        $output = array(
+        $output = [
             'cover' => '',
+            'back' => '',
             'html'  => '',
             'page'  => '',
             'first' => '',
             'cite'  => '',
-        );
+        ];
 
         // prepare header/footer elements
         $html = '';
@@ -911,8 +912,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $levels = array();
         if($hasToC) {
             $toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);
-            list($top_input, $max_input) = explode('-', $toclevels, 2);
-            list($top_conf, $max_conf) = explode('-', $this->getConf('toclevels'), 2);
+            list($top_input, $max_input) = array_pad(explode('-', $toclevels, 2), 2, '');
+            list($top_conf, $max_conf) = array_pad(explode('-', $this->getConf('toclevels'), 2), 2, '');
             $bounds_input = array(
                 'top' => array(
                     (int) $top_input,
