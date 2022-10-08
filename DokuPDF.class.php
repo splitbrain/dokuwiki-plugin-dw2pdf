@@ -55,7 +55,7 @@ class DokuPDF extends \Mpdf\Mpdf
             array(
                 'mode' => $mode,
                 'format' => $format,
-                'fontsize' => $fontsize,
+                'default_font_size' => $fontsize,
                 'ImageProcessorClass' => DokuImageProcessorDecorator::class,
                 'tempDir' => _MPDF_TEMP_PATH //$conf['tmpdir'] . '/tmp/dwpdf'
             )
