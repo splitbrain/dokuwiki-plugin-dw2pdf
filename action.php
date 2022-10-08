@@ -182,7 +182,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $excludes = $INPUT->arr('excludes');
             if (!empty($excludes)) {
                 $result = array_filter($result, function ($item) use ($excludes) {
-                    return array_search($item['id'], $excludes) === false;
+                    return !in_array($item['id'], $excludes);
+                });
+            }
+            // exclude namespaces
+            $excludesns = $INPUT->arr('excludesns');
+            if (!empty($excludesns)) {
+                $result = array_filter($result, function ($item) use ($excludesns) {
+                    foreach ($excludesns as $ns) {
+                        if (strpos($item['id'], $ns . ':') === 0) return false;
+                    }
+                    return true;
                 });
             }
 
