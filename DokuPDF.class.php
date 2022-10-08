@@ -28,7 +28,7 @@ class DokuPDF extends \Mpdf\Mpdf
      */
     function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11)
     {
-        global $conf;
+        global $conf, $lang;
 
         if (!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
         io_mkdir_p(_MPDF_TEMP_PATH);
@@ -69,6 +69,9 @@ class DokuPDF extends \Mpdf\Mpdf
 
         $this->ignore_invalid_utf8 = true;
         $this->tabSpaces = 4;
+
+        // assumed that global language can be used, maybe Bookcreator needs more nuances?
+        $this->SetDirectionality($lang['direction']);
     }
 
     /**
