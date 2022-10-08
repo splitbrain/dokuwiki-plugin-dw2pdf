@@ -7,17 +7,17 @@
  *
  * @author Andreas Gohr <andi@splitbrain.org>
  */
-global $conf;
-if(!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
+
+use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator;
 
 require_once __DIR__ . '/vendor/autoload.php';
-require __DIR__ . '/DokuImageProcessorDecorator.class.php';
 
 /**
  * Class DokuPDF
  * Some DokuWiki specific extentions
  */
-class DokuPDF extends \Mpdf\Mpdf {
+class DokuPDF extends \Mpdf\Mpdf
+{
 
     /**
      * DokuPDF constructor.
@@ -26,17 +26,19 @@ class DokuPDF extends \Mpdf\Mpdf {
      * @param string $orientation
      * @param int $fontsize
      */
-    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11) {
-        global $conf;
+    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11)
+    {
+        global $conf, $lang;
 
+        if (!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
         io_mkdir_p(_MPDF_TEMP_PATH);
 
         $format = $pagesize;
-        if($orientation == 'landscape') {
+        if ($orientation == 'landscape') {
             $format .= '-L';
         }
 
-        switch($conf['lang']) {
+        switch ($conf['lang']) {
             case 'zh':
             case 'zh-tw':
             case 'ja':
@@ -53,7 +55,7 @@ class DokuPDF extends \Mpdf\Mpdf {
             array(
                 'mode' => $mode,
                 'format' => $format,
-                'fontsize' => $fontsize,
+                'default_font_size' => $fontsize,
                 'ImageProcessorClass' => DokuImageProcessorDecorator::class,
                 'tempDir' => _MPDF_TEMP_PATH //$conf['tmpdir'] . '/tmp/dwpdf'
             )
@@ -67,12 +69,16 @@ class DokuPDF extends \Mpdf\Mpdf {
 
         $this->ignore_invalid_utf8 = true;
         $this->tabSpaces = 4;
+
+        // assumed that global language can be used, maybe Bookcreator needs more nuances?
+        $this->SetDirectionality($lang['direction']);
     }
 
     /**
      * Cleanup temp dir
      */
-    function __destruct() {
+    function __destruct()
+    {
         io_rmdir(_MPDF_TEMP_PATH, true);
     }
 
@@ -82,7 +88,8 @@ class DokuPDF extends \Mpdf\Mpdf {
      * @param string $path
      * @param string $basepath
      */
-    function GetFullPath(&$path, $basepath = '') {
+    function GetFullPath(&$path, $basepath = '')
+    {
         $path = htmlspecialchars_decode($path);
         parent::GetFullPath($path, $basepath);
     }

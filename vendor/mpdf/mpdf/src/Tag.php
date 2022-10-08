@@ -2,14 +2,18 @@
 
 namespace Mpdf;
 
+use Mpdf\Strict;
+
 use Mpdf\Color\ColorConverter;
 
-use Mpdf\Image\ImageProcessor;
+use \dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
 
 use Mpdf\Language\LanguageToFontInterface;
 
 class Tag
 {
+
+	use Strict;
 
 	/**
 	 * @var \Mpdf\Mpdf
@@ -140,7 +144,7 @@ class Tag
 			'FORMFEED' => 'FormFeed',
 			'HGROUP' => 'HGroup',
 			'INDEXENTRY' => 'IndexEntry',
-			'INDEXINSET' => 'IndexInsert',
+			'INDEXINSERT' => 'IndexInsert',
 			'NEWCOLUMN' => 'NewColumn',
 			'NEWPAGE' => 'NewPage',
 			'PAGEFOOTER' => 'PageFooter',

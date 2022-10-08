@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author FOTONTV <obraztsov568@gmail.com>
  * @author Yuriy Skalko <yuriy.skalko@gmail.com>
  * @author Vasilyy Balyasnyy <v.balyasnyy@gmail.com>
  * @author RainbowSpike <1@2.ru>
@@ -15,3 +16,4 @@ $lang['empty']                 = 'У вас ещё нет выделенных �
 $lang['tocheader']             = 'Содержание';
 $lang['export_ns']             = 'Экспортировать папку %s в файл %s.pdf';
 $lang['forbidden']             = 'У вас нет доступа к этим страницам: %s.<br/><br/>Используйте опцию "Пропустить запрещенные страницы", чтобы создать книгу с доступными страницами.';
+$lang['missingbookcreator']    = 'Плагин Bookcreator не установлен или отключен';

@@ -7,7 +7,7 @@
         }
     ],
     "require": {
-        "mpdf/mpdf": "7.0.3"
+        "mpdf/mpdf": "8.0.*"
     },
     "replace": {
         "paragonie/random_compat": "*"

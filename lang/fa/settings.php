@@ -3,12 +3,14 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Nima Hamidian <nima.hamidian@gmail.com>
  * @author Sam01 <m.sajad079@gmail.com>
  */
 $lang['pagesize']              = 'فرمت صفحه توسط mPDF پشتیبانی می شود. معمولا <code>A4</code> یا <code>letter</code>.';
 $lang['orientation']           = 'جهت صفحه.';
 $lang['orientation_o_portrait'] = 'پرتره';
 $lang['orientation_o_landscape'] = 'چشم‌انداز';
+$lang['font-size']             = 'اندازه فونت برای متن نرمال برحسب نقطه.';
 $lang['doublesided']           = 'سند دوطرفه شروع به اضافه کردن صفحه‌فرد کرد، و جفت زوج و فرد دارد. سند تک‌طرفه تنها دارای صفحات فرد می‌باشد.';
 $lang['toc']                   = 'اضافه کردن فهرست مندرجات خودکار در پی‌دی‌اف (توجه داشته باشید: می‌توانید صفحات خالی اضافه کنید که در صفحه فرد شروع می‌شود و ToC همیشه در هر تعداد صفحه وجود دارد، صفحه‌ها در ToC دارای شماره صفحه هستند)';
 $lang['toclevels']             = 'تعریف سطح بالا و حداکثر عمق سطح که به ToC اضافه شده‌اند.
