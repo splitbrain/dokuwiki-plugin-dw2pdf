@@ -28,6 +28,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     protected $list = array();
     /** @var bool|string path to temporary cachefile */
     protected $onetimefile = false;
+    protected $currentBookChapter = 0;
 
     /**
      * Constructor. Sets the correct template
@@ -43,6 +44,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         if($this->onetimefile) {
             unlink($this->onetimefile);
         }
+    }
+
+    /**
+     * Return the value of currentBookChapter, which is the order of the file to be added in a book generation
+     */
+    public function getCurrentBookChapter()
+    {
+        return $this->currentBookChapter;
     }
 
     /**
@@ -304,6 +313,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             . $this->getExportConfig('orientation')
             . $this->getExportConfig('font-size')
             . $this->getExportConfig('doublesided')
+            . $this->getExportConfig('headernumber')
             . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
             . $this->title;
         $cache = new cache($cachekey, '.dw2.pdf');
@@ -494,6 +504,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $counter = 0;
         $no_pages = count($this->list);
         foreach($this->list as $page) {
+            $this->currentBookChapter = $counter;
             $counter++;
 
             $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at);
