@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Hella <hella.breitkopf@gmail.com>
  * @author Markus <mosesmami0@gmail.com>
  * @author Matthias Schulte <dokuwiki@lupo49.de>
  * @author Juergen-aus-Koeln <h-j-schuemmer@web.de>
@@ -12,10 +13,11 @@ $lang['pagesize']              = 'Ein von mPDF unterstütztes Seitenformat. Norm
 $lang['orientation']           = 'Die Seiten-Ausrichtung';
 $lang['orientation_o_portrait'] = 'Hochformat';
 $lang['orientation_o_landscape'] = 'Querformat';
-$lang['font-size']             = 'Die Schriftgröße für normalen Text in Punkten.';
+$lang['font-size']             = 'Die Schriftgröße für normalen Text in Punkt.';
 $lang['doublesided']           = 'Doppelseitige Dokumente beginnen mit einer ungeraden Seite und werden fortgeführt mit Paaren von geraden und ungeraden Seiten. Einseitige Dokumente haben nur ungerade Seiten.';
 $lang['toc']                   = 'Hinzufügen eines automatisch generierten Inhaltsverzeichnisses am Anfang der PDF-Datei (Anmerkung: kann dazu führen, dass eine leere Seite eingefügt wird, damit der Text bei einer ungeraden Seitenzahl beginnt; das Inhaltsverzeichnis selbst wird bei der Seitennummerierung nicht mitgezählt)';
 $lang['toclevels']             = 'Oberste Ebene und maximale Tiefe des Inhaltsverzeichnisses. Standardmäßig werden die Werte aus der Wiki-Konfiguration <a href="#config___toptoclevel">toptoclevel</a> und <a href="#config___maxtoclevel">maxtoclevel</a> benutzt. Format: <code><i>&lt;top&gt;</i>-<i>&lt;max&gt;</i></code>';
+$lang['headernumber']          = 'Nummerierung bei Überschriften einschalten';
 $lang['maxbookmarks']          = 'Bis zu welcher Tiefe werden Lesezeichen angezeigt? (0=keine, 5=alle)';
 $lang['template']              = 'Welches Template soll zur Formatierung der PDFs verwendet werden?';
 $lang['output']                = 'Wie soll das PDF angezeigt werden?';
