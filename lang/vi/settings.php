@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Minh <phandinhminh@protonmail.ch>
  * @author Thien Hau <thienhau.9a14@gmail.com>
  */
 $lang['pagesize']              = 'Định dạng trang được hỗ trợ bởi mPDF. Thường là <code>A4</code> hoặc <code>letter</code>.';
@@ -13,6 +14,7 @@ $lang['font-size']             = 'Cỡ chữ cho văn bản bình thường theo
 $lang['doublesided']           = 'Tài liệu hai mặt bắt đầu thêm trang lẻ và có các cặp trang chẵn và lẻ.  Tài liệu một mặt chỉ có các trang lẻ.';
 $lang['toc']                   = 'Thêm Mục lục được tạo tự động vào PDF (lưu ý: Có thể thêm các trang trống do bắt đầu tại một trang lẻ và Mục lục luôn bao gồm số trang chẵn, bản thân các trang Mục lục không có số trang)';
 $lang['toclevels']             = 'Xác định cấp cao nhất và cấp độ sâu tối đa được thêm vào Mục lục.  Các mức Mục lục mặc định của wiki là <a href="#config___toptoclevel">toptoclevel</a> và <a href="#config___maxtoclevel">maxtoclevel</a> được sử dụng. Định dạng: <code><i>&lt;hàng đầu&gt;</i>-<i>&lt;tối đa&gt;</i></code>';
+$lang['headernumber']          = 'Kích hoạt đánh số thứ tự tiêu đề';
 $lang['maxbookmarks']          = 'Có bao nhiêu cấp độ đầu đề được sử dụng trong dấu trang PDF?<small>(0=không có, 5=tất cả)</small>';
 $lang['template']              = 'Chủ đề nào nên được sử dụng để định dạng các tập tin PDF?';
 $lang['output']                = 'PDF nên được trình bày cho người dùng như thế nào?';
