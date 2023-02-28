@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of FPDI
  *
@@ -22,8 +23,6 @@ use setasign\FpdiPdfParser\PdfParser\Filter\Predictor;
 
 /**
  * Class representing a PDF stream object
- *
- * @package setasign\Fpdi\PdfParser\Type
  */
 class PdfStream extends PdfType
 {
@@ -38,7 +37,7 @@ class PdfStream extends PdfType
      */
     public static function parse(PdfDictionary $dictionary, StreamReader $reader, PdfParser $parser = null)
     {
-        $v = new self;
+        $v = new self();
         $v->value = $dictionary;
         $v->reader = $reader;
         $v->parser = $parser;
@@ -47,25 +46,20 @@ class PdfStream extends PdfType
 
         // Find the first "newline"
         while (($firstByte = $reader->getByte($offset)) !== false) {
-            if ($firstByte !== "\n" && $firstByte !== "\r") {
-                $offset++;
-            } else {
+            $offset++;
+            if ($firstByte === "\n" || $firstByte === "\r") {
                 break;
             }
         }
 
-        if (false === $firstByte) {
+        if ($firstByte === false) {
             throw new PdfTypeException(
                 'Unable to parse stream data. No newline after the stream keyword found.',
                 PdfTypeException::NO_NEWLINE_AFTER_STREAM_KEYWORD
             );
         }
 
-        $sndByte = $reader->getByte($offset + 1);
-        if ($firstByte === "\n" || $firstByte === "\r") {
-            $offset++;
-        }
-
+        $sndByte = $reader->getByte($offset);
         if ($sndByte === "\n" && $firstByte !== "\n") {
             $offset++;
         }
@@ -86,7 +80,7 @@ class PdfStream extends PdfType
      */
     public static function create(PdfDictionary $dictionary, $stream)
     {
-        $v = new self;
+        $v = new self();
         $v->value = $dictionary;
         $v->stream = (string) $stream;
 
@@ -115,7 +109,7 @@ class PdfStream extends PdfType
     /**
      * The stream reader instance.
      *
-     * @var StreamReader
+     * @var StreamReader|null
      */
     protected $reader;
 
