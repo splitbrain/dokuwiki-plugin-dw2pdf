@@ -13,6 +13,9 @@
  * Export html content to pdf, for different url parameter configurations
  * DokuPDF which extends mPDF is used for generating the pdf from html.
  */
+
+use dokuwiki\Cache\Cache;
+
 class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     /**
      * Settings for current export, collected from url param, plugin config, global config
@@ -316,7 +319,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             . $this->getExportConfig('headernumber')
             . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
             . $this->title;
-        $cache = new cache($cachekey, '.dw2.pdf');
+        $cache = new Cache($cachekey, '.dw2.pdf');
 
         $dependencies = array();
         foreach($this->list as $pageid) {
