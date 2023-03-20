@@ -639,7 +639,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             '@WIKI@'    => $conf['title'],
             '@WIKIURL@' => DOKU_URL,
             '@DATE@'    => dformat(time()),
-            '@USERNAME@'=> $INFO['userinfo']['name'],
+            '@USERNAME@'=> $INFO['userinfo']['name'] ?? '',
             '@BASE@'    => DOKU_BASE,
             '@INC@'     => DOKU_INC,
             '@TPLBASE@' => DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
