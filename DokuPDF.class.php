@@ -28,7 +28,9 @@ class DokuPDF extends \Mpdf\Mpdf
      */
     function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11)
     {
-        global $conf, $lang;
+        global $conf;
+        global $lang;
+        global $ID;
 
         if (!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
         io_mkdir_p(_MPDF_TEMP_PATH);
@@ -38,7 +40,8 @@ class DokuPDF extends \Mpdf\Mpdf
             $format .= '-L';
         }
 
-        switch ($conf['lang']) {
+        $docLang = $this->getDocumentLanguage($ID);
+        switch ($docLang) {
             case 'zh':
             case 'zh-tw':
             case 'ja':
@@ -50,16 +53,14 @@ class DokuPDF extends \Mpdf\Mpdf
 
         }
 
-        // we're always UTF-8
-        parent::__construct(
-            array(
-                'mode' => $mode,
-                'format' => $format,
-                'default_font_size' => $fontsize,
-                'ImageProcessorClass' => DokuImageProcessorDecorator::class,
-                'tempDir' => _MPDF_TEMP_PATH //$conf['tmpdir'] . '/tmp/dwpdf'
-            )
-        );
+        parent::__construct([
+            'mode' => $mode,
+            'format' => $format,
+            'default_font_size' => $fontsize,
+            'ImageProcessorClass' => DokuImageProcessorDecorator::class,
+            'tempDir' => _MPDF_TEMP_PATH, //$conf['tmpdir'] . '/tmp/dwpdf'
+            'SHYlang' => $docLang,
+        ]);
 
         $this->autoScriptToLang = true;
         $this->baseScript = 1;
@@ -93,4 +94,26 @@ class DokuPDF extends \Mpdf\Mpdf
         $path = htmlspecialchars_decode($path);
         parent::GetFullPath($path, $basepath);
     }
+
+    /**
+     * Get the language of the current document
+     *
+     * Uses the translation plugin if available
+     * @return string
+     */
+    protected function getDocumentLanguage($pageid)
+    {
+        global $conf;
+
+        $lang = $conf['lang'];
+        /** @var helper_plugin_translation $trans */
+        $trans = plugin_load('helper', 'translation');
+        if ($trans) {
+            $tr = $trans->getLangPart($pageid);
+            if ($tr) $lang = $tr;
+        }
+
+        return $lang;
+    }
+
 }
