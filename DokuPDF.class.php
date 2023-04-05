@@ -26,11 +26,10 @@ class DokuPDF extends \Mpdf\Mpdf
      * @param string $orientation
      * @param int $fontsize
      */
-    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11)
+    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11, $docLang = 'en')
     {
         global $conf;
         global $lang;
-        global $ID;
 
         if (!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
         io_mkdir_p(_MPDF_TEMP_PATH);
@@ -40,7 +39,6 @@ class DokuPDF extends \Mpdf\Mpdf
             $format .= '-L';
         }
 
-        $docLang = $this->getDocumentLanguage($ID);
         switch ($docLang) {
             case 'zh':
             case 'zh-tw':
@@ -95,25 +93,5 @@ class DokuPDF extends \Mpdf\Mpdf
         parent::GetFullPath($path, $basepath);
     }
 
-    /**
-     * Get the language of the current document
-     *
-     * Uses the translation plugin if available
-     * @return string
-     */
-    protected function getDocumentLanguage($pageid)
-    {
-        global $conf;
-
-        $lang = $conf['lang'];
-        /** @var helper_plugin_translation $trans */
-        $trans = plugin_load('helper', 'translation');
-        if ($trans) {
-            $tr = $trans->getLangPart($pageid);
-            if ($tr) $lang = $tr;
-        }
-
-        return $lang;
-    }
 
 }
