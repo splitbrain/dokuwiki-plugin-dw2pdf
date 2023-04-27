@@ -50,12 +50,26 @@ class DokuPDF extends \Mpdf\Mpdf
 
         }
 
+        $proxy = $proxyAuth = null;
+        if (isset($conf['proxy']['host'])) {
+            $proxy = "http";
+            if ($conf['proxy']['ssl'] ?? false) {
+                $proxy .= "s";
+            }
+            $proxy .= "://" . $conf['proxy']['host'] . ":" . ($conf['proxy']['port'] ?? 3128);
+            if (isset($conf['proxy']['user']) && isset($conf['proxy']['pass'])) {
+                $proxyAuth = urlencode($conf['proxy']['user']) . "@" . urlencode($conf['proxy']['pass']);
+            }
+        }
+
         // we're always UTF-8
         parent::__construct(
             array(
                 'mode' => $mode,
                 'format' => $format,
                 'default_font_size' => $fontsize,
+                'curlProxy' => $proxy,
+                'curlProxyAuth' => $proxyAuth,
                 'ImageProcessorClass' => DokuImageProcessorDecorator::class,
                 'tempDir' => _MPDF_TEMP_PATH //$conf['tmpdir'] . '/tmp/dwpdf'
             )
