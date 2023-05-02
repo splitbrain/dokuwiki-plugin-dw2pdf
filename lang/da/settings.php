@@ -21,5 +21,4 @@ $lang['output_o_browser']      = 'Vis i browser';
 $lang['output_o_file']         = 'Download PDF\'en';
 $lang['usecache']              = 'Skal PDF\'er cachelagres? Indlejrede billeder bliver ikke kontrolleret af ACL, deaktiver hvis det er et sikkerhedsproblem for dig.';
 $lang['usestyles']             = 'Du kan angive en kommasepareret liste over plugins hvor <code>style.css</code> eller <code>screen.css</code> skal benyttes til generering af PDF.';
-$lang['qrcodesize']            = 'Størrelse på indlejrede QR-kode (i pixels <code><i>bredde</i><b>x</b><i>højde</i></code>). Efterlad tomt for at deaktivere';
 $lang['showexportbutton']      = 'Vis PDF eksportknap (kun hvis det er supporteret af din skabelon)';

@@ -22,5 +22,4 @@ $lang['output_o_browser']      = 'Ver en el navegador';
 $lang['output_o_file']         = 'Bajar el PDF';
 $lang['usecache']              = '¿Deben los PDFs ser guardados en caché? Las imágenes añadidas no serán revisadas por los ACL, deshabilitar si es un problema de seguridad para usted.';
 $lang['usestyles']             = 'Puede añadir una lista separada por comas de los plugins de los que <code>style.css</code> o <code>screen.css</code> deben ser usados para la generación del PDF. Por defecto sólo <code>print.css</code> y <code>pdf.css</code> son usados.';
-$lang['qrcodesize']            = 'Tamaño del código QR añadido (en pixeles <code><i>&lt;width&gt;</i><b>x</b><i>&lt;height&gt;</i></code>). Dejar vacío para deshabilitar';
 $lang['showexportbutton']      = 'Mostrar el botón de exportar PDF (solo cuando es soportado por su plantilla)';

@@ -20,5 +20,4 @@ $lang['output_o_browser']      = 'Visa i webbläsare';
 $lang['output_o_file']         = 'Ladda ner PDF';
 $lang['usecache']              = 'Skall PDF-filerna cachas? Inbäddade bilder kommer då inte att ACL-kontrolleras, avaktivera om det innebär säkerhetsbetänkligheter för dig.';
 $lang['usestyles']             = 'Du kan specificera en kommaseparerad lista på de plugin som <code>style.css</code> eller <code>screen.css</code> skall använda för PDF-generering. Normalt används bara <code>print.css</code> och <code>pdf.css</code>.';
-$lang['qrcodesize']            = 'Storlek på inbäddad QR-kod (i pixlar <code><i>&lt;bredd&gt;</i><b>x</b><i>&lt;höjd&gt;</i></code>). Lämna tom för att avaktivera';
 $lang['showexportbutton']      = 'Visa PDF-exportknapp (bara när det stöds av ditt templat)';

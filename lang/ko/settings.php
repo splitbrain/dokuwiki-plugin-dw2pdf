@@ -20,5 +20,4 @@ $lang['output_o_browser']      = '브라우저에서 보기';
 $lang['output_o_file']         = 'PDF 다운로드';
 $lang['usecache']              = 'PDF를 캐시해야 합니까? 보안 문제가 있으면 포함된 그림은 ACL을 확인되지 않고, 비활성화합니다.';
 $lang['usestyles']             = 'PDF 생성에 사용되어야 하는 <code>style.css</code>나 <code>screen.css</code> 중 하나의 플러그인의 쉼표로 구분된 목록을 제공할 수 있습니다. 기본적으로 <code>print.css</code>와 <code>pdf.css</code>만 사용됩니다.';
-$lang['qrcodesize']            = '포함된 QR 코드의 크기. (픽셀로 <code><i>너비</i><b>x</b><i>높이</i></code>) 비활성화하려면 비우세요';
 $lang['showexportbutton']      = 'PDF 내보내기 버튼 보이기 (템플릿이 지원하고, 템플릿이 허용할 때만)';

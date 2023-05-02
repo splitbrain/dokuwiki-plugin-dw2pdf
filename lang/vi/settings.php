@@ -22,5 +22,4 @@ $lang['output_o_browser']      = 'Xem trong trình duyệt';
 $lang['output_o_file']         = 'Tải về PDF';
 $lang['usecache']              = 'PDF có nên được lưu trữ?  Sau đó, hình ảnh nhúng sẽ không được ACL kiểm tra, vô hiệu hóa nếu đó là vấn đề bảo mật cho bạn.';
 $lang['usestyles']             = 'Bạn có thể đưa ra một danh sách các plugin được phân tách bằng dấu phẩy của <code>style.css</code> hoặc <code>screen.css</code> nên được sử dụng để tạo PDF.  Theo mặc định chỉ có <code>print.css</code> và <code>pdf.css</code> được sử dụng';
-$lang['qrcodesize']            = 'Kích thước của mã QR nhúng (tính bằng <code><i>&lt;chiều rộng&gt;</i><b>x</b><i>&lt;chiều cao&gt;</i></code> pixel). Để trống để vô hiệu hóa';
 $lang['showexportbutton']      = 'Hiển thị nút xuất PDF (chỉ khi được hỗ trợ bởi chủ đề của bạn)';
