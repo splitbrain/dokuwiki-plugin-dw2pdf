@@ -690,12 +690,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     protected function page_depend_replacements($raw, $id) {
         global $REV, $DATE_AT;
 
-        // generate qr code for this page using quickchart.io (Google infographics api was deprecated in March 14, 2019)
+        // generate qr code for this page
         $qr_code = '';
-        if($this->getConf('qrcodesize')) {
-            $url = urlencode(wl($id, '', '&', true));
-            $qr_code = '<img src="https://quickchart.io/qr?size=' .
-                $this->getConf('qrcodesize') . '&text=' . $url . '&margin=1&ecLevel=Q" />';
+        if($this->getConf('qrcodescale')) {
+            $url = hsc(wl($id, '', '&', true));
+            $size = floatval($this->getConf('qrcodescale'));
+            $qr_code = '<barcode type="QR" code="' . $url . '" error="Q" disableborder="1" class="qrcode" size="'.$size.'" />';
         }
         // prepare replacements
         $replace['@ID@']      = $id;
