@@ -414,9 +414,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         // initialize PDF library
         require_once(dirname(__FILE__) . "/DokuPDF.class.php");
 
-        $mpdf = new DokuPDF($this->getExportConfig('pagesize'),
-                            $this->getExportConfig('orientation'),
-                            $this->getExportConfig('font-size'));
+        $mpdf = new DokuPDF(
+            $this->getExportConfig('pagesize'),
+            $this->getExportConfig('orientation'),
+            $this->getExportConfig('font-size'),
+            $this->getDocumentLanguage($this->list[0]) //use language of first page
+        );
 
         // let mpdf fix local links
         $self = parse_url(DOKU_URL);
@@ -1055,5 +1058,26 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         }
 
         array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
+    }
+
+    /**
+     * Get the language of the current document
+     *
+     * Uses the translation plugin if available
+     * @return string
+     */
+    protected function getDocumentLanguage($pageid)
+    {
+        global $conf;
+
+        $lang = $conf['lang'];
+        /** @var helper_plugin_translation $trans */
+        $trans = plugin_load('helper', 'translation');
+        if ($trans) {
+            $tr = $trans->getLangPart($pageid);
+            if ($tr) $lang = $tr;
+        }
+
+        return $lang;
     }
 }

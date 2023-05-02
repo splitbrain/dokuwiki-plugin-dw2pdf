@@ -26,9 +26,10 @@ class DokuPDF extends \Mpdf\Mpdf
      * @param string $orientation
      * @param int $fontsize
      */
-    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11)
+    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11, $docLang = 'en')
     {
-        global $conf, $lang;
+        global $conf;
+        global $lang;
 
         if (!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
         io_mkdir_p(_MPDF_TEMP_PATH);
@@ -38,7 +39,7 @@ class DokuPDF extends \Mpdf\Mpdf
             $format .= '-L';
         }
 
-        switch ($conf['lang']) {
+        switch ($docLang) {
             case 'zh':
             case 'zh-tw':
             case 'ja':
@@ -50,16 +51,14 @@ class DokuPDF extends \Mpdf\Mpdf
 
         }
 
-        // we're always UTF-8
-        parent::__construct(
-            array(
-                'mode' => $mode,
-                'format' => $format,
-                'default_font_size' => $fontsize,
-                'ImageProcessorClass' => DokuImageProcessorDecorator::class,
-                'tempDir' => _MPDF_TEMP_PATH //$conf['tmpdir'] . '/tmp/dwpdf'
-            )
-        );
+        parent::__construct([
+            'mode' => $mode,
+            'format' => $format,
+            'default_font_size' => $fontsize,
+            'ImageProcessorClass' => DokuImageProcessorDecorator::class,
+            'tempDir' => _MPDF_TEMP_PATH, //$conf['tmpdir'] . '/tmp/dwpdf'
+            'SHYlang' => $docLang,
+        ]);
 
         $this->autoScriptToLang = true;
         $this->baseScript = 1;
@@ -93,4 +92,6 @@ class DokuPDF extends \Mpdf\Mpdf
         $path = htmlspecialchars_decode($path);
         parent::GetFullPath($path, $basepath);
     }
+
+
 }
