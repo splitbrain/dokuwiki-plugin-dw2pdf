@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of FPDI
  *
@@ -22,8 +23,6 @@ use setasign\Fpdi\PdfParser\Type\PdfTypeException;
 
 /**
  * A PDF reader class
- *
- * @package setasign\Fpdi\PdfReader
  */
 class PdfReader
 {
@@ -178,6 +177,7 @@ class PdfReader
                     // let's reset the pages array and read all page objects
                     $this->pages = [];
                     $this->readPages(true);
+                    // @phpstan-ignore-next-line
                     $page = $this->pages[$pageNumber - 1];
                 }
             } else {
@@ -202,7 +202,8 @@ class PdfReader
             return;
         }
 
-        $readPages = function ($kids, $count) use (&$readPages, $readAll) {
+        $expectedPageCount = $this->getPageCount();
+        $readPages = function ($kids, $count) use (&$readPages, $readAll, $expectedPageCount) {
             $kids = PdfArray::ensure($kids);
             $isLeaf = ($count->value === \count($kids->value));
 
@@ -221,6 +222,11 @@ class PdfReader
                     $readPages(PdfDictionary::get($object->value, 'Kids'), PdfDictionary::get($object->value, 'Count'));
                 } else {
                     $this->pages[] = $object;
+                }
+
+                // stop if all pages are read - faulty documents exists with additional entries with invalid data.
+                if (count($this->pages) === $expectedPageCount) {
+                    break;
                 }
             }
         };
