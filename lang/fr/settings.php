@@ -27,5 +27,4 @@ $lang['output_o_browser']      = 'Afficher dans le navigateur';
 $lang['output_o_file']         = 'Télécharger le PDF';
 $lang['usecache']              = 'Mettre les PDF en cache ? Les images incluses le seront, alors, sans vérification des droits (ACL), désactivez cette option si cela vous pose un problème de sécurité.';
 $lang['usestyles']             = 'Vous pouvez préciser une liste d\'extensions dont les fichiers <code>style.css</code> ou <code>screen.css</code> doivent être utilisés pour générer les PDF. Par défaut,  seuls les fichiers  <code>print.css</code> et <code>pdf.css</code> sont utilisés.';
-$lang['qrcodesize']            = 'Taille du code QR  (en pixels <code><i>largeur</i><b>x</b><i>hauteur</i></code>). Laisser vide pour le désactiver.';
 $lang['showexportbutton']      = 'Afficher le bouton « Exporter en PDF » (seulement pour les thèmes validés et prenant en charge cette fonctionnalité)';

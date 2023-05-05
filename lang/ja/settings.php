@@ -21,5 +21,4 @@ $lang['output_o_browser']      = 'ブラウザ上に表示する';
 $lang['output_o_file']         = 'PDF ファイルとしてダウンロードする';
 $lang['usecache']              = 'PDF をキャッシュしますか？埋込み画像は ACL 認証されません。セキュリティ上問題となる場合、無効にして下さい。';
 $lang['usestyles']             = 'PDF 作成で使用する <code>style.css</code> や <code>screen.css</code> のカンマ区切り一覧。デフォルトでは <code>print.css</code> と <code>pdf.css</code> だけを使用します。';
-$lang['qrcodesize']            = '埋込み QR コードの大きさ（<code><i>幅</i><b>x</b><i>高さ</i></code> のピクセル）。無効にするためには空にして下さい。';
 $lang['showexportbutton']      = 'PDF 出力ボタンを表示する（テンプレートが対応してる場合のみ）';

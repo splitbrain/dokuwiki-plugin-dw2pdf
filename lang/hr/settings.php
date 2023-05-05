@@ -20,5 +20,4 @@ $lang['output_o_browser']      = 'Prikaži u pregledniku';
 $lang['output_o_file']         = 'Snimi PDF u datoteku';
 $lang['usecache']              = 'Da li će PDF-ovi bit priručno pohranjeni ? Tada neće biti provjeravana autorizacija na ubačene slike. Onemogućite ako je to sigurnosni problem.';
 $lang['usestyles']             = 'Navedite zarezom odvojenu listu dodataka čiji <code>style.css</code> ili <code>screen.css</code> će biti korišteni pri kreiranju PDF-a. Podrazumjevano se koriste samo <code>print.css</code> i <code>pdf.css</code>.';
-$lang['qrcodesize']            = 'Veličina ugrađenog QR koda (u pikselima <code><i>širina</i><b>x</b><i>visina</i></code>). Prazno za onemogućavanje';
 $lang['showexportbutton']      = 'Prikaži Ispis u PDF dugme (samo ako je podržano od strane DokuWiki predloška)';

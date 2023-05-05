@@ -22,5 +22,4 @@ $lang['output_o_browser']        = 'Zobraziť v prehliadači';
 $lang['output_o_file']           = 'Stiahnuť PDF súbor';
 $lang['usecache']                = 'Majú sa PDF súbory ukladať do vyrovnávacej pamäte? Vložené obrázky nebudú skontrolované cez ACL. Zakážte, ak je to pre vás bezpečnostné riziko.';
 $lang['usestyles']               = 'Môžete zadať čiarkou oddelený zoznam rozšírení (pluginov), na ktoré sa pri generovaní PDF dokumentu bude vzťahovať <code>style.css</code> alebo <code>screen.css</code>. Prednastavená možnosť je, že sa používajú iba <code>print.css</code> a <code>pdf.css</code>.';
-$lang['qrcodesize']              = 'Veľkosť vloženého QR kódu (v pixeloch <code><i>&lt;šírka&gt;</i><b>x</b><i>&lt;výška&gt;</i></code>). Nevypĺňajte, ak chcete QR kód zakázať.';
 $lang['showexportbutton']        = 'Zobraziť tlačidlo na export do PDF (iba ak podporuje vaša téma)';

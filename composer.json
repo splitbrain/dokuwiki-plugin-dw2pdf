@@ -6,8 +6,14 @@
             "email": "andi@splitbrain.org"
         }
     ],
+    "config": {
+        "platform": {
+            "php": "7.2"
+        }
+    },
     "require": {
-        "mpdf/mpdf": "8.0.*"
+        "mpdf/mpdf": "8.0.*",
+        "mpdf/qrcode": "^1.2"
     },
     "replace": {
         "paragonie/random_compat": "*"
