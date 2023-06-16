@@ -3,7 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
- * @author Gerrit <klapinklapin@gmail.com>
+ * @author G. Uitslag <klapinklapin@gmail.com>
  * @author mark prins <mprins@users.sf.net>
  * @author Wouter Wijsman <wwijsman@live.nl>
  * @author Johan Wijnker <johan@wijnker.eu>
@@ -26,4 +26,5 @@ $lang['output_o_browser']      = 'Weergeven in de browser';
 $lang['output_o_file']         = 'Download de PDF';
 $lang['usecache']              = 'Moeten PDF\'s gebufferd worden? Ingebedde afbeeldingen zullen niet  op toegangsrechten worden gecontroleerd, schakel bufferen uit als dit een beveiligingsprobleem oplevert voor jou.';
 $lang['usestyles']             = 'Je kunt een komma gescheiden lijst van plugins opgeven waarvan de  <code>style.css</code> of <code>screen.css</code> moeten worden gebruikt bij het genereren van de PDF. Standaard worden alleen <code>print.css</code> en <code>pdf.css</code> gebruikt.';
+$lang['qrcodescale']           = 'Afmetingen schalen van een ingebedde QR code. Leeg of <code>0</code> om uit te schakelen.';
 $lang['showexportbutton']      = 'PDF export knop weergeven (alleen als je template dat ondersteund)';
