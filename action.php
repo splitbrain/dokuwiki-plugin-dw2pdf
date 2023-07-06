@@ -371,10 +371,17 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
 
         if(!file_exists($file)) return '';
 
-        //ensure $id is in global $ID (needed for parsing)
+        /*
+         * Ensure that global $ID and $INFO are set to match the page
+         * to be rendered in order for the rendering and other plugins
+         * to work properly.
+         */
         global $ID;
-        $keep = $ID;
-        $ID   = $id;
+        global $INFO;
+        $keepid = $ID;
+        $keepinfo = $INFO;
+        $ID = $id;
+        $INFO = pageinfo();
 
         if($rev || $date_at) {
             $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at); //no caching on old revisions
@@ -382,8 +389,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             $ret = p_cached_output($file, 'dw2pdf', $id);
         }
 
-        //restore ID (just in case)
-        $ID = $keep;
+        // Restore ID and INFO (just in case)
+        $ID = $keepid;
+        $INFO = $keepinfo;
 
         return $ret;
     }
