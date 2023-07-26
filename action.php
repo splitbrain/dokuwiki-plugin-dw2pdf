@@ -1021,7 +1021,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
     public function addbutton(Doku_Event $event) {
         global $ID, $REV, $DATE_AT;
 
-        if($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
+        if(!$event->data['view'] == 'main') {
+            return;
+        }
+
+        if($this->getConf('showexportbutton')) {
             $params = array('do' => 'export_pdf');
             if($DATE_AT) {
                 $params['at'] = $DATE_AT;
@@ -1040,6 +1044,28 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
                 ) +
                 array_slice($event->data['items'], -1, 1, true);
         }
+
+        if($this->getConf('showexportnsbutton') && getNS($ID)) {
+            $params = array('do' => 'export_pdf');
+            if($DATE_AT) {
+                $params['at'] = $DATE_AT;
+            } elseif($REV) {
+                $params['rev'] = $REV;
+            }
+            $params['book_ns'] = getNS($ID);
+            $params['book_title'] = noNS(getNS($ID));
+
+            // insert button at position before last (up to top)
+            $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
+                array('export_pdfns' =>
+                    '<li>'
+                    . '<a href="' . wl($ID, $params) . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdfns_button') . '">'
+                    . '<span>' . $this->getLang('export_pdfns_button') . '</span>'
+                    . '</a>'
+                    . '</li>'
+                ) +
+                array_slice($event->data['items'], -1, 1, true);
+        }
     }
 
     /**
@@ -1048,8 +1074,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      */
     public function addsvgbutton(Doku_Event $event) {
-        global $INFO;
-        if($event->data['view'] != 'page' || !$this->getConf('showexportbutton')) {
+        global $INFO, $ID;
+
+        if($event->data['view'] != 'page') {
             return;
         }
 
@@ -1057,7 +1084,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             return;
         }
 
-        array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
+        if( $this->getConf('showexportbutton') ) {
+            array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuItem()]);
+        }
+
+        if( $this->getConf('showexportnsbutton') && getNS($ID) ) {
+            array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\dw2pdf\MenuNSItem()]);
+        }
     }
 
     /**

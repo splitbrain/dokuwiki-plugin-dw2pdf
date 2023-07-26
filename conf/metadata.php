@@ -13,4 +13,4 @@ $meta['usecache']         = array('onoff');
 $meta['usestyles']        = array('string');
 $meta['qrcodescale']       = array('string', '_pattern' => '/^(|\d+(\.\d+)?)$/');
 $meta['showexportbutton'] = array('onoff');
-
+$meta['showexportnsbutton'] = array('onoff');

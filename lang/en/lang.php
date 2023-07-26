@@ -1,6 +1,7 @@
 <?php
 
 $lang['export_pdf_button'] = "Export to PDF";
+$lang['export_pdfns_button'] = "Export Namespace to PDF";
 $lang['needtitle']         = "Please provide a title.";
 $lang['needns']            = "Please provide an existing namespace.";
 $lang['notexist']          = "Requested page doesn't exist.";
