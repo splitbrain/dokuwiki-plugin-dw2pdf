@@ -55,9 +55,10 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin {
         global $ID;
         $ns = substr($match,8,strpos($match,'|')-8);
         $id = $ns . ':start';
-        resolve_pageid(getNS($ID),$id,$exists);
-        $ns = getNS($id);
         $title = substr($match,strpos($match,'|')+1,-2);
+        $resolver = new PageResolver($ID);
+        $page = $resolver->resolveId($id);
+        $ns = getNS($page);
         $link = '?do=export_pdfns&book_ns=' . $ns . '&book_title=' . $title;
 
         // check if there is an ampersand in the title
