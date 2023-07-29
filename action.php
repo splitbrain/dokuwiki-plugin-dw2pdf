@@ -130,7 +130,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
      *  - Check permisions
      *
      * @param Doku_Event $event
-     * @return array|false
+     * @return array
      * @throws Exception
      */
     protected function collectExportablePages(Doku_Event $event) {
@@ -440,11 +440,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
         $mpdf->setAutoBottomMargin = 'stretch';
 //            $mpdf->pagenumSuffix = '/'; //prefix for {nbpg}
         if($hasToC) {
-            $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => 'i', 'suppress' => 'off'); //use italic pageno until ToC
             $mpdf->h2toc = $levels;
-        } else {
-            $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off');
         }
+        $mpdf->PageNumSubstitutions[] = array('from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off');
 
         // Watermarker
         if($watermark) {
@@ -494,14 +492,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin {
             //      - first page of ToC starts always at odd page (so eventually an additional blank page is included before)
             //      - there is no page numbering at the pages of the ToC
             $mpdf->TOCpagebreakByArray(
-                array(
+                [
                     'toc-preHTML' => '<h2>' . $this->getLang('tocheader') . '</h2>',
                     'toc-bookmarkText' => $this->getLang('tocheader'),
                     'links' => true,
                     'outdent' => '1em',
-                    'resetpagenum' => true, //start pagenumbering after ToC
                     'pagenumstyle' => '1'
-                )
+                ]
             );
             $html .= '<tocpagebreak>';
         }
