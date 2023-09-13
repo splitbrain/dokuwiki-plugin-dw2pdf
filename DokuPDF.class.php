@@ -1,4 +1,10 @@
 <?php
+
+// phpcs:disable: PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
+use Mpdf\Mpdf;
+use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator;
+
 /**
  * Wrapper around the mpdf library class
  *
@@ -7,18 +13,8 @@
  *
  * @author Andreas Gohr <andi@splitbrain.org>
  */
-
-use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator;
-
-require_once __DIR__ . '/vendor/autoload.php';
-
-/**
- * Class DokuPDF
- * Some DokuWiki specific extentions
- */
-class DokuPDF extends \Mpdf\Mpdf
+class DokuPDF extends Mpdf
 {
-
     /**
      * DokuPDF constructor.
      *
@@ -26,12 +22,16 @@ class DokuPDF extends \Mpdf\Mpdf
      * @param string $orientation
      * @param int $fontsize
      */
-    function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11, $docLang = 'en')
+    public function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11, $docLang = 'en')
     {
         global $conf;
         global $lang;
 
-        if (!defined('_MPDF_TEMP_PATH')) define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . rand(1, 1000) . '/');
+        require_once __DIR__ . '/vendor/autoload.php';
+
+        if (!defined('_MPDF_TEMP_PATH')) {
+            define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . random_int(1, 1000) . '/');
+        }
         io_mkdir_p(_MPDF_TEMP_PATH);
 
         $format = $pagesize;
@@ -48,7 +48,6 @@ class DokuPDF extends \Mpdf\Mpdf
                 break;
             default:
                 $mode = 'UTF-8-s';
-
         }
 
         parent::__construct([
@@ -76,7 +75,7 @@ class DokuPDF extends \Mpdf\Mpdf
     /**
      * Cleanup temp dir
      */
-    function __destruct()
+    public function __destruct()
     {
         io_rmdir(_MPDF_TEMP_PATH, true);
     }
@@ -87,11 +86,9 @@ class DokuPDF extends \Mpdf\Mpdf
      * @param string $path
      * @param string $basepath
      */
-    function GetFullPath(&$path, $basepath = '')
+    public function GetFullPath(&$path, $basepath = '')
     {
         $path = htmlspecialchars_decode($path);
         parent::GetFullPath($path, $basepath);
     }
-
-
 }

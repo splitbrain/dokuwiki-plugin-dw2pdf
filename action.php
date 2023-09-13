@@ -1,32 +1,31 @@
 <?php
+
+use dokuwiki\Cache\Cache;
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\Event;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\plugin\dw2pdf\MenuItem;
+use dokuwiki\StyleUtils;
+use Mpdf\MpdfException;
+
 /**
  * dw2Pdf Plugin: Conversion from dokuwiki content to pdf.
+ *
+ * Export html content to pdf, for different url parameter configurations
+ * DokuPDF which extends mPDF is used for generating the pdf from html.
  *
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  * @author     Luigi Micco <l.micco@tiscali.it>
  * @author     Andreas Gohr <andi@splitbrain.org>
  */
-
-/**
- * Class action_plugin_dw2pdf
- *
- * Export html content to pdf, for different url parameter configurations
- * DokuPDF which extends mPDF is used for generating the pdf from html.
- */
-
-use dokuwiki\Cache\Cache;
-use dokuwiki\plugin\dw2pdf\MenuItem;
-use dokuwiki\StyleUtils;
-use Mpdf\MpdfException;
-
-class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
+class action_plugin_dw2pdf extends ActionPlugin
 {
     /**
      * Settings for current export, collected from url param, plugin config, global config
      *
      * @var array
      */
-    protected $exportConfig = null;
+    protected $exportConfig;
     /** @var string template name, to use templates from dw2pdf/tpl/<template name> */
     protected $tpl;
     /** @var string title of exported pdf */
@@ -68,7 +67,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      *
      * @param Doku_Event_Handler $controller
      */
-    public function register(Doku_Event_Handler $controller)
+    public function register(EventHandler $controller)
     {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert');
         $controller->register_hook('TEMPLATE_PAGETOOLS_DISPLAY', 'BEFORE', $this, 'addbutton');
@@ -80,7 +79,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      *
      * @param Doku_Event $event
      */
-    public function convert(Doku_Event $event)
+    public function convert(Event $event)
     {
         global $REV, $DATE_AT;
         global $conf, $INPUT;
@@ -91,7 +90,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
 
         try {
             //collect pages and check permissions
-            list($this->title, $this->list) = $this->collectExportablePages($event);
+            [$this->title, $this->list] = $this->collectExportablePages($event);
 
             if ($event->data === 'export_pdf' && ($REV || $DATE_AT)) {
                 $cachefile = tempnam($conf['tmpdir'] . '/dwpdf', 'dw2pdf_');
@@ -117,7 +116,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         } catch (Exception $e) {
             if ($INPUT->has('selection')) {
                 http_status(400);
-                print $e->getMessage();
+                echo $e->getMessage();
                 exit();
             } else {
                 //prevent Action/Export()
@@ -141,7 +140,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      * @return array
      * @throws Exception
      */
-    protected function collectExportablePages(Doku_Event $event)
+    protected function collectExportablePages(Event $event)
     {
         global $ID, $REV;
         global $INPUT;
@@ -169,7 +168,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             if (!file_exists($filename)) {
                 throw new Exception($this->getLang('notexist'));
             }
-
         } elseif ($event->data == 'export_pdfns') {
             //check input for title and ns
             if (!$title = $INPUT->str('book_title')) {
@@ -220,9 +218,9 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             //sorting
             if (count($result) > 0) {
                 if ($order == 'date') {
-                    usort($result, [$this, '_datesort']);
+                    usort($result, [$this, 'cbDateSort']);
                 } elseif ($order == 'pagename' || $order == 'natural') {
-                    usort($result, [$this, '_pagenamesort']);
+                    usort($result, [$this, 'cbPagenameSort']);
                 }
             }
 
@@ -237,7 +235,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
                     }
                 }
             }
-
         } elseif (!empty($_COOKIE['list-pagelist'])) {
             /** @deprecated  April 2016 replaced by localStorage version of Bookcreator */
             //is in Bookmanager of bookcreator plugin a title given?
@@ -248,7 +245,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             }
 
             $list = explode("|", $_COOKIE['list-pagelist']);
-
         } elseif ($INPUT->has('selection')) {
             //handle Bookcreator requests based at localStorage
 //            if(!checkSecurityToken()) {
@@ -258,7 +254,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
 //            }
 
             $list = json_decode($INPUT->str('selection', '', true), true);
-            if (!is_array($list) || empty($list)) {
+            if (!is_array($list) || $list === []) {
                 throw new Exception($this->getLang('empty'));
             }
 
@@ -267,7 +263,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             if (empty($title)) {
                 throw new Exception($this->getLang('needtitle'));
             }
-
         } elseif ($INPUT->has('savedselection')) {
             //export a saved selection of the Bookcreator Plugin
             if (plugin_isdisabled('bookcreator')) {
@@ -283,7 +278,6 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             if (empty($title)) {
                 throw new Exception($this->getLang('needtitle'));
             }
-
         } else {
             //show empty bookcreator message
             throw new Exception($this->getLang('empty'));
@@ -301,8 +295,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         $list = array_filter($list, 'strlen'); //use of strlen() callback prevents removal of pagename '0'
 
         //if selection contains forbidden pages throw (overridable) warning
-        if (!$INPUT->bool('book_skipforbiddenpages') && !empty($skippedpages)) {
-            $msg = hsc(join(', ', $skippedpages));
+        if (!$INPUT->bool('book_skipforbiddenpages') && $skippedpages !== []) {
+            $msg = hsc(implode(', ', $skippedpages));
             throw new Exception(sprintf($this->getLang('forbidden'), $msg));
         }
 
@@ -319,7 +313,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
     {
         global $REV;
 
-        $cachekey = join(',', $this->list)
+        $cachekey = implode(',', $this->list)
             . $REV
             . $this->getExportConfig('template')
             . $this->getExportConfig('pagesize')
@@ -327,7 +321,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             . $this->getExportConfig('font-size')
             . $this->getExportConfig('doublesided')
             . $this->getExportConfig('headernumber')
-            . ($this->getExportConfig('hasToC') ? join('-', $this->getExportConfig('levels')) : '0')
+            . ($this->getExportConfig('hasToC') ? implode('-', $this->getExportConfig('levels')) : '0')
             . $this->title;
         $cache = new Cache($cachekey, '.dw2.pdf');
 
@@ -358,8 +352,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
 
         $depends['files'] = array_map('wikiFN', $this->list);
         $depends['files'][] = __FILE__;
-        $depends['files'][] = dirname(__FILE__) . '/renderer.php';
-        $depends['files'][] = dirname(__FILE__) . '/mpdf/mpdf.php';
+        $depends['files'][] = __DIR__ . '/renderer.php';
+        $depends['files'][] = __DIR__ . '/mpdf/mpdf.php';
         $depends['files'] = array_merge(
             $depends['files'],
             $dependencies,
@@ -376,7 +370,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      * @param string $date_at
      * @return null|string
      */
-    protected function p_wiki_dw2pdf($id, $rev = '', $date_at = '')
+    protected function wikiToDW2PDF($id, $rev = '', $date_at = '')
     {
         $file = wikiFN($id, $rev);
 
@@ -388,7 +382,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         $ID = $id;
 
         if ($rev || $date_at) {
-            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at); //no caching on old revisions
+            //no caching on old revisions
+            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at);
         } else {
             $ret = p_cached_output($file, 'dw2pdf', $id);
         }
@@ -413,8 +408,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         if ($event->data == 'export_pdf') { //only one page is exported
             $rev = $REV;
             $date_at = $DATE_AT;
-        } else { //we are exporting entire namespace, ommit revisions
-            $rev = $date_at = '';
+        } else {
+            //we are exporting entire namespace, ommit revisions
+            $rev = '';
+            $date_at = '';
         }
 
         //some shortcuts to export settings
@@ -424,7 +421,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         $watermark = $this->getExportConfig('watermark');
 
         // initialize PDF library
-        require_once(dirname(__FILE__) . "/DokuPDF.class.php");
+        require_once(__DIR__ . "/DokuPDF.class.php");
 
         $mpdf = new DokuPDF(
             $this->getExportConfig('pagesize'),
@@ -463,7 +460,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         }
 
         // load the template
-        $template = $this->load_template();
+        $template = $this->loadTemplate();
 
         // prepare HTML header styles
         $html = '';
@@ -479,7 +476,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         $styles .= 'div.dw2pdf-landscape { page:landscape-page }';
         $styles .= '@page portrait-page { size:portrait }';
         $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
-        $styles .= $this->load_css();
+        $styles .= $this->loadCSS();
 
         $mpdf->WriteHTML($styles, 1);
 
@@ -500,8 +497,10 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             $html .= $body_start;
         }
         if ($hasToC) {
-            //Note: - for double-sided document the ToC is always on an even number of pages, so that the following content is on a correct odd/even page
-            //      - first page of ToC starts always at odd page (so eventually an additional blank page is included before)
+            //Note: - for double-sided document the ToC is always on an even number of pages, so that the
+            //        following content is on a correct odd/even page
+            //      - first page of ToC starts always at odd page (so eventually an additional blank page
+            //        is included before)
             //      - there is no page numbering at the pages of the ToC
             $mpdf->TOCpagebreakByArray([
                 'toc-preHTML' => '<h2>' . $this->getLang('tocheader') . '</h2>',
@@ -520,12 +519,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             $this->currentBookChapter = $counter;
             $counter++;
 
-            $pagehtml = $this->p_wiki_dw2pdf($page, $rev, $date_at);
+            $pagehtml = $this->wikiToDW2PDF($page, $rev, $date_at);
             //file doesn't exists
             if ($pagehtml == '') {
                 continue;
             }
-            $pagehtml .= $this->page_depend_replacements($template['cite'], $page);
+            $pagehtml .= $this->pageDependReplacements($template['cite'], $page);
             if ($counter < $no_pages) {
                 $pagehtml .= '<pagebreak />';
             }
@@ -591,7 +590,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             http_rangeRequest($fp, filesize($cachefile), 'application/pdf');
         } else {
             header("HTTP/1.0 500 Internal Server Error");
-            print "Could not read file - bad permissions?";
+            echo "Could not read file - bad permissions?";
         }
         exit();
     }
@@ -601,7 +600,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      *
      * @return array
      */
-    protected function load_template()
+    protected function loadTemplate()
     {
         global $ID;
         global $conf;
@@ -659,14 +658,14 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         // set HTML element
         $html = str_replace(array_keys($replace), array_values($replace), $html);
         //TODO For bookcreator $ID (= bookmanager page) makes no sense
-        $output['html'] = $this->page_depend_replacements($html, $ID);
+        $output['html'] = $this->pageDependReplacements($html, $ID);
 
         // cover page
         $coverfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/cover.html';
         if (file_exists($coverfile)) {
             $output['cover'] = file_get_contents($coverfile);
             $output['cover'] = str_replace(array_keys($replace), array_values($replace), $output['cover']);
-            $output['cover'] = $this->page_depend_replacements($output['cover'], $ID);
+            $output['cover'] = $this->pageDependReplacements($output['cover'], $ID);
             $output['cover'] .= '<pagebreak />';
         }
 
@@ -676,7 +675,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
             $output['back'] = '<pagebreak />';
             $output['back'] .= file_get_contents($backfile);
             $output['back'] = str_replace(array_keys($replace), array_values($replace), $output['back']);
-            $output['back'] = $this->page_depend_replacements($output['back'], $ID);
+            $output['back'] = $this->pageDependReplacements($output['back'], $ID);
         }
 
         // citation box
@@ -694,7 +693,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      * @param string $id pageid
      * @return string
      */
-    protected function page_depend_replacements($raw, $id)
+    protected function pageDependReplacements($raw, $id)
     {
         global $REV, $DATE_AT;
 
@@ -702,8 +701,12 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         $qr_code = '';
         if ($this->getConf('qrcodescale')) {
             $url = hsc(wl($id, '', '&', true));
-            $size = floatval($this->getConf('qrcodescale'));
-            $qr_code = '<barcode type="QR" code="' . $url . '" error="Q" disableborder="1" class="qrcode" size="' . $size . '" />';
+            $size = (float)$this->getConf('qrcodescale');
+            $qr_code = sprintf(
+                '<barcode type="QR" code="%s" error="Q" disableborder="1" class="qrcode" size="%s" />',
+                $url,
+                $size
+            );
         }
         // prepare replacements
         $replace['@ID@'] = $id;
@@ -722,7 +725,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
 
         // let other plugins define their own replacements
         $evdata = ['id' => $id, 'replace' => &$replace, 'content' => &$content];
-        $event = new Doku_Event('PLUGIN_DW2PDF_REPLACE', $evdata);
+        $event = new Event('PLUGIN_DW2PDF_REPLACE', $evdata);
         if ($event->advise_before()) {
             $content = str_replace(array_keys($replace), array_values($replace), $raw);
         }
@@ -733,7 +736,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         // @DATE(<date>[, <format>])@
         $content = preg_replace_callback(
             '/@DATE\((.*?)(?:,\s*(.*?))?\)@/',
-            [$this, 'replacedate'],
+            [$this, 'replaceDate'],
             $content
         );
 
@@ -748,7 +751,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      * @param array $match with [0]=>whole match, [1]=> first subpattern, [2] => second subpattern
      * @return string
      */
-    function replacedate($match)
+    public function replaceDate($match)
     {
         global $conf;
         //no 2nd argument for default date format
@@ -761,7 +764,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
     /**
      * Load all the style sheets and apply the needed replacements
      */
-    protected function load_css()
+    protected function loadCSS()
     {
         global $conf;
         //reuse the CSS dispatcher functions without triggering the main function
@@ -774,10 +777,11 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
                 DOKU_INC . 'lib/styles/screen.css' => DOKU_BASE . 'lib/styles/',
                 DOKU_INC . 'lib/styles/print.css' => DOKU_BASE . 'lib/styles/',
             ],
-            $this->css_pluginPDFstyles(),
+            $this->cssPluginPDFstyles(),
             [
                 DOKU_PLUGIN . 'dw2pdf/conf/style.css' => DOKU_BASE . 'lib/plugins/dw2pdf/conf/',
-                DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/style.css' => DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
+                DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/style.css' =>
+                    DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
                 DOKU_PLUGIN . 'dw2pdf/conf/style.local.css' => DOKU_BASE . 'lib/plugins/dw2pdf/conf/',
             ]
         );
@@ -817,7 +821,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      *
      * @author Andreas Gohr <andi@splitbrain.org>
      */
-    protected function css_pluginPDFstyles()
+    protected function cssPluginPDFstyles()
     {
         $list = [];
         $plugins = plugin_list();
@@ -845,7 +849,16 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         }
 
         // template support
-        foreach (['pdf.css', 'pdf.less', 'css/pdf.css', 'css/pdf.less', 'styles/pdf.css', 'styles/pdf.less'] as $file) {
+        foreach (
+            [
+                     'pdf.css',
+                     'pdf.less',
+                     'css/pdf.css',
+                     'css/pdf.less',
+                     'styles/pdf.css',
+                     'styles/pdf.less'
+                 ] as $file
+        ) {
             if (file_exists(tpl_incdir() . $file)) {
                 $list[tpl_incdir() . $file] = tpl_basedir() . $file;
             }
@@ -871,7 +884,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      * @param array $b
      * @return int
      */
-    public function _datesort($a, $b)
+    public function cbDateSort($a, $b)
     {
         if ($b['rev'] < $a['rev']) return -1;
         if ($b['rev'] > $a['rev']) return 1;
@@ -884,7 +897,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      * @param array $b
      * @return int
      */
-    public function _pagenamesort($a, $b)
+    public function cbPagenameSort($a, $b)
     {
         global $conf;
 
@@ -951,8 +964,8 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
         $levels = [];
         if ($hasToC) {
             $toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);
-            list($top_input, $max_input) = array_pad(explode('-', $toclevels, 2), 2, '');
-            list($top_conf, $max_conf) = array_pad(explode('-', $this->getConf('toclevels'), 2), 2, '');
+            [$top_input, $max_input] = array_pad(explode('-', $toclevels, 2), 2, '');
+            [$top_conf, $max_conf] = array_pad(explode('-', $this->getConf('toclevels'), 2), 2, '');
             $bounds_input = [
                 'top' => [
                     (int)$top_input,
@@ -1025,7 +1038,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      *
      * @param Doku_Event $event
      */
-    public function addbutton(Doku_Event $event)
+    public function addbutton(Event $event)
     {
         global $ID, $REV, $DATE_AT;
 
@@ -1039,13 +1052,13 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
 
             // insert button at position before last (up to top)
             $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
-                ['export_pdf' =>
-                    '<li>'
-                    . '<a href="' . wl($ID, $params) . '"  class="action export_pdf" rel="nofollow" title="' . $this->getLang('export_pdf_button') . '">'
-                    . '<span>' . $this->getLang('export_pdf_button') . '</span>'
-                    . '</a>'
-                    . '</li>'
-                ] +
+                ['export_pdf' => sprintf(
+                    '<li><a href="%s" class="%s" rel="nofollow" title="%s"><span>%s</span></a></li>',
+                    wl($ID, $params),
+                    'action export_pdf',
+                    $this->getLang('export_pdf_button'),
+                    $this->getLang('export_pdf_button')
+                )] +
                 array_slice($event->data['items'], -1, 1, true);
         }
     }
@@ -1055,7 +1068,7 @@ class action_plugin_dw2pdf extends DokuWiki_Action_Plugin
      *
      * @param Doku_Event $event
      */
-    public function addsvgbutton(Doku_Event $event)
+    public function addsvgbutton(Event $event)
     {
         global $INFO;
         if ($event->data['view'] != 'page' || !$this->getConf('showexportbutton')) {

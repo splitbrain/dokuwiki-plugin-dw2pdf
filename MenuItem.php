@@ -11,8 +11,8 @@ use dokuwiki\Menu\Item\AbstractItem;
  *
  * @package dokuwiki\plugin\dw2pdf
  */
-class MenuItem extends AbstractItem {
-
+class MenuItem extends AbstractItem
+{
     /** @var string do action for this plugin */
     protected $type = 'export_pdf';
 
@@ -22,13 +22,14 @@ class MenuItem extends AbstractItem {
     /**
      * MenuItem constructor.
      */
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         global $REV, $DATE_AT;
 
-        if($DATE_AT) {
+        if ($DATE_AT) {
             $this->params['at'] = $DATE_AT;
-        } elseif($REV) {
+        } elseif ($REV) {
             $this->params['rev'] = $REV;
         }
     }
@@ -38,7 +39,8 @@ class MenuItem extends AbstractItem {
      *
      * @return string
      */
-    public function getLabel() {
+    public function getLabel()
+    {
         $hlp = plugin_load('action', 'dw2pdf');
         return $hlp->getLang('export_pdf_button');
     }
