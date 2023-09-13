@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DokuWiki Plugin dw2pdf (Syntax Component)
  *
@@ -8,14 +9,14 @@
  * @author     Sam Wilson <sam@samwilson.id.au>
  */
 
+use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\File\PageResolver;
 
 /**
  * Syntax for page specific directions for mpdf library
  */
-class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin
+class syntax_plugin_dw2pdf_exportlink extends SyntaxPlugin
 {
-
     /**
      * Syntax Type
      *
@@ -96,5 +97,4 @@ class syntax_plugin_dw2pdf_exportlink extends DokuWiki_Syntax_Plugin
         }
         return false;
     }
-
 }

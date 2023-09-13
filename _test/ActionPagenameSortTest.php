@@ -17,8 +17,8 @@ class ActionPagenameSortTest extends DokuWikiTest
     {
         $action = new \action_plugin_dw2pdf();
 
-        $this->assertLessThan(0, $action->_pagenamesort(['id' => 'bar'], ['id' => 'bar:start']));
-        $this->assertGreaterThan(0, $action->_pagenamesort(['id' => 'bar:bar'], ['id' => 'bar:start']));
+        $this->assertLessThan(0, $action->cbPagenameSort(['id' => 'bar'], ['id' => 'bar:start']));
+        $this->assertGreaterThan(0, $action->cbPagenameSort(['id' => 'bar:bar'], ['id' => 'bar:start']));
     }
 
     /**
@@ -96,7 +96,7 @@ class ActionPagenameSortTest extends DokuWikiTest
 
         // run sort
         $action = new \action_plugin_dw2pdf();
-        usort($input, [$action, '_pagenamesort']);
+        usort($input, [$action, 'cbPagenameSort']);
 
         $this->assertSame($prepared, $input);
     }

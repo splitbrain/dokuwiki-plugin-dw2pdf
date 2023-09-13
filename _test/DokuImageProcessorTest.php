@@ -13,6 +13,12 @@ use DokuWikiTest;
  */
 class DokuImageProcessorTest extends DokuWikiTest
 {
+    public static function setUpBeforeClass(): void
+    {
+        parent::setUpBeforeClass();
+        require_once __DIR__ . '/../vendor/autoload.php';
+    }
+
 
     /**
      * @return array the Testdata

@@ -1,23 +1,20 @@
 <?php
+
+// phpcs:disable: PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+// phpcs:disable: PSR2.Methods.MethodDeclaration.Underscore
+
 /**
  * DokuWiki Plugin dw2pdf (Renderer Component)
+ * Render xhtml suitable as input for mpdf library
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
-
-/**
- * Render xhtml suitable as input for mpdf library
- */
-class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
-
+class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
+{
     private $lastHeaderLevel = -1;
     private $originalHeaderLevel = 0;
     private $difference = 0;
-    private $current_bookmark_level = 0;
     private static $header_count = [];
     private static $previous_level = 0;
 
@@ -26,16 +23,18 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      *
      * @var action_plugin_dw2pdf
      */
-    private $actioninstance = null;
+    private $actioninstance;
 
     /**
      * load action plugin instance
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->actioninstance = plugin_load('action', 'dw2pdf');
     }
 
-    public function document_start() {
+    public function document_start()
+    {
         global $ID;
 
         parent::document_start();
@@ -47,7 +46,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $this->doc .= "<a name=\"{$pid}__\">";
         $this->doc .= "</a>";
 
-        $this->header_count[1] = $this->actioninstance->getCurrentBookChapter();
+        self::$header_count[1] = $this->actioninstance->getCurrentBookChapter();
     }
 
     /**
@@ -56,8 +55,9 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param $format
      * @return bool
      */
-    public function canRender($format) {
-        if($format == 'xhtml') return true;
+    public function canRender($format)
+    {
+        if ($format == 'xhtml') return true;
         return false;
     }
 
@@ -68,8 +68,9 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param int $level from 1 (highest) to 6 (lowest)
      * @param int $pos
      */
-    public function header($text, $level, $pos, $returnonly = false) {
-        if(!$text) return; //skip empty headlines
+    public function header($text, $level, $pos, $returnonly = false)
+    {
+        if (!$text) return; //skip empty headlines
         global $ID;
 
         $hid = $this->_headerToLink($text, true);
@@ -82,42 +83,47 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         $hid = $pid . '__' . $hid;
 
 
-	// retrieve numbered headings option
+        // retrieve numbered headings option
         $isnumberedheadings = $this->actioninstance->getExportConfig('headernumber');
 
         $header_prefix = "";
-	if ($isnumberedheadings) {
-		if ($level > 0) {
-        	    if ($this->previous_level > $level ) {
-	                for ($i=$level+1; $i<=$this->previous_level; $i++) {
-				$this->header_count[$i]=0;
-	                }
-	            }
-	        }
-		$this->header_count[$level]++;
+        if ($isnumberedheadings) {
+            if ($level > 0) {
+                if (self::$previous_level > $level) {
+                    for ($i = $level + 1; $i <= self::$previous_level; $i++) {
+                        self::$header_count[$i] = 0;
+                    }
+                }
+            }
+            self::$header_count[$level]++;
 
-        	// $header_prefix = "";
-	        for ($i=1; $i<=$level; $i++) {
-	            $header_prefix .= $this->header_count[$i].".";
-	 	}
-	}
+            // $header_prefix = "";
+            for ($i = 1; $i <= $level; $i++) {
+                $header_prefix .= self::$header_count[$i] . ".";
+            }
+        }
 
         // add PDF bookmark
         $bookmark = '';
         $maxbookmarklevel = $this->actioninstance->getExportConfig('maxbookmarks');
         // 0: off, 1-6: show down to this level
-        if($maxbookmarklevel && $maxbookmarklevel >= $level) {
+        if ($maxbookmarklevel && $maxbookmarklevel >= $level) {
             $bookmarklevel = $this->calculateBookmarklevel($level);
-            $bookmark = '<bookmark content="' . $header_prefix." ". $this->_xmlEntities($text) . '" level="' . ($bookmarklevel) . '" />';
+            $bookmark = sprintf(
+                '<bookmark content="%s %s" level="%d" />',
+                $header_prefix,
+                $this->_xmlEntities($text),
+                $bookmarklevel
+            );
         }
 
         // print header
         $this->doc .= DOKU_LF . "<h$level>$bookmark";
-        $this->doc .= $header_prefix."<a name=\"$hid\">";
+        $this->doc .= $header_prefix . "<a name=\"$hid\">";
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
         $this->doc .= "</h$level>" . DOKU_LF;
-	$this->previous_level = $level;
+        self::$previous_level = $level;
     }
 
     /**
@@ -127,22 +133,23 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param int $level 1 (highest) to 6 (lowest)
      * @return int
      */
-    protected function calculateBookmarklevel($level) {
-        if($this->lastHeaderLevel == -1) {
+    protected function calculateBookmarklevel($level)
+    {
+        if ($this->lastHeaderLevel == -1) {
             $this->lastHeaderLevel = $level;
         }
         $step = $level - $this->lastHeaderLevel;
-        if($step > 1) {
-            $this->difference = $this->difference + ($step - 1);
+        if ($step > 1) {
+            $this->difference += $step - 1;
         }
-        if($step < 0) {
+        if ($step < 0) {
             $this->difference = min($this->difference, $level - $this->originalHeaderLevel);
             $this->difference = max($this->difference, 0);
         }
 
         $bookmarklevel = $level - $this->difference;
 
-        if($step > 1) {
+        if ($step > 1) {
             $this->originalHeaderLevel = $bookmarklevel;
         }
 
@@ -162,7 +169,8 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      *
      * @see Doku_Renderer_xhtml::locallink
      */
-    function locallink($hash, $name = null, $returnonly = false) {
+    public function locallink($hash, $name = null, $returnonly = false)
+    {
         global $ID;
         $name = $this->_getLinkTitle($name, $hash, $isImage);
         $hash = $this->_headerToLink($hash);
@@ -179,26 +187,33 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
     /**
      * Wrap centered media in a div to center it
      *
-     * @param string $src       media ID
-     * @param string $title     descriptive text
-     * @param string $align     left|center|right
-     * @param int    $width     width of media in pixel
-     * @param int    $height    height of media in pixel
-     * @param string $cache     cache|recache|nocache
-     * @param bool   $render    should the media be embedded inline or just linked
+     * @param string $src media ID
+     * @param string $title descriptive text
+     * @param string $align left|center|right
+     * @param int $width width of media in pixel
+     * @param int $height height of media in pixel
+     * @param string $cache cache|recache|nocache
+     * @param bool $render should the media be embedded inline or just linked
      * @return string
      */
-    function _media($src, $title = NULL, $align = NULL, $width = NULL,
-                    $height = NULL, $cache = NULL, $render = true) {
+    public function _media(
+        $src,
+        $title = null,
+        $align = null,
+        $width = null,
+        $height = null,
+        $cache = null,
+        $render = true
+    ) {
 
         $out = '';
-        if($align == 'center') {
+        if ($align == 'center') {
             $out .= '<div align="center" style="text-align: center">';
         }
 
         $out .= parent::_media($src, $title, $align, $width, $height, $cache, $render);
 
-        if($align == 'center') {
+        if ($align == 'center') {
             $out .= '</div>';
         }
 
@@ -210,7 +225,8 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      *
      * @param string $acronym
      */
-    function acronym($acronym) {
+    public function acronym($acronym)
+    {
         $this->doc .= $this->_xmlEntities($acronym);
     }
 
@@ -220,11 +236,12 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param array $link
      * @return string
      */
-    function _formatLink($link) {
+    public function _formatLink($link)
+    {
 
         // for internal links contains the title the pageid
-        if(in_array($link['title'], $this->actioninstance->getExportedPages())) {
-            list(/* $url */, $hash) = array_pad(explode('#', $link['url'], 2), 2, '');
+        if (in_array($link['title'], $this->actioninstance->getExportedPages())) {
+            [/* url */, $hash] = sexplode('#', $link['url'], 2, '');
 
             $check = false;
             $pid = sectionID($link['title'], $check);
@@ -232,16 +249,21 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
         }
 
         // prefix interwiki links with interwiki icon
-        if($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/', $link['class'], $m)) {
-            if(file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.png')) {
+        if ($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/', $link['class'], $m)) {
+            if (file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.png')) {
                 $img = DOKU_BASE . 'lib/images/interwiki/' . $m[1] . '.png';
-            } elseif(file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.gif')) {
+            } elseif (file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.gif')) {
                 $img = DOKU_BASE . 'lib/images/interwiki/' . $m[1] . '.gif';
             } else {
                 $img = DOKU_BASE . 'lib/images/interwiki.png';
             }
 
-            $link['name'] = '<img src="' . $img . '" width="16" height="16" style="vertical-align: middle" class="' . $link['class'] . '" />' . $link['name'];
+            $link['name'] = sprintf(
+                '<img src="%s" width="16" height="16" style="vertical-align: middle" class="%s" />%s',
+                $img,
+                $link['class'],
+                $link['name']
+            );
         }
         return parent::_formatLink($link);
     }
@@ -254,13 +276,12 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml {
      * @param bool $returnonly
      * @return string|void
      */
-    function emaillink($address, $name = NULL, $returnonly = false) {
+    public function emaillink($address, $name = null, $returnonly = false)
+    {
         global $conf;
         $old = $conf['mailguard'];
         $conf['mailguard'] = 'none';
         parent::emaillink($address, $name, $returnonly);
         $conf['mailguard'] = $old;
     }
-
 }
-

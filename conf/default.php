@@ -1,4 +1,5 @@
 <?php
+
 $conf['pagesize']         = 'A4';
 $conf['orientation']      = 'portrait';
 $conf['font-size']        = 11;

@@ -1,4 +1,5 @@
 <?php
+
 $meta['pagesize']         = array('string');
 $meta['orientation']      = array('multichoice', '_choices' => array('portrait', 'landscape'));
 $meta['font-size']        = array('numeric');
@@ -13,4 +14,3 @@ $meta['usecache']         = array('onoff');
 $meta['usestyles']        = array('string');
 $meta['qrcodescale']       = array('string', '_pattern' => '/^(|\d+(\.\d+)?)$/');
 $meta['showexportbutton'] = array('onoff');
-
