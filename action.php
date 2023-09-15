@@ -41,6 +41,8 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     public function __construct()
     {
+        require_once __DIR__ . '/vendor/autoload.php';
+
         $this->tpl = $this->getExportConfig('template');
     }
 

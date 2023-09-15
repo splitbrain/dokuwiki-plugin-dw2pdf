@@ -27,8 +27,6 @@ class DokuPDF extends Mpdf
         global $conf;
         global $lang;
 
-        require_once __DIR__ . '/vendor/autoload.php';
-
         if (!defined('_MPDF_TEMP_PATH')) {
             define('_MPDF_TEMP_PATH', $conf['tmpdir'] . '/dwpdf/' . random_int(1, 1000) . '/');
         }
