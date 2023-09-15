@@ -2,8 +2,9 @@
 
 // phpcs:disable: PSR1.Methods.CamelCapsMethodName.NotCamelCaps
 
-use Mpdf\Mpdf;
 use dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator;
+use Mpdf\Mpdf;
+use Mpdf\MpdfException;
 
 /**
  * Wrapper around the mpdf library class
@@ -21,6 +22,9 @@ class DokuPDF extends Mpdf
      * @param string $pagesize
      * @param string $orientation
      * @param int $fontsize
+     *
+     * @throws MpdfException
+     * @throws Exception
      */
     public function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11, $docLang = 'en')
     {
