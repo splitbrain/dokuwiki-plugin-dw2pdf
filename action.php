@@ -41,6 +41,8 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     public function __construct()
     {
+        require_once __DIR__ . '/vendor/autoload.php';
+
         $this->tpl = $this->getExportConfig('template');
     }
 
@@ -540,7 +542,7 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         $body_end .= '</div>';
 
-        $mpdf->WriteHTML($body_end, 2, false, true); // finish body html
+        $mpdf->WriteHTML($body_end, 2, false); // finish body html
         if ($isDebug) {
             $html .= $body_end;
             $html .= '</body>';
@@ -763,6 +765,8 @@ class action_plugin_dw2pdf extends ActionPlugin
 
     /**
      * Load all the style sheets and apply the needed replacements
+     *
+     * @return string css styles
      */
     protected function loadCSS()
     {
@@ -792,26 +796,19 @@ class action_plugin_dw2pdf extends ActionPlugin
             $css .= css_loadfile($file, $location);
         }
 
-        if (function_exists('css_parseless')) {
-            // apply pattern replacements
-            if (function_exists('css_styleini')) {
-                // compatiblity layer for pre-Greebo releases of DokuWiki
-                $styleini = css_styleini($conf['template']);
-            } else {
-                // Greebo functionality
-                $styleUtils = new StyleUtils();
-                $styleini = $styleUtils->cssStyleini($conf['template']); // older versions need still the template
-            }
-            $css = css_applystyle($css, $styleini['replacements']);
-
-            // parse less
-            $css = css_parseless($css);
+        // apply pattern replacements
+        if (function_exists('css_styleini')) {
+            // compatiblity layer for pre-Greebo releases of DokuWiki
+            $styleini = css_styleini($conf['template']);
         } else {
-            // @deprecated 2013-12-19: fix backward compatibility
-            $css = css_applystyle($css, DOKU_INC . 'lib/tpl/' . $conf['template'] . '/');
+            // Greebo functionality
+            $styleUtils = new StyleUtils();
+            $styleini = $styleUtils->cssStyleini($conf['template']); // older versions need still the template
         }
+        $css = css_applystyle($css, $styleini['replacements']);
 
-        return $css;
+        // parse less
+        return css_parseless($css);
     }
 
     /**
