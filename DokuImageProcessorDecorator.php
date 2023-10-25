@@ -63,13 +63,21 @@ class DokuImageProcessorDecorator extends ImageProcessor
                 $w = 0;
                 $h = 0;
                 $rev = '';
-                if (preg_match('/[?&]w=(\d+)/', $file, $m)) $w = $m[1];
-                if (preg_match('/[?&]h=(\d+)/', $file, $m)) $h = $m[1];
-                if (preg_match('/[&?]rev=(\d+)/', $file, $m)) $rev = $m[1];
+                if (preg_match('/[?&]w=(\d+)/', $file, $m)) {
+                    $w = $m[1];
+                }
+                if (preg_match('/[?&]h=(\d+)/', $file, $m)) {
+                    $h = $m[1];
+                }
+                if (preg_match('/[&?]rev=(\d+)/', $file, $m)) {
+                    $rev = $m[1];
+                }
 
                 if (media_isexternal($media)) {
                     $local = media_get_from_URL($media, $ext, -1);
-                    if (!$local) $local = $media; // let mpdf try again
+                    if (!$local) {
+                        $local = $media;
+                    } // let mpdf try again
                 } else {
                     $media = cleanID($media);
                     //check permissions (namespace only)
