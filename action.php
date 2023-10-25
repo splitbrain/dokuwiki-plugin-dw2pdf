@@ -88,7 +88,9 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         // our event?
         $allowedEvents = ['export_pdfbook', 'export_pdf', 'export_pdfns'];
-        if (!in_array($event->data, $allowedEvents)) return;
+        if (!in_array($event->data, $allowedEvents)) {
+            return;
+        }
 
         try {
             //collect pages and check permissions
@@ -211,7 +213,9 @@ class action_plugin_dw2pdf extends ActionPlugin
             if (!empty($excludesns)) {
                 $result = array_filter($result, function ($item) use ($excludesns) {
                     foreach ($excludesns as $ns) {
-                        if (strpos($item['id'], $ns . ':') === 0) return false;
+                        if (strpos($item['id'], $ns . ':') === 0) {
+                            return false;
+                        }
                     }
                     return true;
                 });
@@ -376,7 +380,9 @@ class action_plugin_dw2pdf extends ActionPlugin
     {
         $file = wikiFN($id, $rev);
 
-        if (!file_exists($file)) return '';
+        if (!file_exists($file)) {
+            return '';
+        }
 
         //ensure $id is in global $ID (needed for parsing)
         global $ID;
@@ -883,8 +889,12 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     public function cbDateSort($a, $b)
     {
-        if ($b['rev'] < $a['rev']) return -1;
-        if ($b['rev'] > $a['rev']) return 1;
+        if ($b['rev'] < $a['rev']) {
+            return -1;
+        }
+        if ($b['rev'] > $a['rev']) {
+            return 1;
+        }
         return strcmp($b['id'], $a['id']);
     }
 
@@ -913,14 +923,22 @@ class action_plugin_dw2pdf extends ActionPlugin
             // have we reached the page level?
             if ($i === ($countA - 1) || $i === ($countB - 1)) {
                 // start page first
-                if ($partA == $conf['start']) return -1;
-                if ($partB == $conf['start']) return 1;
+                if ($partA == $conf['start']) {
+                    return -1;
+                }
+                if ($partB == $conf['start']) {
+                    return 1;
+                }
             }
 
             // prefer page over namespace
             if ($partA === $partB) {
-                if (!isset($partsA[$i + 1])) return -1;
-                if (!isset($partsB[$i + 1])) return 1;
+                if (!isset($partsA[$i + 1])) {
+                    return -1;
+                }
+                if (!isset($partsB[$i + 1])) {
+                    return 1;
+                }
                 continue;
             }
 
@@ -1094,7 +1112,9 @@ class action_plugin_dw2pdf extends ActionPlugin
         $trans = plugin_load('helper', 'translation');
         if ($trans) {
             $tr = $trans->getLangPart($pageid);
-            if ($tr) $lang = $tr;
+            if ($tr) {
+                $lang = $tr;
+            }
         }
 
         return $lang;

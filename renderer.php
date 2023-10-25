@@ -57,7 +57,9 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
      */
     public function canRender($format)
     {
-        if ($format == 'xhtml') return true;
+        if ($format == 'xhtml') {
+            return true;
+        }
         return false;
     }
 
@@ -70,7 +72,9 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
      */
     public function header($text, $level, $pos, $returnonly = false)
     {
-        if (!$text) return; //skip empty headlines
+        if (!$text) {
+            return;
+        } //skip empty headlines
         global $ID;
 
         $hid = $this->_headerToLink($text, true);
