@@ -72,9 +72,10 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
      */
     public function header($text, $level, $pos, $returnonly = false)
     {
+        //skip empty headlines
         if (!$text) {
             return;
-        } //skip empty headlines
+        }
         global $ID;
 
         $hid = $this->_headerToLink($text, true);
