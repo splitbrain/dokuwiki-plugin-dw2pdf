@@ -76,8 +76,9 @@ class DokuImageProcessorDecorator extends ImageProcessor
                 if (media_isexternal($media)) {
                     $local = media_get_from_URL($media, $ext, -1);
                     if (!$local) {
+                        // let mpdf try again
                         $local = $media;
-                    } // let mpdf try again
+                    }
                 } else {
                     $media = cleanID($media);
                     //check permissions (namespace only)
