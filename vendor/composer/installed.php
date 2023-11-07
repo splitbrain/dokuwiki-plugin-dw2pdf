@@ -3,7 +3,7 @@
         'name' => 'splitbrain/dw2pdf',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '0680251b39194f10d53b3b0a54d928c151819766',
+        'reference' => '7d636181fc5bb007c30530a67e7c156f19ded673',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'mpdf/mpdf' => array(
-            'pretty_version' => 'v8.0.7',
-            'version' => '8.0.7.0',
-            'reference' => '7daf07f15334ed59a276bd52131dcca48794cdbd',
+            'pretty_version' => 'v8.0.17',
+            'version' => '8.0.17.0',
+            'reference' => '5f64118317c8145c0abc606b310aa0a66808398a',
             'type' => 'library',
             'install_path' => __DIR__ . '/../mpdf/mpdf',
             'aliases' => array(),
@@ -67,7 +67,7 @@
         'splitbrain/dw2pdf' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '0680251b39194f10d53b3b0a54d928c151819766',
+            'reference' => '7d636181fc5bb007c30530a67e7c156f19ded673',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
