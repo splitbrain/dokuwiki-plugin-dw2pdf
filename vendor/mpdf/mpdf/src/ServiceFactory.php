@@ -7,7 +7,7 @@ use Mpdf\Color\ColorModeConverter;
 use Mpdf\Color\ColorSpaceRestrictor;
 use Mpdf\Fonts\FontCache;
 use Mpdf\Fonts\FontFileFinder;
-use Mpdf\Image\ImageProcessor;
+use \dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
 use Mpdf\Pdf\Protection;
 use Mpdf\Pdf\Protection\UniqidGenerator;
 use Mpdf\Writer\BaseWriter;
