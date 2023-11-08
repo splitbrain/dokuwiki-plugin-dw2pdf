@@ -1,9 +1,9 @@
 <?php
 
 namespace Mpdf\Tag;
+use \dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
 
 use Mpdf\Mpdf;
-use \dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
 
 class Img extends Tag
 {

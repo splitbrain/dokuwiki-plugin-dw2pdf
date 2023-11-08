@@ -3,29 +3,18 @@
 namespace Mpdf\Image;
 
 use Mpdf\Cache;
-
 use Mpdf\Color\ColorConverter;
 use Mpdf\Color\ColorModeConverter;
-
 use Mpdf\CssManager;
-
 use Mpdf\File\StreamWrapperChecker;
-
 use Mpdf\Gif\Gif;
-
 use Mpdf\Language\LanguageToFontInterface;
 use Mpdf\Language\ScriptToLanguageInterface;
-
 use Mpdf\Log\Context as LogContext;
-
 use Mpdf\Mpdf;
-
 use Mpdf\Otl;
-
 use Mpdf\RemoteContentFetcher;
-
 use Mpdf\SizeConverter;
-
 use Psr\Log\LoggerInterface;
 
 class ImageProcessor implements \Psr\Log\LoggerAwareInterface
@@ -155,10 +144,14 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 		/**
 		 * Prevents insecure PHP object injection through phar:// wrapper
 		 * @see https://github.com/mpdf/mpdf/issues/949
+		 * @see https://github.com/mpdf/mpdf/issues/1381
 		 */
 		$wrapperChecker = new StreamWrapperChecker($this->mpdf);
 		if ($wrapperChecker->hasBlacklistedStreamWrapper($file)) {
 			return $this->imageError($file, $firsttime, 'File contains an invalid stream. Only ' . implode(', ', $wrapperChecker->getWhitelistedStreamWrappers()) . ' streams are allowed.');
+		}
+		if ($wrapperChecker->hasBlacklistedStreamWrapper($orig_srcpath)) {
+			return $this->imageError($orig_srcpath, $firsttime, 'File contains an invalid stream. Only ' . implode(', ', $wrapperChecker->getWhitelistedStreamWrappers()) . ' streams are allowed.');
 		}
 
 		// mPDF 6
@@ -176,7 +169,7 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 			$file = md5($data);
 		}
 
-		if (preg_match('/data:image\/(gif|jpe?g|png);base64,(.*)/', $file, $v)) {
+		if (preg_match('/data:image\/(gif|jpe?g|png|webp);base64,(.*)/', $file, $v)) {
 			$type = $v[1];
 			$data = base64_decode($v[2]);
 			$file = md5($data);
@@ -231,7 +224,7 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 				$type = $this->guesser->guess($data);
 			}
 
-			if (!$data && $check = @fopen($file, 'rb')) {
+			if ($file && !$data && $check = @fopen($file, 'rb')) {
 				fclose($check);
 				$this->logger->debug(sprintf('Fetching (file_get_contents) content of file "%s" with non-local basepath', $file), ['context' => LogContext::REMOTE_CONTENT]);
 				$data = file_get_contents($file);
@@ -286,6 +279,31 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 			return $info;
 		}
 
+		if ($type === 'webp') { // Convert webp images to JPG and treat them as such
+
+			$im = @imagecreatefromstring($data);
+
+			if (!function_exists('imagewebp') || false === $im) {
+				return $this->imageError($file, $firsttime, 'Missing GD support for WEBP images.');
+			}
+
+			$tempfile = $this->cache->tempFilename('_tempImgPNG' . md5($file) . random_int(1, 10000) . '.jpg');
+			$checkfile = $this->cache->tempFilename('_tempImgPNG' . md5($file) . random_int(1, 10000) . '.jpg');
+			$check = @imagewebp($im, $checkfile);
+
+			if (!$check) {
+				return $this->imageError($file, $firsttime, 'Error creating temporary file (' . $tempfile . ') when using GD library to parse WEBP image');
+			}
+
+			@imagejpeg($im, $tempfile);
+			$data = file_get_contents($tempfile);
+			imagedestroy($im);
+			unlink($tempfile);
+			unlink($checkfile);
+			$type = 'jpeg';
+
+		}
+
 		// JPEG
 		if ($type === 'jpeg' || $type === 'jpg') {
 
@@ -327,7 +345,7 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 					imageinterlace($im, false);
 					$check = @imagepng($im, $tempfile);
 					if (!$check) {
-						return $this->imageError($file, $firsttime, 'Error creating temporary file (' . $tempfile . ') whilst using GD library to parse JPG(CMYK) image');
+						return $this->imageError($file, $firsttime, 'Error creating temporary file (' . $tempfile . ') when using GD library to parse JPG(CMYK) image');
 					}
 					$info = $this->getImage($tempfile, false);
 					if (!$info) {
@@ -844,10 +862,13 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 					} else {
 						return $this->imageError($file, $firsttime, 'Error parsing PNG image data');
 					}
+
 				} while ($n);
+
 				if (!$pngdata) {
 					return $this->imageError($file, $firsttime, 'Error parsing PNG image data - no IDAT data found');
 				}
+
 				if ($colspace === 'Indexed' && empty($pal)) {
 					return $this->imageError($file, $firsttime, 'Error parsing PNG image data - missing colour palette');
 				}
@@ -877,11 +898,9 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 
 		} elseif ($type === 'gif') { // GIF
 
-			if (function_exists('gd_info')) {
-				$gd = gd_info();
-			} else {
-				$gd = [];
-			}
+			$gd = function_exists('gd_info')
+				? gd_info()
+				: [];
 
 			if (isset($gd['GIF Read Support']) && $gd['GIF Read Support']) {
 
@@ -895,7 +914,7 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 						ob_start();
 						$check = @imagepng($im);
 						if (!$check) {
-							return $this->imageError($file, $firsttime, 'Error creating temporary image object whilst using GD library to parse GIF image');
+							return $this->imageError($file, $firsttime, 'Error creating temporary image object when using GD library to parse GIF image');
 						}
 						$this->mpdf->imageVars['tempImage'] = ob_get_contents();
 						$tempimglnk = 'var:tempImage';
@@ -908,7 +927,7 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 					} else {
 						$check = @imagepng($im, $tempfile);
 						if (!$check) {
-							return $this->imageError($file, $firsttime, 'Error creating temporary file (' . $tempfile . ') whilst using GD library to parse GIF image');
+							return $this->imageError($file, $firsttime, 'Error creating temporary file (' . $tempfile . ') when using GD library to parse GIF image');
 						}
 						$info = $this->getImage($tempfile, false);
 						if (!$info) {
@@ -1031,11 +1050,9 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 
 		} else { // UNKNOWN TYPE - try GD imagecreatefromstring
 
-			if (function_exists('gd_info')) {
-				$gd = gd_info();
-			} else {
-				$gd = [];
-			}
+			$gd = function_exists('gd_info')
+				? gd_info()
+				: [];
 
 			if (isset($gd['PNG Support']) && $gd['PNG Support']) {
 
@@ -1054,7 +1071,7 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 				$check = @imagepng($im, $tempfile);
 
 				if (!$check) {
-					return $this->imageError($file, $firsttime, 'Error creating temporary file (' . $tempfile . ') whilst using GD library to parse unknown image type');
+					return $this->imageError($file, $firsttime, 'Error creating temporary file (' . $tempfile . ') when using GD library to parse unknown image type');
 				}
 
 				$info = $this->getImage($tempfile, false);
@@ -1082,6 +1099,10 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
 
 	private function convertImage(&$data, $colspace, $targetcs, $w, $h, $dpi, $mask, $gamma_correction = false, $pngcolortype = false)
 	{
+		if (!function_exists('gd_info')) {
+			return $this->imageError($file, $firsttime, 'GD library needed to parse image files');
+		}
+
 		if ($this->mpdf->PDFA || $this->mpdf->PDFX) {
 			$mask = false;
 		}
