@@ -67,7 +67,7 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Register the events
      *
-     * @param Doku_Event_Handler $controller
+     * @param EventHandler $controller
      */
     public function register(EventHandler $controller)
     {
@@ -79,7 +79,7 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Do the HTML to PDF conversion work
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
     public function convert(Event $event)
     {
@@ -140,7 +140,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      *  - Return a title and selection, throw otherwise an exception
      *  - Check permisions
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @return array
      * @throws Exception
      */
@@ -406,7 +406,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      * Build a pdf from the html
      *
      * @param string $cachefile
-     * @param Doku_Event $event
+     * @param Event $event
      * @throws MpdfException
      */
     protected function generatePDF($cachefile, $event)
@@ -1051,7 +1051,7 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Add 'export pdf'-button to pagetools
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
     public function addbutton(Event $event)
     {
@@ -1081,7 +1081,7 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Add 'export pdf' button to page tools, new SVG based mechanism
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
     public function addsvgbutton(Event $event)
     {
