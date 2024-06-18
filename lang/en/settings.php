@@ -24,3 +24,4 @@ $lang['usecache']                = 'Should PDFs be cached? Embedded images won\'
 $lang['usestyles']               = 'You can give a comma separated list of plugins of which the <code>style.css</code> or <code>screen.css</code> should be used for PDF generation. By default only <code>print.css</code> and <code>pdf.css</code> are used.';
 $lang['qrcodescale']             = 'Size scaling of the embedded QR code. Empty or <code>0</code> to disable.';
 $lang['showexportbutton']        = 'Show PDF export button (only when supported by your template)';
+$lang['useSubstitutions']        = 'Substitute missing characters in UTF-8(multibyte) documents - from other fonts';
