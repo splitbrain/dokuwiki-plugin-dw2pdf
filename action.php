@@ -41,7 +41,24 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     public function __construct()
     {
+        global $JSINFO;
+
         require_once __DIR__ . '/vendor/autoload.php';
+
+        $JSINFO['plugins']['dw2pdf']['showexporttemplate'] = $this->getConf('showexporttemplate');
+
+        if($this->getConf('showexporttemplate')) {
+            $templates = [$this->getExportConfig('template')];
+            $dir = scandir(DOKU_PLUGIN . 'dw2pdf' . DIRECTORY_SEPARATOR . 'tpl');
+            foreach ($dir as $key => $value)
+            {
+                if (is_dir(DOKU_PLUGIN . 'dw2pdf' . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . $value) && !in_array($value,array(".","..",$this->getExportConfig('template'))))
+                {
+                    $templates[] = $value;
+                }
+            }
+            $JSINFO['plugins']['dw2pdf']['templates'] = json_encode($templates);
+        }
 
         $this->tpl = $this->getExportConfig('template');
     }
@@ -435,7 +452,8 @@ class action_plugin_dw2pdf extends ActionPlugin
             $this->getExportConfig('pagesize'),
             $this->getExportConfig('orientation'),
             $this->getExportConfig('font-size'),
-            $this->getDocumentLanguage($this->list[0]) //use language of first page
+            $this->getDocumentLanguage($this->list[0]),
+            $this->getExportConfig('template') //use language of first page
         );
 
         // let mpdf fix local links
@@ -479,6 +497,7 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         $styles = '@page { size:auto; ' . $template['page'] . '}';
         $styles .= '@page :first {' . $template['first'] . '}';
+        $styles .= '@page last-page :first {' . $template['last'] . '}';
 
         $styles .= '@page landscape-page { size:landscape }';
         $styles .= 'div.dw2pdf-landscape { page:landscape-page }';
@@ -621,13 +640,14 @@ class action_plugin_dw2pdf extends ActionPlugin
             'html' => '',
             'page' => '',
             'first' => '',
+            'last' => '',
             'cite' => '',
         ];
 
         // prepare header/footer elements
         $html = '';
         foreach (['header', 'footer'] as $section) {
-            foreach (['', '_odd', '_even', '_first'] as $order) {
+            foreach (['', '_odd', '_even', '_first', '_last'] as $order) {
                 $file = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/' . $section . $order . '.html';
                 if (file_exists($file)) {
                     $html .= '<htmlpage' . $section . ' name="' . $section . $order . '">' . DOKU_LF;
@@ -637,6 +657,8 @@ class action_plugin_dw2pdf extends ActionPlugin
                     // register the needed pseudo CSS
                     if ($order == '_first') {
                         $output['first'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
+                    } elseif ($order == '_last') {
+                        $output['last'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
                     } elseif ($order == '_even') {
                         $output['page'] .= 'even-' . $section . '-name: html_' . $section . $order . ';' . DOKU_LF;
                     } elseif ($order == '_odd') {
@@ -677,10 +699,10 @@ class action_plugin_dw2pdf extends ActionPlugin
             $output['cover'] .= '<pagebreak />';
         }
 
-        // cover page
+        // back page
         $backfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/back.html';
         if (file_exists($backfile)) {
-            $output['back'] = '<pagebreak />';
+            $output['back'] = '<pagebreak page-selector="last-page" />';
             $output['back'] .= file_get_contents($backfile);
             $output['back'] = str_replace(array_keys($replace), array_values($replace), $output['back']);
             $output['back'] = $this->pageDependReplacements($output['back'], $ID);
@@ -728,6 +750,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         }
         $replace['@PAGEURL@'] = wl($id, $params, true, "&");
         $replace['@QRCODE@'] = $qr_code;
+        $replace['@OLDREVISIONS@'] = $this->changesToHTML($id);
 
         $content = $raw;
 
@@ -748,6 +771,14 @@ class action_plugin_dw2pdf extends ActionPlugin
             $content
         );
 
+        // @OLDREVISIONS(<html>[, <first>])@
+        // /@OLDREVISIONS\\(([\\"\'])(.*?[^\\\\])\\1(?:,\\s*(.*?))?\\)@/
+        $content = preg_replace_callback(
+            '/@OLDREVISIONS\\(([\\"\'])(.*?[^\\\\])\\1(?:,\\s*(.*?))?\\)@/',
+            fn($matches) => $this->changesToHTML($id, $matches),
+            $content
+        );
+
         return $content;
     }
 
@@ -763,10 +794,163 @@ class action_plugin_dw2pdf extends ActionPlugin
     {
         global $conf;
         //no 2nd argument for default date format
-        if ($match[2] == null) {
+        if (!isset($match[2])) {
             $match[2] = $conf['dformat'];
         }
-        return strftime($match[2], strtotime($match[1]));
+        return date_format(date_create($match[1]), str_replace('%', '', $match[2]));
+    }
+
+    /**
+     * Load page changelog to Array
+     *
+     * @param string page changelog file location
+     * @return array
+     */
+    public function changesToArray($f_changes) {
+        GLOBAL $auth;
+
+        $a_changes = [];
+        if (file_exists($f_changes)) {
+            $lines = explode(PHP_EOL, io_readFile($f_changes, false));
+            for($l = 0; $l < count($lines)-1; $l++) { // Remove last empty line from file
+                $a_changes[$l] = explode("\t", $lines[$l]);
+                $a_changes[$l] = array_combine(
+                    ['date', 'ip', 'type', 'id', 'user', 'sum', 'extra', 'sizechange'],
+                    $a_changes[$l]
+                );
+
+                // Username
+                if (!empty($a_changes[$l]['user'])) {
+                    $userinfo = $auth->getUserData($a_changes[$l]['user'], true);
+                    if (!empty($userinfo)) {
+                        $a_changes[$l]['user'] = $userinfo['name']; // Real Name
+                    }
+                } else {
+                    // Set "ip" as "user" for Anonymous edits
+                    $a_changes[$l]['user'] = $a_changes[$l]['ip'];
+                }
+            }
+        }
+        return array_reverse($a_changes); // Latest revision history first
+    }
+
+    /**
+     * Convert page changelog from Array to HTML
+     *
+     * @param int page id
+     * @param array @OLDREVISIONS@ preg_match array (html, <first>)
+     * @return string
+     */
+    public function changesToHTML($id, $matches = [null, null]) {
+        global $lang;
+
+        $changes[] = metaFN($id, '.changes');
+        $f_changes = $changes[0];
+        $a_changes = $this->changesToArray($f_changes);
+
+
+        $html = $matches[2] ?? null;
+        $first = $matches[3] ?? null;
+
+        // Return last X revisions
+        if ($first == null) {
+            $first = count($a_changes);
+        }
+
+        $changes_html = '';
+        // Render as Table by default
+        if($html == null) {
+            $changes_html .= '<table class="dw2pdf-oldrevisions inline" width="100%">';
+            $changes_html .= '<thead>'; 
+            $changes_html .= '<tr>';
+            $changes_html .= '<th>' . $lang['media_sort_date'] . '</th>';
+            $changes_html .= '<th>' . $lang['user'] . '</th>';
+            $changes_html .= '<th>' . $lang['summary'] . '</th>';
+            $changes_html .= '</tr>';
+            $changes_html .= '</thead>';
+            $changes_html .= '<tbody>';
+            $last_date = '';
+            $last_author = '';
+            for($l = 0; $l < $first; ++$l) {
+                // Summary contains text
+                if (!empty($a_changes[$l]['sum'])) {
+                    // Wrap Date between <span>
+                    $a_date = explode(" ", dformat($a_changes[$l]['date']));
+                    $a_date_span = [];
+                    for ($i = 0; $i < count($a_date); $i++) {
+                        $a_date_span[] = '<span class="dates date-' . $i . '">' . $a_date[$i] . '</span>';
+                    }
+
+                    // Wrap User between <span>
+                    $a_user = explode(" ", $a_changes[$l]['user']);
+                    $a_user_span = [];
+                    for ($i = 0; $i < count($a_user); $i++) {
+                        $a_user_span[] = '<span class="names name-' . $i . ($i == count($a_user) ? ' last-name' : '') . '">' . $a_user[$i] . '</span>';
+                    }
+
+                    $changes_html .= '<span class="lines line-' . $l . ($l == 0 ? ' latest-revision' : '') . '">';
+                    $changes_html .= '<tr>';
+                    $changes_html .= '<td><span class="date' . ($last_date == dformat($a_changes[$l]['date'], '%Y/%m/%d') ? ' same-day' : '') . '">' . implode(" ", $a_date_span) . '</span></td>'; // Date
+                    /* $changes_html .= '<td>' . $a_change['ip'] . '</td>'; // Source IP
+                    $changes_html .= '<td>' . $a_change['type'] . '</td>'; // Operation Type (C - Create, E - Edit)
+                    $changes_html .= '<td>' . $a_change['id'] . '</td>'; // Namespace */
+                    $changes_html .= '<td><span class="author' . ($last_author == $a_changes[$l]['user'] ? ' same-author' : '') . '">' . implode(" ", $a_user_span) . '</span></td>'; // Author
+                    $changes_html .= '<td><span class="sum">' . trim($a_changes[$l]['sum']) . '</span></td>'; // Summary
+                    /*  $changes_html .= '<td>' . $a_change['extra'] . '</td>'; // Extra (Flags)
+                    $changes_html .= '<td>' . $a_change['sizechange'] . '</td>'; // Bytes changed */
+                    $changes_html . '</tr>';
+                    $changes_html .= ($l == 0 ? '</span>' : '');
+
+                    $last_author = $a_changes[$l]['user'];
+                    $last_date = dformat($a_changes[$l]['date'], '%Y/%m/%d');
+                }
+                $l++;
+            }
+            $changes_html .= '</tbody>';
+            $changes_html .= '</table>';
+        } else {
+            // Reverse array for negative first numbers.
+            // e.g. -1 returns the revision when the page was first created
+            if($first < 0) {
+                $a_changes = array_reverse($a_changes);
+                $first = abs($first); // Convert number to positive
+            }
+
+            for($l = 0; $l < $first; ++$l) {
+                $variables = array(
+                                    "REVDATE" => $a_changes[$l]['date'],
+                                    "REVIP" => $a_changes[$l]['ip'],
+                                    "REVTYPE" => $a_changes[$l]['type'],
+                                    "REVID" => $a_changes[$l]['id'],
+                                    "REVUSER" => $a_changes[$l]['user'],
+                                    "REVSUM" => $a_changes[$l]['sum'],
+                                    "REVEXTRA" => $a_changes[$l]['extra'],
+                                    "REVSIZECHANGE" => $a_changes[$l]['sizechange']
+                                );
+
+                $changes_string = $html;
+                foreach($variables as $key => $value){
+                    $changes_string = str_replace('@'.strtoupper($key).'@', $value, $changes_string);
+                }
+
+                // @REVDATE(<format>)@
+                $changes_string = preg_replace_callback(
+                    '/@REVDATE\((.*?)\)@/',
+                    fn($datematches) => dformat($a_changes[$l]['date'], $datematches[1]),
+                    $changes_string
+                );
+
+                // @REVNAME(<first>)@
+                $changes_string = preg_replace_callback(
+                    '/@REVUSER\((.*?)\)@/',
+                    fn($namematches) => ($namematches[1] >= 0 ? explode(" ", $a_changes[$l]['user'])[$namematches[1]] ?? '' : array_reverse(explode(" ", $a_changes[$l]['user']))[abs($namematches[1]+1)] ?? ''),
+                    $changes_string
+                );
+
+                $changes_html .= $changes_string;
+            }
+        }
+        return $changes_html;
     }
 
     /**
