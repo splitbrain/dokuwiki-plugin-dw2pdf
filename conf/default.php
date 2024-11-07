@@ -14,3 +14,4 @@ $conf['usecache']         = 1;
 $conf['usestyles']        = 'wrap,';
 $conf['qrcodescale']       = '1';
 $conf['showexportbutton'] = 1;
+$conf['showexporttemplate'] = 0;

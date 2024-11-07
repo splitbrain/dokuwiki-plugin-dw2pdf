@@ -814,8 +814,12 @@ class action_plugin_dw2pdf extends ActionPlugin
             $lines = explode(PHP_EOL, io_readFile($f_changes, false));
             for($l = 0; $l < count($lines)-1; $l++) { // Remove last empty line from file
                 $a_changes[$l] = explode("\t", $lines[$l]);
+                $a_keys = ['date', 'ip', 'type', 'id', 'user', 'sum', 'extra', 'sizechange'];
+                if(count($a_changes[$l]) < 8) {
+                    array_splice($a_keys, 7, 1); // Remove missing 'extra' key on revisions created on older DokuWiki releases
+                }
                 $a_changes[$l] = array_combine(
-                    ['date', 'ip', 'type', 'id', 'user', 'sum', 'extra', 'sizechange'],
+                    $a_keys,
                     $a_changes[$l]
                 );
 
