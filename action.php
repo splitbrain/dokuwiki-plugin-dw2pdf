@@ -677,7 +677,6 @@ class action_plugin_dw2pdf extends ActionPlugin
             '@TITLE@' => hsc($this->title),
             '@WIKI@' => $conf['title'],
             '@WIKIURL@' => DOKU_URL,
-            '@DATE@' => dformat(time()),
             '@USERNAME@' => $INFO['userinfo']['name'] ?? '',
             '@BASE@' => DOKU_BASE,
             '@INC@' => DOKU_INC,
@@ -751,6 +750,14 @@ class action_plugin_dw2pdf extends ActionPlugin
         $replace['@PAGEURL@'] = wl($id, $params, true, "&");
         $replace['@QRCODE@'] = $qr_code;
         $replace['@OLDREVISIONS@'] = $this->changesToHTML($id);
+        $replace['@DATE@'] = dformat(time());
+
+        // @DATE(<date>[, <format>])@
+        $raw = preg_replace_callback(
+            '/@DATE\((.*?)(?:,\s*(.*?))?\)@/',
+            [$this, 'replaceDate'],
+            $raw
+        );
 
         $content = $raw;
 
@@ -763,13 +770,6 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         // plugins may post-process HTML, e.g to clean up unused replacements
         $event->advise_after();
-
-        // @DATE(<date>[, <format>])@
-        $content = preg_replace_callback(
-            '/@DATE\((.*?)(?:,\s*(.*?))?\)@/',
-            [$this, 'replaceDate'],
-            $content
-        );
 
         // @OLDREVISIONS(<html>[, <first>])@
         // /@OLDREVISIONS\\(([\\"\'])(.*?[^\\\\])\\1(?:,\\s*(.*?))?\\)@/
@@ -793,11 +793,14 @@ class action_plugin_dw2pdf extends ActionPlugin
     public function replaceDate($match)
     {
         global $conf;
+        if ($match[1] == '@DATE@') {
+            $match[1] = time();
+        }
         //no 2nd argument for default date format
         if (!isset($match[2])) {
             $match[2] = $conf['dformat'];
         }
-        return date_format(date_create($match[1]), str_replace('%', '', $match[2]));
+        return dformat($match[1], $match[2]);
     }
 
     /**
