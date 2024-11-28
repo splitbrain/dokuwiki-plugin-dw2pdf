@@ -28,3 +28,4 @@ $lang['usecache']              = '开启 PDF 文件缓存？内嵌的图片将�
 $lang['usestyles']             = 'PDF 生成过程中的 <code>style.css</code> 或者 <code>screen.css</code> ，以英文逗号,分割。默认只有<code>print.css</code> 和 <code>pdf.css</code> 被使用。';
 $lang['qrcodescale']           = '嵌入的二维码的大小缩放。留空或<code>0</code>以禁用';
 $lang['showexportbutton']      = '显示导出 PDF 按钮。（只有在模版支持并在白名单里的时候才能使用）';
+$lang['useSubstitutions']      = '从其他字体寻找并使用UTF-8（多字节）文档中丢失的字符';
