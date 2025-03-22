@@ -495,6 +495,8 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         $styles = '@page { size:auto; ' . $template['page'] . '}';
         $styles .= '@page :first {' . $template['first'] . '}';
+        $styles .= '@page back {' . $template['last'] . '}';
+        $styles .= 'div.back { page:back }';
 
         // Define headers footers @page rule for each page
         foreach ($this->list as $page) {
@@ -707,7 +709,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         // prepare header/footer elements
         $html = '';
         foreach (['header', 'footer'] as $section) {
-            foreach (['', '_odd', '_even', '_first'] as $order) {
+            foreach (['', '_odd', '_even', '_first', '_last'] as $order) {
                 $file = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/' . $section . $order . '.html';
                 if (file_exists($file)) {
                     $html .= '<htmlpage' . $section . ' name="' . $section . $order . '">' . DOKU_LF;
@@ -717,6 +719,8 @@ class action_plugin_dw2pdf extends ActionPlugin
                     // register the needed pseudo CSS
                     if ($order == '_first') {
                         $output['first'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
+                    } elseif ($order == '_last') {
+                        $output['last'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
                     } elseif ($order == '_even') {
                         $output['page'] .= 'even-' . $section . '-name: html_' . $section . $order . ';' . DOKU_LF;
                     } elseif ($order == '_odd') {
@@ -744,8 +748,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         // back page
         $backfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/back.html';
         if (file_exists($backfile)) {
-            $output['back'] = '<pagebreak />';
-            $output['back'] .= file_get_contents($backfile);
+            $output['back'] = file_get_contents($backfile);
             $output['back'] = $this->coreReplace($output['back']);
             $output['back'] = $this->pageDependReplacements($output['back'], $ID);
         }
