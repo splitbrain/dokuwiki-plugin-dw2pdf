@@ -14,9 +14,10 @@ use Mpdf\MpdfException;
  * Export html content to pdf, for different url parameter configurations
  * DokuPDF which extends mPDF is used for generating the pdf from html.
  *
- * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * @author     Luigi Micco <l.micco@tiscali.it>
- * @author     Andreas Gohr <andi@splitbrain.org>
+ * @license GPL 2 (http://www.gnu.org/licenses/gpl.html)
+ * @author  Luigi Micco <l.micco@tiscali.it>
+ * @author  Andreas Gohr <andi@splitbrain.org>
+ * @author  Josquin Dehaene <jo@foobarjo.org>
  */
 class action_plugin_dw2pdf extends ActionPlugin
 {
@@ -26,13 +27,21 @@ class action_plugin_dw2pdf extends ActionPlugin
      * @var array
      */
     protected $exportConfig;
-    /** @var string template name, to use templates from dw2pdf/tpl/<template name> */
+    /**
+     * @var string template name, to use templates from dw2pdf/tpl/<template name> 
+     */
     protected $tpl;
-    /** @var string title of exported pdf */
+    /**
+     * @var string title of exported pdf 
+     */
     protected $title;
-    /** @var array list of pages included in exported pdf */
+    /**
+     * @var array list of pages included in exported pdf 
+     */
     protected $list = [];
-    /** @var bool|string path to temporary cachefile */
+    /**
+     * @var bool|string path to temporary cachefile 
+     */
     protected $onetimefile = false;
     protected $currentBookChapter = 0;
 
@@ -41,7 +50,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     public function __construct()
     {
-        require_once __DIR__ . '/vendor/autoload.php';
+        include_once __DIR__ . '/vendor/autoload.php';
 
         $this->tpl = $this->getExportConfig('template');
     }
@@ -140,7 +149,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      *  - Return a title and selection, throw otherwise an exception
      *  - Check permisions
      *
-     * @param Event $event
+     * @param  Event $event
      * @return array
      * @throws Exception
      */
@@ -204,21 +213,25 @@ class action_plugin_dw2pdf extends ActionPlugin
             // exclude ids
             $excludes = $INPUT->arr('excludes');
             if (!empty($excludes)) {
-                $result = array_filter($result, function ($item) use ($excludes) {
-                    return !in_array($item['id'], $excludes);
-                });
+                $result = array_filter(
+                    $result, function ($item) use ($excludes) {
+                        return !in_array($item['id'], $excludes);
+                    }
+                );
             }
             // exclude namespaces
             $excludesns = $INPUT->arr('excludesns');
             if (!empty($excludesns)) {
-                $result = array_filter($result, function ($item) use ($excludesns) {
-                    foreach ($excludesns as $ns) {
-                        if (strpos($item['id'], $ns . ':') === 0) {
-                            return false;
+                $result = array_filter(
+                    $result, function ($item) use ($excludesns) {
+                        foreach ($excludesns as $ns) {
+                            if (strpos($item['id'], $ns . ':') === 0) {
+                                return false;
+                            }
                         }
+                        return true;
                     }
-                    return true;
-                });
+                );
             }
 
             //sorting
@@ -242,7 +255,9 @@ class action_plugin_dw2pdf extends ActionPlugin
                 }
             }
         } elseif (!empty($_COOKIE['list-pagelist'])) {
-            /** @deprecated  April 2016 replaced by localStorage version of Bookcreator */
+            /**
+ * @deprecated April 2016 replaced by localStorage version of Bookcreator 
+*/
             //is in Bookmanager of bookcreator plugin a title given?
             $title = $INPUT->str('pdfbook_title'); //DEPRECATED
             $title = $INPUT->str('book_title', $title, true);
@@ -253,11 +268,11 @@ class action_plugin_dw2pdf extends ActionPlugin
             $list = explode("|", $_COOKIE['list-pagelist']);
         } elseif ($INPUT->has('selection')) {
             //handle Bookcreator requests based at localStorage
-//            if(!checkSecurityToken()) {
-//                http_status(403);
-//                print $this->getLang('empty');
-//                exit();
-//            }
+            //            if(!checkSecurityToken()) {
+            //                http_status(403);
+            //                print $this->getLang('empty');
+            //                exit();
+            //            }
 
             $list = json_decode($INPUT->str('selection', '', true), true);
             if (!is_array($list) || $list === []) {
@@ -274,7 +289,9 @@ class action_plugin_dw2pdf extends ActionPlugin
             if (plugin_isdisabled('bookcreator')) {
                 throw new Exception($this->getLang('missingbookcreator'));
             }
-            /** @var action_plugin_bookcreator_handleselection $SelectionHandling */
+            /**
+ * @var action_plugin_bookcreator_handleselection $SelectionHandling 
+*/
             $SelectionHandling = plugin_load('action', 'bookcreator_handleselection');
             $savedselection = $SelectionHandling->loadSavedSelection($INPUT->str('savedselection'));
             $title = $savedselection['title'];
@@ -312,7 +329,7 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Prepare cache
      *
-     * @param array $depends (reference) array with dependencies
+     * @param  array $depends (reference) array with dependencies
      * @return cache
      */
     protected function prepareCache(&$depends)
@@ -371,9 +388,9 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Returns the parsed Wikitext in dw2pdf for the given id and revision
      *
-     * @param string $id page id
-     * @param string|int $rev revision timestamp or empty string
-     * @param string $date_at
+     * @param  string     $id      page id
+     * @param  string|int $rev     revision timestamp or empty string
+     * @param  string     $date_at
      * @return null|string
      */
     protected function wikiToDW2PDF($id, $rev = '', $date_at = '')
@@ -405,8 +422,8 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Build a pdf from the html
      *
-     * @param string $cachefile
-     * @param Event $event
+     * @param  string $cachefile
+     * @param  Event  $event
      * @throws MpdfException
      */
     protected function generatePDF($cachefile, $event)
@@ -429,7 +446,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         $watermark = $this->getExportConfig('watermark');
 
         // initialize PDF library
-        require_once(__DIR__ . "/DokuPDF.class.php");
+        include_once __DIR__ . "/DokuPDF.class.php";
 
         $mpdf = new DokuPDF(
             $this->getExportConfig('pagesize'),
@@ -455,7 +472,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         $mpdf->mirrorMargins = $this->getExportConfig('doublesided');
         $mpdf->setAutoTopMargin = 'stretch';
         $mpdf->setAutoBottomMargin = 'stretch';
-//            $mpdf->pagenumSuffix = '/'; //prefix for {nbpg}
+        //            $mpdf->pagenumSuffix = '/'; //prefix for {nbpg}
         if ($hasToC) {
             $mpdf->h2toc = $levels;
         }
@@ -479,7 +496,19 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         $styles = '@page { size:auto; ' . $template['page'] . '}';
         $styles .= '@page :first {' . $template['first'] . '}';
+        // Define headers footers @page rule for each page
+        foreach ($this->list as $page) {
+            $this->defineNamedHeadersAndFooters($mpdf, $page);
+            $cleanPage = str_replace(':', '_', $page); 
 
+            $styles .= '@page ' . $cleanPage . ' { ';
+                $styles .= 'odd-header-name: html_header_odd' . $cleanPage . '; ';
+                $styles .= 'odd-footer-name: html_footer_odd' . $cleanPage . '; ';
+                $styles .= 'even-header-name: html_header_even' . $cleanPage . '; ';
+                $styles .= 'even-footer-name: html_footer_even' . $cleanPage . ';';
+            $styles .= '} ';
+            $styles .= ' div.' . $cleanPage . ' { page: ' . $cleanPage . '; } ';
+        }
         $styles .= '@page landscape-page { size:landscape }';
         $styles .= 'div.dw2pdf-landscape { page:landscape-page }';
         $styles .= '@page portrait-page { size:portrait }';
@@ -510,13 +539,15 @@ class action_plugin_dw2pdf extends ActionPlugin
             //      - first page of ToC starts always at odd page (so eventually an additional blank page
             //        is included before)
             //      - there is no page numbering at the pages of the ToC
-            $mpdf->TOCpagebreakByArray([
+            $mpdf->TOCpagebreakByArray(
+                [
                 'toc-preHTML' => '<h2>' . $this->getLang('tocheader') . '</h2>',
                 'toc-bookmarkText' => $this->getLang('tocheader'),
                 'links' => true,
                 'outdent' => '1em',
                 'pagenumstyle' => '1'
-            ]);
+                ]
+            );
             $html .= '<tocpagebreak>';
         }
 
@@ -532,10 +563,12 @@ class action_plugin_dw2pdf extends ActionPlugin
             if ($pagehtml == '') {
                 continue;
             }
+
             $pagehtml .= $this->pageDependReplacements($template['cite'], $page);
-            if ($counter < $no_pages) {
-                $pagehtml .= '<pagebreak />';
-            }
+
+            $cleanPage = str_replace(':', '_', $page);
+            // Wrap content in a div to apply @page rules
+            $pagehtml = '<div class="' . $cleanPage . '">' . $pagehtml . '</div>';
 
             $mpdf->WriteHTML($pagehtml, 2, false, false); //intermediate body html
             if ($isDebug) {
@@ -566,6 +599,53 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         // write to cache file
         $mpdf->Output($cachefile, 'F');
+    }
+
+    /**
+     * Define named headers and footers dynamically based on the current page.
+     *
+     * @param \Mpdf\Mpdf $mpdf The mPDF instance
+     * @param string     $id   of the current page 
+     */
+    protected function defineNamedHeadersAndFooters($mpdf, $page)
+    {
+        $cleanPage = str_replace(':', '_', $page);
+
+        foreach (['header', 'footer'] as $section) {
+            // Define different variations: normal, odd, even
+            $orders = ['', '_odd', '_even'];
+
+            foreach ($orders as $order) {
+                $file = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/' . $section . $order . '.html';
+
+                if (file_exists($file)) {
+                    $raw = file_get_contents($file);
+                    $processedHtml = $this->coreReplace($raw);
+                    $processedHtml = $this->pageDependReplacements($processedHtml, $page);
+
+                    if ($order === '') {
+                        // Apply to both odd/even if no specific variant
+                        $mpdfNameOdd  = $section . '_odd' . $cleanPage;
+                        $mpdfNameEven = $section . '_even' . $cleanPage;
+
+                        if ($section === 'header') {
+                            $mpdf->DefHTMLHeaderByName($mpdfNameOdd, $processedHtml);
+                            $mpdf->DefHTMLHeaderByName($mpdfNameEven, $processedHtml);
+                        } else {
+                            $mpdf->DefHTMLFooterByName($mpdfNameOdd, $processedHtml);
+                            $mpdf->DefHTMLFooterByName($mpdfNameEven, $processedHtml);
+                        }
+                    } else {
+                        $mpdfName = $section . $order . $cleanPage;
+                        if ($section === 'header') {
+                            $mpdf->DefHTMLHeaderByName($mpdfName, $processedHtml);
+                        } else {
+                            $mpdf->DefHTMLFooterByName($mpdfName, $processedHtml);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -648,6 +728,49 @@ class action_plugin_dw2pdf extends ActionPlugin
             }
         }
 
+        // set HTML element
+        $html = $this->coreReplace($html);
+        //TODO For bookcreator $ID (= bookmanager page) makes no sense
+        $output['html'] = $this->pageDependReplacements($html, $ID);
+
+        // cover page
+        $coverfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/cover.html';
+        if (file_exists($coverfile)) {
+            $output['cover'] = file_get_contents($coverfile);
+            $output['cover'] = $this->coreReplace($output['cover']);
+            $output['cover'] = $this->pageDependReplacements($output['cover'], $ID);
+        }
+
+        // back page
+        $backfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/back.html';
+        if (file_exists($backfile)) {
+            $output['back'] = '<pagebreak />';
+            $output['back'] .= file_get_contents($backfile);
+            $output['back'] = $this->coreReplace($output['back']);
+            $output['back'] = $this->pageDependReplacements($output['back'], $ID);
+        }
+
+        // citation box
+        $citationfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/citation.html';
+        if (file_exists($citationfile)) {
+            $output['cite'] = file_get_contents($citationfile);
+            $output['cite'] = $this->coreReplace($output['cite']);
+        }
+
+        return $output;
+    }
+
+    protected function coreReplace($raw)
+    {
+        global $ID;
+        global $conf;
+        global $INFO;
+
+        // Check if $raw is null or not a string
+        if (!is_string($raw)) {
+            return '';
+        }
+
         // prepare replacements
         $replace = [
             '@PAGE@' => '{PAGENO}',
@@ -663,42 +786,14 @@ class action_plugin_dw2pdf extends ActionPlugin
             '@TPLINC@' => DOKU_INC . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/'
         ];
 
-        // set HTML element
-        $html = str_replace(array_keys($replace), array_values($replace), $html);
-        //TODO For bookcreator $ID (= bookmanager page) makes no sense
-        $output['html'] = $this->pageDependReplacements($html, $ID);
+        $html = str_replace(array_keys($replace), array_values($replace), $raw);
 
-        // cover page
-        $coverfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/cover.html';
-        if (file_exists($coverfile)) {
-            $output['cover'] = file_get_contents($coverfile);
-            $output['cover'] = str_replace(array_keys($replace), array_values($replace), $output['cover']);
-            $output['cover'] = $this->pageDependReplacements($output['cover'], $ID);
-            $output['cover'] .= '<pagebreak />';
-        }
-
-        // cover page
-        $backfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/back.html';
-        if (file_exists($backfile)) {
-            $output['back'] = '<pagebreak />';
-            $output['back'] .= file_get_contents($backfile);
-            $output['back'] = str_replace(array_keys($replace), array_values($replace), $output['back']);
-            $output['back'] = $this->pageDependReplacements($output['back'], $ID);
-        }
-
-        // citation box
-        $citationfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/citation.html';
-        if (file_exists($citationfile)) {
-            $output['cite'] = file_get_contents($citationfile);
-            $output['cite'] = str_replace(array_keys($replace), array_values($replace), $output['cite']);
-        }
-
-        return $output;
+        return $html;
     }
 
     /**
-     * @param string $raw code with placeholders
-     * @param string $id pageid
+     * @param  string $raw code with placeholders
+     * @param  string $id  pageid
      * @return string
      */
     protected function pageDependReplacements($raw, $id)
@@ -756,7 +851,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      * (callback) Replace date by request datestring
      * e.g. '%m(30-11-1975)' is replaced by '11'
      *
-     * @param array $match with [0]=>whole match, [1]=> first subpattern, [2] => second subpattern
+     * @param  array $match with [0]=>whole match, [1]=> first subpattern, [2] => second subpattern
      * @return string
      */
     public function replaceDate($match)
@@ -779,7 +874,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         global $conf;
         //reuse the CSS dispatcher functions without triggering the main function
         define('SIMPLE_TEST', 1);
-        require_once(DOKU_INC . 'lib/exe/css.php');
+        include_once DOKU_INC . 'lib/exe/css.php';
 
         // prepare CSS files
         $files = array_merge(
@@ -883,8 +978,8 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * usort callback to sort by file lastmodified time
      *
-     * @param array $a
-     * @param array $b
+     * @param  array $a
+     * @param  array $b
      * @return int
      */
     public function cbDateSort($a, $b)
@@ -900,8 +995,9 @@ class action_plugin_dw2pdf extends ActionPlugin
 
     /**
      * usort callback to sort by page id
-     * @param array $a
-     * @param array $b
+     *
+     * @param  array $a
+     * @param  array $b
      * @return int
      */
     public function cbPagenameSort($a, $b)
@@ -1035,8 +1131,8 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Returns requested config
      *
-     * @param string $name
-     * @param mixed $notset
+     * @param  string $name
+     * @param  mixed  $notset
      * @return mixed|bool
      */
     public function getExportConfig($name, $notset = false)
@@ -1101,6 +1197,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      * Get the language of the current document
      *
      * Uses the translation plugin if available
+     *
      * @return string
      */
     protected function getDocumentLanguage($pageid)
@@ -1108,7 +1205,9 @@ class action_plugin_dw2pdf extends ActionPlugin
         global $conf;
 
         $lang = $conf['lang'];
-        /** @var helper_plugin_translation $trans */
+        /**
+ * @var helper_plugin_translation $trans 
+*/
         $trans = plugin_load('helper', 'translation');
         if ($trans) {
             $tr = $trans->getLangPart($pageid);
