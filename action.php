@@ -494,14 +494,23 @@ class action_plugin_dw2pdf extends ActionPlugin
             $html .= '<style>';
         }
 
-        $styles = '@page { size:auto; ' . $template['page'] . '}';
+        // use specific header and footer if we are in a book 
+        if (count($this->list) > 1 && $template['book']) {
+                $styles = '@page { size:auto; ' . $template['book'] . '}';
+        } else {
+                $styles = '@page { size:auto; ' . $template['page'] . '}';
+        }
         $styles .= '@page :first {' . $template['first'] . '}';
-        // Define headers footers @page rule for each page
+        $styles .= '@page toc {' . $template['toc'] . '}'; // toc header and footer
+        $styles .= '@page back {' . $template['last'] . '}'; // back header and footer
+        $styles .= 'div.back { page:back }';
+
         foreach ($this->list as $page) {
             $this->defineNamedHeadersAndFooters($mpdf, $page);
             $cleanPage = str_replace(':', '_', $page); 
 
-            $styles .= '@page ' . $cleanPage . ' { ';
+            // Define @page rules for this specific wiki page
+            $styles .= '@page ' . $cleanPage . ' { size:auto; ';
                 $styles .= 'odd-header-name: html_header_odd' . $cleanPage . '; ';
                 $styles .= 'odd-footer-name: html_footer_odd' . $cleanPage . '; ';
                 $styles .= 'even-header-name: html_header_even' . $cleanPage . '; ';
@@ -545,7 +554,8 @@ class action_plugin_dw2pdf extends ActionPlugin
                 'toc-bookmarkText' => $this->getLang('tocheader'),
                 'links' => true,
                 'outdent' => '1em',
-                'pagenumstyle' => '1'
+                'pagenumstyle' => '1',
+                'toc-pageselector' => 'toc'
                 ]
             );
             $html .= '<tocpagebreak>';
@@ -701,13 +711,16 @@ class action_plugin_dw2pdf extends ActionPlugin
             'html' => '',
             'page' => '',
             'first' => '',
+            'last' => '',
+            'toc' => '',
+            'book' => '',
             'cite' => '',
         ];
 
         // prepare header/footer elements
         $html = '';
         foreach (['header', 'footer'] as $section) {
-            foreach (['', '_odd', '_even', '_first'] as $order) {
+            foreach (['', '_odd', '_even', '_first', '_last', '_toc', '_book'] as $order) {
                 $file = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/' . $section . $order . '.html';
                 if (file_exists($file)) {
                     $html .= '<htmlpage' . $section . ' name="' . $section . $order . '">' . DOKU_LF;
@@ -717,6 +730,12 @@ class action_plugin_dw2pdf extends ActionPlugin
                     // register the needed pseudo CSS
                     if ($order == '_first') {
                         $output['first'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
+                    } elseif ($order == '_last') {
+                        $output['last'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
+                    } elseif ($order == '_toc') {
+                        $output['toc'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
+                    } elseif ($order == '_book') {
+                        $output['book'] .= $section . ': html_' . $section . $order . ';' . DOKU_LF;
                     } elseif ($order == '_even') {
                         $output['page'] .= 'even-' . $section . '-name: html_' . $section . $order . ';' . DOKU_LF;
                     } elseif ($order == '_odd') {
@@ -744,8 +763,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         // back page
         $backfile = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/back.html';
         if (file_exists($backfile)) {
-            $output['back'] = '<pagebreak />';
-            $output['back'] .= file_get_contents($backfile);
+            $output['back'] = file_get_contents($backfile);
             $output['back'] = $this->coreReplace($output['back']);
             $output['back'] = $this->pageDependReplacements($output['back'], $ID);
         }
