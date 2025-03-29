@@ -428,7 +428,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     protected function generatePDF($cachefile, $event)
     {
-        global $REV, $INPUT, $DATE_AT;
+        global $REV, $INPUT, $DATE_AT, $REVISIONS;
 
         if ($event->data == 'export_pdf') { //only one page is exported
             $rev = $REV;
@@ -505,6 +505,11 @@ class action_plugin_dw2pdf extends ActionPlugin
         $styles .= '@page back {' . $template['last'] . '}'; // back header and footer
         $styles .= 'div.back { page:back }';
 
+        //structpublish and bookcreator integration
+        if ($INPUT->has('revisions')) {
+            $REVISIONS = json_decode($INPUT->str('revisions', '{}', true), true);
+        }
+
         foreach ($this->list as $page) {
             $this->defineNamedHeadersAndFooters($mpdf, $page);
             $cleanPage = str_replace(':', '_', $page); 
@@ -561,12 +566,19 @@ class action_plugin_dw2pdf extends ActionPlugin
             $html .= '<tocpagebreak>';
         }
 
+
+
         // loop over all pages
         $counter = 0;
         $no_pages = count($this->list);
         foreach ($this->list as $page) {
             $this->currentBookChapter = $counter;
             $counter++;
+
+            //strucpublish and bookcreator integration
+            if (isset($REVISIONS)) {
+                $rev = $REVISIONS[$page];
+            }
 
             $pagehtml = $this->wikiToDW2PDF($page, $rev, $date_at);
             //file doesn't exists
@@ -619,6 +631,13 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     protected function defineNamedHeadersAndFooters($mpdf, $page)
     {
+        global $REV, $REVISIONS;
+
+        //structpublish and bookcreator integration
+        if (isset($REVISIONS)) {
+                $REV = $REVISIONS[$page];
+        }
+
         $cleanPage = str_replace(':', '_', $page);
 
         foreach (['header', 'footer'] as $section) {
@@ -845,7 +864,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         $content = $raw;
 
         // let other plugins define their own replacements
-        $evdata = ['id' => $id, 'replace' => &$replace, 'content' => &$content];
+        $evdata = ['id' => $id, 'rev' => $REV, 'replace' => &$replace, 'content' => &$content];
         $event = new Event('PLUGIN_DW2PDF_REPLACE', $evdata);
         if ($event->advise_before()) {
             $content = str_replace(array_keys($replace), array_values($replace), $raw);
@@ -902,7 +921,7 @@ class action_plugin_dw2pdf extends ActionPlugin
             ],
             $this->cssPluginPDFstyles(),
             [
-                DOKU_PLUGIN . 'dw2pdf/conf/style.css' => DOKU_BASE . 'lib/plugins/dw2pdf/conf/',
+                DOKU_PLUGIN . '$dw2pdf/conf/style.css' => DOKU_BASE . 'lib/plugins/dw2pdf/conf/',
                 DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/style.css' =>
                     DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
                 DOKU_PLUGIN . 'dw2pdf/conf/style.local.css' => DOKU_BASE . 'lib/plugins/dw2pdf/conf/',
