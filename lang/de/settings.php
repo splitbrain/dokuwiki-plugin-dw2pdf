@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author andreash <aeheil@gmail.com>
  * @author Hella <hella.breitkopf@gmail.com>
  * @author Markus <mosesmami0@gmail.com>
  * @author Matthias Schulte <dokuwiki@lupo49.de>
@@ -25,4 +26,5 @@ $lang['output_o_browser']      = 'Im Browser anzeigen';
 $lang['output_o_file']         = 'PDF herunterladen';
 $lang['usecache']              = 'Sollen PDFs zwischengespeichert werden? Eingebettete Grafiken werden dann nicht hinsichtlich ihrer Zugriffsberechtigungen geprüft (sicherheitskritische Option). ';
 $lang['usestyles']             = 'Hier können komma-separiert Plugins angegeben werden, von denen die <code>style.css</code> oder <code>screen.css</code> für die PDF-Generierung verwendet werden sollen. Als Standard wird nur die <code>print.css</code> und <code>pdf.css</code> verwendet.';
+$lang['qrcodescale']           = 'Größenanpassung des eingebetteten QR-Codes. Leer lassen oder <code>0</code> eingeben, um sie zu deaktivieren.';
 $lang['showexportbutton']      = 'Zeige PDF Export Button (nur wenn vom Template unterstützt)';
