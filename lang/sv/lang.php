@@ -13,3 +13,4 @@ $lang['empty']                 = 'Du har inte valt några sidor än.';
 $lang['tocheader']             = 'Innehållsföreteckning';
 $lang['export_ns']             = 'Exportera namnrymd "%s:" till filen %s.pdf';
 $lang['forbidden']             = 'Du har inte tillträde till följande sidor: %s.<br/><br/>Använd inställningen \'Uteslut förbjudna sidor\' för att skapa din bok med de tillgängliga sidorna.';
+$lang['missingbookcreator']    = 'Bokskaparpluginet (Bookcreator) är inte installerat eller är avaktiverat';
