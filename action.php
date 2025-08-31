@@ -467,6 +467,10 @@ class action_plugin_dw2pdf extends ActionPlugin
             $mpdf->showWatermarkText = true;
         }
 
+	if ($this->getExportConfig('useSubstitutions')) {
+		$mpdf->useSubstitutions = true;
+	}
+
         // load the template
         $template = $this->loadTemplate();
 
@@ -1030,6 +1034,8 @@ class action_plugin_dw2pdf extends ActionPlugin
         $this->exportConfig['template'] = $tpl;
 
         $this->exportConfig['isDebug'] = $conf['allowdebug'] && $INPUT->has('debughtml');
+        
+        $this->exportConfig['useSubstitutions'] = $this->getConf('useSubstitutions');
     }
 
     /**
@@ -1095,6 +1101,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         }
 
         array_splice($event->data['items'], -1, 0, [new MenuItem()]);
+        //array_splice($event->data['items'], -1, 0, [new MenuItemNS()]);
     }
 
     /**
