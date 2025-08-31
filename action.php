@@ -184,9 +184,15 @@ class action_plugin_dw2pdf extends ActionPlugin
 
             //sort order
             $order = $INPUT->str('book_order', 'natural', true);
-            $sortoptions = ['pagename', 'date', 'natural'];
+            $sortoptions = ['pagename', 'date', 'natural', 'indexmenu'];
             if (!in_array($order, $sortoptions)) {
                 $order = 'natural';
+            }
+
+            global $indexmenu_mode;
+            $indexmenu_mode = $INPUT->str('mode', 'soft', true);
+            if (!in_array($indexmenu_mode, array('soft', 'strict'))) {
+               $indexmenu_mode = 'soft';
             }
 
             //search depth
@@ -227,6 +233,9 @@ class action_plugin_dw2pdf extends ActionPlugin
                     usort($result, [$this, 'cbDateSort']);
                 } elseif ($order == 'pagename' || $order == 'natural') {
                     usort($result, [$this, 'cbPagenameSort']);
+                }
+                elseif ($order == 'indexmenu') {
+                    usort($result, array($this, 'cbIndexmenuSort'));
                 }
             }
 
@@ -896,6 +905,157 @@ class action_plugin_dw2pdf extends ActionPlugin
             return 1;
         }
         return strcmp($b['id'], $a['id']);
+    }
+
+
+    /**
+     * Returns first different namespaces when comparing two arrays of namespace parts
+     *
+     * @param array $a
+     * @param array $b
+     * @return array
+     */
+    public function getFirstDifferentNs($a, $b) {
+        $countA = count($a);
+        $countB = count($b);
+        $max = max($countA, $countB);
+    
+        for ($i=0; $i < $max - 1; $i++) {
+            $partA = $a[$i] ?: null;
+            $partB = $b[$i] ?: null;
+
+            if ($i === $countA - 1) {
+                return array(null, $partB);
+            }
+            
+            if ($i === $countB - 1) {
+                return array($partA, null);
+            }
+    
+            if ($partA !== $partB) {
+                return array($partA, $partB);
+            }
+        }
+    
+        return array(null, null);
+    }
+    
+    /**
+     * Read indexmenu tag from the given file
+     * @param string $path
+     * @return float|null
+     */
+    public function readIndexmenu($path) {
+        if (!file_exists($path)) {
+            return null;
+        }
+        
+        $f = fopen($path, 'r');
+        $line = fgets($f);
+        fclose($f);
+    
+        preg_match('{{indexmenu_n>(.*?)}}', $line, $matches);
+        if (count($matches) < 2) {
+            return null;
+        }
+    
+        return (float) $matches[1];
+    }
+    
+    /**
+     * usort callback to sort by page indexmenu number. Raises exception if indexmenu tag is not found and indexmenu_mode is strict
+     * @param string $path1
+     * @param string $path2
+     * @return int
+    */
+    public function indexmenuCompare($path1, $path2) {
+        global $indexmenu_mode;    
+        $index1 = $this->readIndexmenu($path1);
+            $index2 = $this->readIndexmenu($path2);
+        
+        if ($indexmenu_mode == 'strict') {
+            if (is_null($index1)) {
+                throw new Exception("File ".$path1." does not exist or does not have indexmenu tag!");
+            }
+
+            if (is_null($index2)) {
+                throw new Exception("File ".$path2." does not exist or does not have indexmenu tag!");
+            }
+        } else {
+            if (is_null($index1) || is_null($index2)) {
+                return strnatcmp($path1, $path2);
+            }
+        }
+            
+        return ($index1 < $index2) ? -1 : 1;
+    }
+
+    /**
+     * Build path to the page file for the given page id
+     * @param array $parts
+     * @param string $ns
+     * @return string
+     */ 
+    public function buildPagePath($parts, $ns=null) {
+        global $conf;
+        $path_prefix = $conf["savedir"]."/pages";
+        array_unshift($parts, $path_prefix);
+    
+        if (is_null($ns)) {
+            $parts[count($parts) - 1] = $parts[count($parts) - 1].".txt";
+            return join("/", $parts);
+        }
+    
+        $path_parts = array();
+        for ($i=0; $i < count($parts); $i++) {
+            $part = $parts[$i];
+    
+            if ($part === $ns) {
+                array_push($path_parts, $part, $conf["start"].".txt");
+                return join("/", $path_parts);
+            }
+    
+            array_push($path_parts, $part);
+        }
+    }
+    
+    /**
+     * usort callback to sort by page indexmenu number
+     * @param array $a
+     * @param array $b
+     * @return int
+    */
+    public function cbIndexmenuSort($a, $b) {
+        global $conf;
+        $partsA = explode(':', $a['id']);
+	    $partsB = explode(':', $b['id']);
+
+	    [$nsA, $nsB] = $this->getFirstDifferentNs($partsA, $partsB);
+
+        // compare pages in the same namespace
+        if (is_null($nsA) && is_null($nsB)) {
+            if ($partsA[count($partsA) - 1] == $conf['start']) return -1;
+            if ($partsB[count($partsB) - 1] == $conf['start']) return 1;
+    
+            $pathA = $this->buildPagePath($partsA);
+            $pathB = $this->buildPagePath($partsB);
+    
+            return $this->indexmenuCompare($pathA, $pathB);
+        }
+    
+        if (is_null($nsA)) {
+            return -1;
+        }
+    
+        if (is_null($nsB)) {
+            return 1;
+        }
+    
+        $pathA = $this->buildPagePath($partsA, $nsA);
+	    $pathB = $this->buildPagePath($partsB, $nsB);
+
+
+        return $this->indexmenuCompare($pathA, $pathB);
     }
 
     /**
