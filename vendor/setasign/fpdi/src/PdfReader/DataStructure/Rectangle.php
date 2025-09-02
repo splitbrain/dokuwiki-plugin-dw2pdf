@@ -1,14 +1,16 @@
 <?php
+
 /**
  * This file is part of FPDI
  *
  * @package   setasign\Fpdi
- * @copyright Copyright (c) 2020 Setasign GmbH & Co. KG (https://www.setasign.com)
+ * @copyright Copyright (c) 2024 Setasign GmbH & Co. KG (https://www.setasign.com)
  * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 
 namespace setasign\Fpdi\PdfReader\DataStructure;
 
+use setasign\Fpdi\Math\Vector;
 use setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException;
 use setasign\Fpdi\PdfParser\PdfParser;
 use setasign\Fpdi\PdfParser\PdfParserException;
@@ -19,8 +21,6 @@ use setasign\Fpdi\PdfParser\Type\PdfTypeException;
 
 /**
  * Class representing a rectangle
- *
- * @package setasign\Fpdi\PdfReader\DataStructure
  */
 class Rectangle
 {
@@ -63,6 +63,11 @@ class Rectangle
         $by = PdfNumeric::ensure(PdfType::resolve($array[3], $parser))->value;
 
         return new self($ax, $ay, $bx, $by);
+    }
+
+    public static function byVectors(Vector $ll, Vector $ur)
+    {
+        return new self($ll->getX(), $ll->getY(), $ur->getX(), $ur->getY());
     }
 
     /**
