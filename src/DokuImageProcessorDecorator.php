@@ -1,6 +1,6 @@
 <?php
 
-namespace dokuwiki\plugin\dw2pdf;
+namespace dokuwiki\plugin\dw2pdf\src;
 
 use Mpdf\Image\ImageProcessor;
 

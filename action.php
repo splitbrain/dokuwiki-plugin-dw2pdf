@@ -5,7 +5,12 @@ use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\plugin\dw2pdf\MenuItem;
+use dokuwiki\plugin\dw2pdf\src\Config;
+use dokuwiki\plugin\dw2pdf\src\DokuPdf;
+use dokuwiki\plugin\dw2pdf\src\Template;
+use dokuwiki\plugin\dw2pdf\src\Writer;
 use dokuwiki\StyleUtils;
+use Mpdf\HTMLParserMode;
 use Mpdf\MpdfException;
 
 /**
@@ -423,20 +428,13 @@ class action_plugin_dw2pdf extends ActionPlugin
         }
 
         //some shortcuts to export settings
-        $hasToC = $this->getExportConfig('hasToC');
-        $levels = $this->getExportConfig('levels');
         $isDebug = $this->getExportConfig('isDebug');
-        $watermark = $this->getExportConfig('watermark');
 
-        // initialize PDF library
-        require_once(__DIR__ . "/DokuPDF.class.php");
+        $config = new Config($this->conf, $this->getDocumentLanguage($this->list[0]));
+        $mpdf = new DokuPDF($config);
+        $template = new Template($this->getConf('template'), $this->getConf('qrcodescale'));
+        $writer = new Writer($mpdf, $template);
 
-        $mpdf = new DokuPDF(
-            $this->getExportConfig('pagesize'),
-            $this->getExportConfig('orientation'),
-            $this->getExportConfig('font-size'),
-            $this->getDocumentLanguage($this->list[0]) //use language of first page
-        );
 
         // let mpdf fix local links
         $self = parse_url(DOKU_URL);
@@ -446,64 +444,12 @@ class action_plugin_dw2pdf extends ActionPlugin
         }
         $mpdf->SetBasePath($url);
 
-        // Set the title
-        $mpdf->SetTitle($this->title);
 
-        // some default document settings
-        //note: double-sided document, starts at an odd page (first page is a right-hand side page)
-        //      single-side document has only odd pages
-        $mpdf->mirrorMargins = $this->getExportConfig('doublesided');
-        $mpdf->setAutoTopMargin = 'stretch';
-        $mpdf->setAutoBottomMargin = 'stretch';
-//            $mpdf->pagenumSuffix = '/'; //prefix for {nbpg}
-        if ($hasToC) {
-            $mpdf->h2toc = $levels;
-        }
-        $mpdf->PageNumSubstitutions[] = ['from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off'];
+        $writer->startDocument($this->title);
+        $writer->cover();
 
-        // Watermarker
-        if ($watermark) {
-            $mpdf->SetWatermarkText($watermark);
-            $mpdf->showWatermarkText = true;
-        }
 
-        // load the template
-        $template = $this->loadTemplate();
-
-        // prepare HTML header styles
-        $html = '';
-        if ($isDebug) {
-            $html .= '<html><head>';
-            $html .= '<style>';
-        }
-
-        $styles = '@page { size:auto; ' . $template['page'] . '}';
-        $styles .= '@page :first {' . $template['first'] . '}';
-
-        $styles .= '@page landscape-page { size:landscape }';
-        $styles .= 'div.dw2pdf-landscape { page:landscape-page }';
-        $styles .= '@page portrait-page { size:portrait }';
-        $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
-        $styles .= $this->loadCSS();
-
-        $mpdf->WriteHTML($styles, 1);
-
-        if ($isDebug) {
-            $html .= $styles;
-            $html .= '</style>';
-            $html .= '</head><body>';
-        }
-
-        $body_start = $template['html'];
-        $body_start .= '<div class="dokuwiki">';
-
-        // insert the cover page
-        $body_start .= $template['cover'];
-
-        $mpdf->WriteHTML($body_start, 2, true, false); //start body html
-        if ($isDebug) {
-            $html .= $body_start;
-        }
+        // FIXME where to move this?
         if ($hasToC) {
             //Note: - for double-sided document the ToC is always on an even number of pages, so that the
             //        following content is on a correct odd/even page
@@ -517,43 +463,24 @@ class action_plugin_dw2pdf extends ActionPlugin
                 'outdent' => '1em',
                 'pagenumstyle' => '1'
             ]);
-            $html .= '<tocpagebreak>';
+
+            $mpdf->WriteHTML('<tocpagebreak>', HTMLParserMode::HTML_BODY, false, false);
         }
 
         // loop over all pages
         $counter = 0;
-        $no_pages = count($this->list);
         foreach ($this->list as $page) {
+            $template->setContext($page, $this->title, $rev, $date_at, $INPUT->server->str('REMOTE_USER', '', true));
+
             $this->currentBookChapter = $counter;
             $counter++;
-
             $pagehtml = $this->wikiToDW2PDF($page, $rev, $date_at);
-            //file doesn't exists
-            if ($pagehtml == '') {
-                continue;
-            }
-            $pagehtml .= $this->pageDependReplacements($template['cite'], $page);
-            if ($counter < $no_pages) {
-                $pagehtml .= '<pagebreak />';
-            }
-
-            $mpdf->WriteHTML($pagehtml, 2, false, false); //intermediate body html
-            if ($isDebug) {
-                $html .= $pagehtml;
-            }
+            $writer->wikiPage($pagehtml);
         }
 
         // insert the back page
-        $body_end = $template['back'];
-
-        $body_end .= '</div>';
-
-        $mpdf->WriteHTML($body_end, 2, false); // finish body html
-        if ($isDebug) {
-            $html .= $body_end;
-            $html .= '</body>';
-            $html .= '</html>';
-        }
+        $writer->back();
+        $writer->endDocument();
 
         //Return html for debugging
         if ($isDebug) {
@@ -616,12 +543,12 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         // this is what we'll return
         $output = [
-            'cover' => '',
-            'back' => '',
-            'html' => '',
-            'page' => '',
-            'first' => '',
-            'cite' => '',
+            'cover' => '', // cover page
+            'back' => '',  // back page
+            'html' => '',  // header/footer html sections
+            'page' => '', // pseudo CSS to register header/footers
+            'first' => '', // pseudo CSS to register first page header/footers
+            'cite' => '', // citation box html
         ];
 
         // prepare header/footer elements
