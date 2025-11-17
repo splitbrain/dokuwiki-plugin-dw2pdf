@@ -427,23 +427,10 @@ class action_plugin_dw2pdf extends ActionPlugin
             $date_at = '';
         }
 
-        //some shortcuts to export settings
-        $isDebug = $this->getExportConfig('isDebug');
-
         $config = new Config($this->conf, $this->getDocumentLanguage($this->list[0]));
         $mpdf = new DokuPDF($config);
         $template = new Template($this->getConf('template'), $this->getConf('qrcodescale'));
-        $writer = new Writer($mpdf, $template);
-
-
-        // let mpdf fix local links
-        $self = parse_url(DOKU_URL);
-        $url = $self['scheme'] . '://' . $self['host'];
-        if (!empty($self['port'])) {
-            $url .= ':' . $self['port'];
-        }
-        $mpdf->SetBasePath($url);
-
+        $writer = new Writer($mpdf, $template, $config->isDebugEnabled());
 
         $writer->startDocument($this->title);
         $writer->cover();
@@ -468,11 +455,9 @@ class action_plugin_dw2pdf extends ActionPlugin
         $writer->endDocument();
 
         //Return html for debugging
-        if ($isDebug) {
-            if ($INPUT->str('debughtml', 'text', true) == 'text') {
-                header('Content-Type: text/plain; charset=utf-8');
-            }
-            echo $html;
+        if ($config->isDebugEnabled()) {
+            header('Content-Type: text/html; charset=utf-8');
+            echo $writer->getDebugHTML();
             exit();
         }
 

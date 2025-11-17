@@ -2,27 +2,37 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
+use dokuwiki\ErrorHandler;
 use Mpdf\HTMLParserMode;
 use Mpdf\MpdfException;
 
-/**
- * @todo handle actual writing in a separate method to allow for centralized error handling and debug writing to HTML
- */
 class Writer
 {
-
+    /** @var DokuPdf Our MPDF instance */
     protected DokuPdf $mpdf;
+
+    /** @var Template The template used */
     protected Template $template;
+
+    /** @var bool Signal to output a page break before the next output */
     protected bool $breakBeforeNext = false;
+
+    /** @var bool Are we debugging? */
+    protected bool $debug = false;
+
+    /** @var string Store HTML when debugging */
+    protected string $debugHTML = '';
 
     /**
      * @param DokuPdf $mpdf
      * @param Template $template
+     * @param bool $debug
      */
-    public function __construct(DokuPdf $mpdf, Template $template)
+    public function __construct(DokuPdf $mpdf, Template $template, bool $debug = false)
     {
         $this->mpdf = $mpdf;
         $this->template = $template;
+        $this->debug = $debug;
     }
 
     /**
@@ -42,10 +52,10 @@ class Writer
         $styles .= '@page portrait-page { size:portrait }';
         $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
         // FIXME$styles .= $this->loadCSS();
-        $this->mpdf->WriteHTML($styles, HTMLParserMode::HEADER_CSS);
+        $this->write($styles, HTMLParserMode::HEADER_CSS);
 
         //start body html
-        $this->mpdf->WriteHTML('<div class="dokuwiki">', HTMLParserMode::HTML_BODY, true, false);
+        $this->write('<div class="dokuwiki">', HTMLParserMode::HTML_BODY, true, false);
     }
 
     /**
@@ -56,7 +66,7 @@ class Writer
      */
     public function pageBreak(): void
     {
-        $this->mpdf->WriteHTML('<pagebreak />', 2, false, false);
+        $this->write('<pagebreak />', 2, false, false);
     }
 
     /**
@@ -72,12 +82,12 @@ class Writer
 
         $this->applyHeaderFooters();
 
-        $this->mpdf->WriteHTML($html, HTMLParserMode::HTML_BODY, false, false);
+        $this->write($html, HTMLParserMode::HTML_BODY, false, false);
 
         // add citation box if any
         $cite = $this->template->getHTML('citation');
         if ($cite) {
-            $this->mpdf->WriteHTML($cite, HTMLParserMode::HTML_BODY, false, false);
+            $this->write($cite, HTMLParserMode::HTML_BODY, false, false);
         }
 
         $this->breakAfterMe();
@@ -106,7 +116,7 @@ class Writer
             'pagenumstyle' => '1'
         ]);
 
-        $this->mpdf->WriteHTML('<tocpagebreak>', HTMLParserMode::HTML_BODY, false, false);
+        $this->write('<tocpagebreak>', HTMLParserMode::HTML_BODY, false, false);
     }
 
     /**
@@ -125,7 +135,7 @@ class Writer
         $html = $this->template->getHTML('cover');
         if (!$html) return;
 
-        $this->mpdf->WriteHTML($html, HTMLParserMode::HTML_BODY, false, false);
+        $this->write($html, HTMLParserMode::HTML_BODY, false, false);
 
         $this->breakAfterMe();
     }
@@ -146,7 +156,7 @@ class Writer
         $html = $this->template->getHTML('back');
         if (!$html) return;
 
-        $this->mpdf->WriteHTML($html, HTMLParserMode::HTML_BODY, false, false);
+        $this->write($html, HTMLParserMode::HTML_BODY, false, false);
     }
 
     /**
@@ -158,7 +168,7 @@ class Writer
     public function endDocument(): void
     {
         // adds the closing div and finalizes the document
-        $this->mpdf->WriteHTML('</div>', HTMLParserMode::HTML_BODY, false, true);
+        $this->write('</div>', HTMLParserMode::HTML_BODY, false, true);
     }
 
     /**
@@ -213,6 +223,7 @@ class Writer
      * Insert a page break if there was previous content
      *
      * @return void
+     * @throws MpdfException
      */
     protected function conditionalPageBreak(): void
     {
@@ -230,5 +241,53 @@ class Writer
     protected function breakAfterMe(): void
     {
         $this->breakBeforeNext = true;
+    }
+
+    /**
+     * Return the debug HTML collected so far
+     *
+     * Will return an empty string if debugging is not enabled.
+     *
+     * @return string The collected debug HTML
+     */
+    public function getDebugHTML(): string
+    {
+        return $this->debugHTML;
+    }
+
+    /**
+     * A wrapper around MPDF::WriteHTML
+     *
+     * When debugging is enabled, the output is written to a debug buffer instead of the PDF.
+     *
+     * @param string $html The HTML code to write
+     * @param int $mode Use HTMLParserMode constants. Controls what parts of the $html code is parsed.
+     * @param bool $init Clears and sets buffers to Top level block etc.
+     * @param bool $close If false leaves buffers etc. in current state, so that it can continue a block etc.
+     * @throws MpdfException
+     */
+    protected function write(
+        string $html,
+        int    $mode = HTMLParserMode::DEFAULT_MODE,
+        bool   $init = true,
+        bool   $close = true
+    )
+    {
+        if (!$this->debug) {
+            try {
+                $this->mpdf->WriteHTML($html, $mode, $init, $close);
+            } catch (MpdfException $e) {
+                ErrorHandler::logException($e); // ensure the issue is logged
+                throw $e;
+            }
+            return;
+        }
+
+        // when debugging, just store the HTML
+        if ($mode === HTMLParserMode::HEADER_CSS) {
+            $this->debugHTML .= "\n<style>\n" . $html . "\n</style>\n";
+        } else {
+            $this->debugHTML .= "\n" . $html . "\n";
+        }
     }
 }

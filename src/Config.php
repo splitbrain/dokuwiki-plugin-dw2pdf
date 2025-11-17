@@ -16,6 +16,7 @@ class Config
     protected string $watermark = '';
     protected string $template = 'default';
     protected string $lang = 'en';
+    protected bool $isDebug = false;
 
     /**
      * @param array $pluginConf Plugin configuration
@@ -72,6 +73,7 @@ class Config
             $this->tocLevels = $this->parseTocLevels($INPUT->str('toclevels'));
         }
         $this->watermark = $INPUT->str('watermark', $this->watermark);
+        $this->isDebug = $INPUT->bool('debug', $this->isDebug);
     }
 
     /**
@@ -82,6 +84,16 @@ class Config
     public function hasToc()
     {
         return $this->hasToC;
+    }
+
+    /**
+     * Check whether debug mode is enabled
+     *
+     * @return bool
+     */
+    public function isDebugEnabled ()
+    {
+        return $this->isDebug;
     }
 
     /**

@@ -39,6 +39,14 @@ class DokuPdf extends Mpdf
         $this->PageNumSubstitutions[] = ['from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off'];
         // add watermark text if configured
         $this->setWatermarkText($config->getWatermarkText());
+
+        // let mpdf fix local links
+        $self = parse_url(DOKU_URL);
+        $url = $self['scheme'] . '://' . $self['host'];
+        if (!empty($self['port'])) {
+            $url .= ':' . $self['port'];
+        }
+        $this->SetBasePath($url);
     }
 
     /**
