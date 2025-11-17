@@ -17,6 +17,7 @@ class Config
     protected string $template = 'default';
     protected string $lang = 'en';
     protected bool $isDebug = false;
+    protected array $useStyles = [];
 
     /**
      * @param array $pluginConf Plugin configuration
@@ -51,6 +52,11 @@ class Config
         if (isset($conf['toclevels'])) $this->tocLevels = $this->parseTocLevels($conf['toclevels']);
         if (isset($conf['maxbookmarks'])) $this->maxBookmarks = (int)$conf['maxbookmarks'];
         if (isset($conf['template'])) $this->template = $conf['template'];
+        if (isset($conf['usestyles'])) {
+            $this->useStyles = explode(',', $conf['usestyles']);
+            $this->useStyles = array_map('trim', $this->useStyles);
+            $this->useStyles = array_filter($this->useStyles);
+        }
     }
 
     /**
@@ -81,7 +87,7 @@ class Config
      *
      * @return bool
      */
-    public function hasToc()
+    public function hasToc(): bool
     {
         return $this->hasToC;
     }
@@ -91,10 +97,31 @@ class Config
      *
      * @return bool
      */
-    public function isDebugEnabled ()
+    public function isDebugEnabled(): bool
     {
         return $this->isDebug;
     }
+
+    /**
+     * Get a list of extensions whose screen styles should be applied
+     *
+     * @return string[]
+     */
+    public function getStyledExtensions(): array
+    {
+        return $this->useStyles;
+    }
+
+    /**
+     * Get the name of the selected template
+     *
+     * @return string
+     */
+    public function getTemplateName(): string
+    {
+        return $this->template;
+    }
+
 
     /**
      * Parses the ToC levels configuration into an array

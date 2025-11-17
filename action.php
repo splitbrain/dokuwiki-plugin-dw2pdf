@@ -7,6 +7,7 @@ use dokuwiki\Extension\EventHandler;
 use dokuwiki\plugin\dw2pdf\MenuItem;
 use dokuwiki\plugin\dw2pdf\src\Config;
 use dokuwiki\plugin\dw2pdf\src\DokuPdf;
+use dokuwiki\plugin\dw2pdf\src\Styles;
 use dokuwiki\plugin\dw2pdf\src\Template;
 use dokuwiki\plugin\dw2pdf\src\Writer;
 use dokuwiki\StyleUtils;
@@ -429,8 +430,9 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         $config = new Config($this->conf, $this->getDocumentLanguage($this->list[0]));
         $mpdf = new DokuPDF($config);
+        $styles = new Styles($config);
         $template = new Template($this->getConf('template'), $this->getConf('qrcodescale'));
-        $writer = new Writer($mpdf, $template, $config->isDebugEnabled());
+        $writer = new Writer($mpdf, $template, $styles, $config->isDebugEnabled());
 
         $writer->startDocument($this->title);
         $writer->cover();
@@ -498,107 +500,6 @@ class action_plugin_dw2pdf extends ActionPlugin
             echo "Could not read file - bad permissions?";
         }
         exit();
-    }
-
-    /**
-     * Load all the style sheets and apply the needed replacements
-     *
-     * @return string css styles
-     */
-    protected function loadCSS()
-    {
-        global $conf;
-        //reuse the CSS dispatcher functions without triggering the main function
-        define('SIMPLE_TEST', 1);
-        require_once(DOKU_INC . 'lib/exe/css.php');
-
-        // prepare CSS files
-        $files = array_merge(
-            [
-                DOKU_INC . 'lib/styles/screen.css' => DOKU_BASE . 'lib/styles/',
-                DOKU_INC . 'lib/styles/print.css' => DOKU_BASE . 'lib/styles/',
-            ],
-            $this->cssPluginPDFstyles(),
-            [
-                DOKU_PLUGIN . 'dw2pdf/conf/style.css' => DOKU_BASE . 'lib/plugins/dw2pdf/conf/',
-                DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->tpl . '/style.css' =>
-                    DOKU_BASE . 'lib/plugins/dw2pdf/tpl/' . $this->tpl . '/',
-                DOKU_PLUGIN . 'dw2pdf/conf/style.local.css' => DOKU_BASE . 'lib/plugins/dw2pdf/conf/',
-            ]
-        );
-        $css = '';
-        foreach ($files as $file => $location) {
-            $display = str_replace(fullpath(DOKU_INC), '', fullpath($file));
-            $css .= "\n/* XXXXXXXXX $display XXXXXXXXX */\n";
-            $css .= css_loadfile($file, $location);
-        }
-
-        // apply pattern replacements
-        if (function_exists('css_styleini')) {
-            // compatiblity layer for pre-Greebo releases of DokuWiki
-            $styleini = css_styleini($conf['template']);
-        } else {
-            // Greebo functionality
-            $styleUtils = new StyleUtils();
-            $styleini = $styleUtils->cssStyleini($conf['template']); // older versions need still the template
-        }
-        $css = css_applystyle($css, $styleini['replacements']);
-
-        // parse less
-        return css_parseless($css);
-    }
-
-    /**
-     * Returns a list of possible Plugin PDF Styles
-     *
-     * Checks for a pdf.css, falls back to print.css
-     *
-     * @author Andreas Gohr <andi@splitbrain.org>
-     */
-    protected function cssPluginPDFstyles()
-    {
-        $list = [];
-        $plugins = plugin_list();
-
-        $usestyle = explode(',', $this->getConf('usestyles'));
-        foreach ($plugins as $p) {
-            if (in_array($p, $usestyle)) {
-                $list[DOKU_PLUGIN . "$p/screen.css"] = DOKU_BASE . "lib/plugins/$p/";
-                $list[DOKU_PLUGIN . "$p/screen.less"] = DOKU_BASE . "lib/plugins/$p/";
-
-                $list[DOKU_PLUGIN . "$p/style.css"] = DOKU_BASE . "lib/plugins/$p/";
-                $list[DOKU_PLUGIN . "$p/style.less"] = DOKU_BASE . "lib/plugins/$p/";
-            }
-
-            $list[DOKU_PLUGIN . "$p/all.css"] = DOKU_BASE . "lib/plugins/$p/";
-            $list[DOKU_PLUGIN . "$p/all.less"] = DOKU_BASE . "lib/plugins/$p/";
-
-            if (file_exists(DOKU_PLUGIN . "$p/pdf.css") || file_exists(DOKU_PLUGIN . "$p/pdf.less")) {
-                $list[DOKU_PLUGIN . "$p/pdf.css"] = DOKU_BASE . "lib/plugins/$p/";
-                $list[DOKU_PLUGIN . "$p/pdf.less"] = DOKU_BASE . "lib/plugins/$p/";
-            } else {
-                $list[DOKU_PLUGIN . "$p/print.css"] = DOKU_BASE . "lib/plugins/$p/";
-                $list[DOKU_PLUGIN . "$p/print.less"] = DOKU_BASE . "lib/plugins/$p/";
-            }
-        }
-
-        // template support
-        foreach (
-            [
-                     'pdf.css',
-                     'pdf.less',
-                     'css/pdf.css',
-                     'css/pdf.less',
-                     'styles/pdf.css',
-                     'styles/pdf.less'
-                 ] as $file
-        ) {
-            if (file_exists(tpl_incdir() . $file)) {
-                $list[tpl_incdir() . $file] = tpl_basedir() . $file;
-            }
-        }
-
-        return $list;
     }
 
     /**

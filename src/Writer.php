@@ -14,6 +14,9 @@ class Writer
     /** @var Template The template used */
     protected Template $template;
 
+    /** @var Styles The style parser */
+    protected Styles $styles;
+
     /** @var bool Signal to output a page break before the next output */
     protected bool $breakBeforeNext = false;
 
@@ -28,10 +31,11 @@ class Writer
      * @param Template $template
      * @param bool $debug
      */
-    public function __construct(DokuPdf $mpdf, Template $template, bool $debug = false)
+    public function __construct(DokuPdf $mpdf, Template $template, Styles $styles, bool $debug = false)
     {
         $this->mpdf = $mpdf;
         $this->template = $template;
+        $this->styles = $styles;
         $this->debug = $debug;
     }
 
@@ -46,12 +50,12 @@ class Writer
     {
         $this->mpdf->SetTitle($title);
 
-        // Set the styles FIXME to be moved into Styles class
+        // Set the styles
         $styles = '@page landscape-page { size:landscape }';
         $styles .= 'div.dw2pdf-landscape { page:landscape-page }';
         $styles .= '@page portrait-page { size:portrait }';
         $styles .= 'div.dw2pdf-portrait { page:portrait-page }';
-        // FIXME$styles .= $this->loadCSS();
+        $styles .= $this->styles->getCSS();
         $this->write($styles, HTMLParserMode::HEADER_CSS);
 
         //start body html
