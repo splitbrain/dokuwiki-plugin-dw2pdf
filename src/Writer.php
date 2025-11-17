@@ -83,11 +83,30 @@ class Writer
         $this->breakAfterMe();
     }
 
-    public function toc(): void
+    /**
+     * Write the Table of Contents
+     *
+     * For double-sided documents the ToC is always on an even number of pages, so that the
+     * following content is on the correct odd/even page.
+     * The first page of ToC starts always at an odd page, so an additional blank page might
+     * be included before.
+     * There is no page numbering at the pages of the ToC.
+     *
+     * @param string $header The header text for the ToC (localized))
+     * @return void
+     * @throws MpdfException
+     */
+    public function toc(string $header): void
     {
-        $this->conditionalPageBreak();
-        // FIXME
-        $this->breakAfterMe();
+        $this->mpdf->TOCpagebreakByArray([
+            'toc-preHTML' => '<h2>' . $header . '</h2>',
+            'toc-bookmarkText' => $header,
+            'links' => true,
+            'outdent' => '1em',
+            'pagenumstyle' => '1'
+        ]);
+
+        $this->mpdf->WriteHTML('<tocpagebreak>', HTMLParserMode::HTML_BODY, false, false);
     }
 
     /**

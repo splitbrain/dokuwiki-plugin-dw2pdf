@@ -74,6 +74,15 @@ class Config
         $this->watermark = $INPUT->str('watermark', $this->watermark);
     }
 
+    /**
+     * Check whether ToC is enabled
+     *
+     * @return bool
+     */
+    public function hasToc()
+    {
+        return $this->hasToC;
+    }
 
     /**
      * Parses the ToC levels configuration into an array

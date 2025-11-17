@@ -448,23 +448,8 @@ class action_plugin_dw2pdf extends ActionPlugin
         $writer->startDocument($this->title);
         $writer->cover();
 
-
-        // FIXME where to move this?
-        if ($hasToC) {
-            //Note: - for double-sided document the ToC is always on an even number of pages, so that the
-            //        following content is on a correct odd/even page
-            //      - first page of ToC starts always at odd page (so eventually an additional blank page
-            //        is included before)
-            //      - there is no page numbering at the pages of the ToC
-            $mpdf->TOCpagebreakByArray([
-                'toc-preHTML' => '<h2>' . $this->getLang('tocheader') . '</h2>',
-                'toc-bookmarkText' => $this->getLang('tocheader'),
-                'links' => true,
-                'outdent' => '1em',
-                'pagenumstyle' => '1'
-            ]);
-
-            $mpdf->WriteHTML('<tocpagebreak>', HTMLParserMode::HTML_BODY, false, false);
+        if($config->hasToC()) {
+            $writer->toc($this->getLang('tocheader'));
         }
 
         // loop over all pages
