@@ -79,7 +79,6 @@ class action_plugin_dw2pdf extends ActionPlugin
     public function register(EventHandler $controller)
     {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'convert');
-        $controller->register_hook('TEMPLATE_PAGETOOLS_DISPLAY', 'BEFORE', $this, 'addbutton');
         $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'addsvgbutton');
     }
 
@@ -474,36 +473,6 @@ class action_plugin_dw2pdf extends ActionPlugin
         }
 
         return $this->exportConfig[$name] ?? $notset;
-    }
-
-    /**
-     * Add 'export pdf'-button to pagetools
-     *
-     * @param Event $event
-     */
-    public function addbutton(Event $event)
-    {
-        global $ID, $REV, $DATE_AT;
-
-        if ($this->getConf('showexportbutton') && $event->data['view'] == 'main') {
-            $params = ['do' => 'export_pdf'];
-            if ($DATE_AT) {
-                $params['at'] = $DATE_AT;
-            } elseif ($REV) {
-                $params['rev'] = $REV;
-            }
-
-            // insert button at position before last (up to top)
-            $event->data['items'] = array_slice($event->data['items'], 0, -1, true) +
-                ['export_pdf' => sprintf(
-                    '<li><a href="%s" class="%s" rel="nofollow" title="%s"><span>%s</span></a></li>',
-                    wl($ID, $params),
-                    'action export_pdf',
-                    $this->getLang('export_pdf_button'),
-                    $this->getLang('export_pdf_button')
-                )] +
-                array_slice($event->data['items'], -1, 1, true);
-        }
     }
 
     /**
