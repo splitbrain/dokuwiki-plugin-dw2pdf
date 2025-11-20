@@ -5,6 +5,7 @@ use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\plugin\dw2pdf\MenuItem;
+use dokuwiki\plugin\dw2pdf\src\CollectorFactory;
 use dokuwiki\plugin\dw2pdf\src\Config;
 use dokuwiki\plugin\dw2pdf\src\DokuPdf;
 use dokuwiki\plugin\dw2pdf\src\Styles;
@@ -152,148 +153,12 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     protected function collectExportablePages(Event $event)
     {
-        global $ID, $REV;
+        global $REV, $DATE_AT;
         global $INPUT;
-        global $conf, $lang;
 
-        // list of one or multiple pages
-        $list = [];
-
-        if ($event->data == 'export_pdf') {
-            if (auth_quickaclcheck($ID) < AUTH_READ) {  // set more specific denied message
-                throw new Exception($lang['accessdenied']);
-            }
-            $list[0] = $ID;
-            $title = $INPUT->str('pdftitle'); //DEPRECATED
-            $title = $INPUT->str('book_title', $title, true);
-            if (empty($title)) {
-                $title = p_get_first_heading($ID);
-            }
-            // use page name if title is still empty
-            if (empty($title)) {
-                $title = noNS($ID);
-            }
-
-            $filename = wikiFN($ID, $REV);
-            if (!file_exists($filename)) {
-                throw new Exception($this->getLang('notexist'));
-            }
-        } elseif ($event->data == 'export_pdfns') {
-            //check input for title and ns
-            if (!$title = $INPUT->str('book_title')) {
-                throw new Exception($this->getLang('needtitle'));
-            }
-            $pdfnamespace = cleanID($INPUT->str('book_ns'));
-            if (!@is_dir(dirname(wikiFN($pdfnamespace . ':dummy')))) {
-                throw new Exception($this->getLang('needns'));
-            }
-
-            //sort order
-            $order = $INPUT->str('book_order', 'natural', true);
-            $sortoptions = ['pagename', 'date', 'natural'];
-            if (!in_array($order, $sortoptions)) {
-                $order = 'natural';
-            }
-
-            //search depth
-            $depth = $INPUT->int('book_nsdepth', 0);
-            if ($depth < 0) {
-                $depth = 0;
-            }
-
-            //page search
-            $result = [];
-            $opts = ['depth' => $depth]; //recursive all levels
-            $dir = utf8_encodeFN(str_replace(':', '/', $pdfnamespace));
-            search($result, $conf['datadir'], 'search_allpages', $opts, $dir);
-
-            // exclude ids
-            $excludes = $INPUT->arr('excludes');
-            if (!empty($excludes)) {
-                $result = array_filter($result, function ($item) use ($excludes) {
-                    return !in_array($item['id'], $excludes);
-                });
-            }
-            // exclude namespaces
-            $excludesns = $INPUT->arr('excludesns');
-            if (!empty($excludesns)) {
-                $result = array_filter($result, function ($item) use ($excludesns) {
-                    foreach ($excludesns as $ns) {
-                        if (strpos($item['id'], $ns . ':') === 0) {
-                            return false;
-                        }
-                    }
-                    return true;
-                });
-            }
-
-            //sorting
-            if (count($result) > 0) {
-                if ($order == 'date') {
-                    usort($result, [$this, 'cbDateSort']);
-                } elseif ($order == 'pagename' || $order == 'natural') {
-                    usort($result, [$this, 'cbPagenameSort']);
-                }
-            }
-
-            foreach ($result as $item) {
-                $list[] = $item['id'];
-            }
-
-            if ($pdfnamespace !== '') {
-                if (!in_array($pdfnamespace . ':' . $conf['start'], $list, true)) {
-                    if (file_exists(wikiFN(rtrim($pdfnamespace, ':')))) {
-                        array_unshift($list, rtrim($pdfnamespace, ':'));
-                    }
-                }
-            }
-        } elseif (!empty($_COOKIE['list-pagelist'])) {
-            /** @deprecated  April 2016 replaced by localStorage version of Bookcreator */
-            //is in Bookmanager of bookcreator plugin a title given?
-            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
-            $title = $INPUT->str('book_title', $title, true);
-            if (empty($title)) {
-                throw new Exception($this->getLang('needtitle'));
-            }
-
-            $list = explode("|", $_COOKIE['list-pagelist']);
-        } elseif ($INPUT->has('selection')) {
-            //handle Bookcreator requests based at localStorage
-//            if(!checkSecurityToken()) {
-//                http_status(403);
-//                print $this->getLang('empty');
-//                exit();
-//            }
-
-            $list = json_decode($INPUT->str('selection', '', true), true);
-            if (!is_array($list) || $list === []) {
-                throw new Exception($this->getLang('empty'));
-            }
-
-            $title = $INPUT->str('pdfbook_title'); //DEPRECATED
-            $title = $INPUT->str('book_title', $title, true);
-            if (empty($title)) {
-                throw new Exception($this->getLang('needtitle'));
-            }
-        } elseif ($INPUT->has('savedselection')) {
-            //export a saved selection of the Bookcreator Plugin
-            if (plugin_isdisabled('bookcreator')) {
-                throw new Exception($this->getLang('missingbookcreator'));
-            }
-            /** @var action_plugin_bookcreator_handleselection $SelectionHandling */
-            $SelectionHandling = plugin_load('action', 'bookcreator_handleselection');
-            $savedselection = $SelectionHandling->loadSavedSelection($INPUT->str('savedselection'));
-            $title = $savedselection['title'];
-            $title = $INPUT->str('book_title', $title, true);
-            $list = $savedselection['selection'];
-
-            if (empty($title)) {
-                throw new Exception($this->getLang('needtitle'));
-            }
-        } else {
-            //show empty bookcreator message
-            throw new Exception($this->getLang('empty'));
-        }
+        $collector = CollectorFactory::create($event->data, $REV, $DATE_AT);
+        $list = $collector->getPages();
+        $title = $collector->getTitle();
 
         $list = array_map('cleanID', $list);
 
