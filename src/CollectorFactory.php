@@ -20,14 +20,14 @@ class CollectorFactory
 
         switch ($event) {
             case 'export_page':
-                return new PageCollector($rev, $at);
+                return new PageCollector($rev);
             case 'export_pdfns':
-                return new NamespaceCollector($rev, $at);
+                return new NamespaceCollector(null, $at); // $at would make sense but is not supported yet
             case 'export_pdfbook':
                 if( $INPUT->has('selection') ) {
-                    return new BookCreatorLiveSelectionCollector($rev, $at);
+                    return new BookCreatorLiveSelectionCollector();
                 } elseif($INPUT->has('savedselection')) {
-                    return new BookCreatorSavedSelectionCollector($rev, $at);
+                    return new BookCreatorSavedSelectionCollector();
                 }
                 // fallthrough
             default:

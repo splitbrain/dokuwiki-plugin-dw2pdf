@@ -15,15 +15,14 @@ class Config
     protected int $maxBookmarks = 5;
     protected string $watermark = '';
     protected string $template = 'default';
-    protected string $lang = 'en';
     protected bool $isDebug = false;
     protected array $useStyles = [];
+    protected float $qrCodeScale = 0.0;
 
     /**
      * @param array $pluginConf Plugin configuration
-     * @param string $lang Document language
      */
-    public function __construct(array $pluginConf = [], string $lang = 'en')
+    public function __construct(array $pluginConf = [])
     {
         global $conf;
         $this->tempDir = $conf['tmpdir'] . '/mpdf';
@@ -32,7 +31,6 @@ class Config
         // set default ToC levels from main config
         $this->tocLevels = $this->parseTocLevels($conf['toptoclevel'] . '-' . $conf['maxtoclevel']);
 
-        $this->lang = $lang;
         $this->loadPluginConfig($pluginConf);
         $this->loadInputConfig();
     }
@@ -57,6 +55,8 @@ class Config
             $this->useStyles = array_map('trim', $this->useStyles);
             $this->useStyles = array_filter($this->useStyles);
         }
+        if (isset($conf['watermark'])) $this->watermark = $conf['watermark']; // FIXME currently not in default config
+        if (isset($conf['qrcodescale'])) $this->qrCodeScale = (float)$conf['qrcodescale'];
     }
 
     /**
@@ -122,6 +122,33 @@ class Config
         return $this->template;
     }
 
+    /**
+     * Get the QR code scale
+     *
+     * @return float
+     */
+    public function getQRScale(): float
+    {
+        return $this->qrCodeScale;
+    }
+
+    /**
+     * Get a unique cache key for the current configuration
+     *
+     * @return string
+     */
+    public function getCacheKey(): string
+    {
+        return join(',', [
+            $this->template,
+            $this->pagesize,
+            $this->isLandscape ? 'L' : 'P',
+            $this->fontSize,
+            $this->isDoublesided ? 'D' : 'S',
+            $this->hasToC ? 'T' : 'N',
+            implode('-', $this->tocLevels)
+        ]);
+    }
 
     /**
      * Parses the ToC levels configuration into an array
@@ -149,26 +176,6 @@ class Config
 
 
     /**
-     * Get the mode to use
-     * @link https://mpdf.github.io/reference/mpdf-functions/construct.html
-     * @link https://mpdf.github.io/reference/mpdf-variables/useadobecjk.html
-     * @todo it might be more sensible to pass a language string instead
-     * @return string
-     */
-    public function getMode(): string
-    {
-        switch ($this->lang) {
-            case 'zh':
-            case 'zh-tw':
-            case 'ja':
-            case 'ko':
-                return '+aCJK';
-            default:
-                return 'UTF-8-s';
-        }
-    }
-
-    /**
      * Return the paper format
      *
      * @return string
@@ -183,22 +190,11 @@ class Config
     }
 
     /**
-     * Return the writing direction based on the set language
+     * Return the watermark text if any
      *
      * @return string
      */
-    public function getDirectionality()
-    {
-        switch ($this->lang) {
-            case 'ar':
-            case 'he':
-                return 'rtl';
-            default:
-                return 'ltr';
-        }
-    }
-
-    public function getWatermarkText()
+    public function getWatermarkText(): string
     {
         return $this->watermark;
     }
@@ -206,7 +202,7 @@ class Config
     /**
      * Get all configuration for mpdf as array
      *
-     * Note: wrtiting direction needs to be set separately
+     * Note: mode and wrtiting direction are set in DokuPDF based on the language
      *
      * @link https://mpdf.github.io/reference/mpdf-variables/overview.html
      * @return array
@@ -214,7 +210,6 @@ class Config
     public function getMPdfConfig(): array
     {
         return [
-            'mode' => $this->getMode(),
             'format' => $this->getFormat(),
             'default_font_size' => $this->fontSize,
             'tempDir' => $this->tempDir,

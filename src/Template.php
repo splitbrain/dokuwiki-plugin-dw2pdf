@@ -32,12 +32,14 @@ class Template
 
 
     /**
-     * @param string $name The name of the template to use
-     * @param float $qrScale The scale of the QR code to generate (0.0 to disable)
+     * Constructor
+     *
+     * @param Config $config The DW2PDF configuration
      */
-    public function __construct(string $name = 'default', float $qrScale = 0.0)
+    public function __construct(Config $config)
     {
-        $this->name = $name;
+        $this->name = $config->getTemplateName();
+        $this->qrScale = $config->getQRScale();
         $this->dir = DOKU_PLUGIN . 'dw2pdf/tpl/' . $this->name;
         if (!is_dir($this->dir)) {
             throw new \RuntimeException("Template directory $this->dir does not exist");
@@ -56,13 +58,13 @@ class Template
      * @param string|null $username The username of the user generating the PDF (if any)
      * @return void
      */
-    public function setContext(string $id, string $title, ?string $rev, ?string $at, ?string $username): void
+    public function setContext(AbstractCollector $collector, string $id, ?string $username): void
     {
         $this->context = [
-            'title' => $title,
+            'title' => $collector->getTitle(),
             'id' => $id,
-            'rev' => $rev ?? '',
-            'at' => $at ?? '',
+            'rev' => $collector->getRev() ?? '',
+            'at' => $collector->getAt() ?? '',
             'username' => $username ?? '',
         ];
     }

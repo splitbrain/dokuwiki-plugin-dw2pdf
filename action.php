@@ -1,18 +1,17 @@
 <?php
 
-use dokuwiki\Cache\Cache;
 use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\plugin\dw2pdf\MenuItem;
+use dokuwiki\plugin\dw2pdf\src\AbstractCollector;
+use dokuwiki\plugin\dw2pdf\src\Cache;
 use dokuwiki\plugin\dw2pdf\src\CollectorFactory;
 use dokuwiki\plugin\dw2pdf\src\Config;
 use dokuwiki\plugin\dw2pdf\src\DokuPdf;
 use dokuwiki\plugin\dw2pdf\src\Styles;
 use dokuwiki\plugin\dw2pdf\src\Template;
 use dokuwiki\plugin\dw2pdf\src\Writer;
-use dokuwiki\StyleUtils;
-use Mpdf\HTMLParserMode;
 use Mpdf\MpdfException;
 
 /**
@@ -27,41 +26,8 @@ use Mpdf\MpdfException;
  */
 class action_plugin_dw2pdf extends ActionPlugin
 {
-    /**
-     * Settings for current export, collected from url param, plugin config, global config
-     *
-     * @var array
-     */
-    protected $exportConfig;
-    /** @var string template name, to use templates from dw2pdf/tpl/<template name> */
-    protected $tpl;
-    /** @var string title of exported pdf */
-    protected $title;
-    /** @var array list of pages included in exported pdf */
-    protected $list = [];
-    /** @var bool|string path to temporary cachefile */
-    protected $onetimefile = false;
+
     protected $currentBookChapter = 0;
-
-    /**
-     * Constructor. Sets the correct template
-     */
-    public function __construct()
-    {
-        require_once __DIR__ . '/vendor/autoload.php';
-
-        $this->tpl = $this->getExportConfig('template');
-    }
-
-    /**
-     * Delete cached files that were for one-time use
-     */
-    public function __destruct()
-    {
-        if ($this->onetimefile) {
-            unlink($this->onetimefile);
-        }
-    }
 
     /**
      * Return the value of currentBookChapter, which is the order of the file to be added in a book generation
@@ -90,7 +56,6 @@ class action_plugin_dw2pdf extends ActionPlugin
     public function convert(Event $event)
     {
         global $REV, $DATE_AT;
-        global $conf, $INPUT;
 
         // our event?
         $allowedEvents = ['export_pdfbook', 'export_pdf', 'export_pdfns'];
@@ -98,145 +63,31 @@ class action_plugin_dw2pdf extends ActionPlugin
             return;
         }
 
-        try {
-            //collect pages and check permissions
-            [$this->title, $this->list] = $this->collectExportablePages($event);
+        $this->loadConfig();
+        $config = new Config($this->conf);
+        $collector = CollectorFactory::create($event->data, $REV, $DATE_AT);
+        $cache = new Cache($config, $collector);
 
-            if ($event->data === 'export_pdf' && ($REV || $DATE_AT)) {
-                $cachefile = tempnam($conf['tmpdir'] . '/dwpdf', 'dw2pdf_');
-                $this->onetimefile = $cachefile;
-                $generateNewPdf = true;
-            } else {
-                // prepare cache and its dependencies
-                $depends = [];
-                $cache = $this->prepareCache($depends);
-                $cachefile = $cache->cache;
-                $generateNewPdf = !$this->getConf('usecache')
-                    || $this->getExportConfig('isDebug')
-                    || !$cache->useCache($depends);
-            }
 
-            // hard work only when no cache available or needed for debugging
-            if ($generateNewPdf) {
-                // generating the pdf may take a long time for larger wikis / namespaces with many pages
-                set_time_limit(0);
-                //may throw Mpdf\MpdfException as well
-                $this->generatePDF($cachefile, $event);
-            }
-        } catch (Exception $e) {
-            if ($INPUT->has('selection')) {
-                http_status(400);
-                echo $e->getMessage();
-                exit();
-            } else {
-                //prevent Action/Export()
-                msg($e->getMessage(), -1);
-                $event->data = 'redirect';
-                return;
+        if (!$cache->useCache()) {
+            // generating the pdf may take a long time for larger wikis / namespaces with many pages
+            set_time_limit(0);
+
+            try {
+                $this->generatePDF($config, $collector, $cache->cache, $event);
+            } catch (Exception $e) {
+                // FIXME should we log here?
+                // FIXME there was special handling for BookCreator with $INPUT->has('selection') before
+                nice_die($e->getMessage());
             }
         }
+
         $event->preventDefault(); // after prevent, $event->data cannot be changed
 
         // deliver the file
-        $this->sendPDFFile($cachefile);  //exits
+        $this->sendPDFFile($cache->cache);  //exits
     }
 
-    /**
-     * Obtain list of pages and title, for different methods of exporting the pdf.
-     *  - Return a title and selection, throw otherwise an exception
-     *  - Check permisions
-     *
-     * @param Event $event
-     * @return array
-     * @throws Exception
-     */
-    protected function collectExportablePages(Event $event)
-    {
-        global $REV, $DATE_AT;
-        global $INPUT;
-
-        $collector = CollectorFactory::create($event->data, $REV, $DATE_AT);
-        $list = $collector->getPages();
-        $title = $collector->getTitle();
-
-        $list = array_map('cleanID', $list);
-
-        $skippedpages = [];
-        foreach ($list as $index => $pageid) {
-            if (auth_quickaclcheck($pageid) < AUTH_READ) {
-                $skippedpages[] = $pageid;
-                unset($list[$index]);
-            }
-        }
-        $list = array_filter($list, 'strlen'); //use of strlen() callback prevents removal of pagename '0'
-
-        //if selection contains forbidden pages throw (overridable) warning
-        if (!$INPUT->bool('book_skipforbiddenpages') && $skippedpages !== []) {
-            $msg = hsc(implode(', ', $skippedpages));
-            throw new Exception(sprintf($this->getLang('forbidden'), $msg));
-        }
-
-        return [$title, $list];
-    }
-
-    /**
-     * Prepare cache
-     *
-     * @param array $depends (reference) array with dependencies
-     * @return cache
-     */
-    protected function prepareCache(&$depends)
-    {
-        global $REV;
-
-        $cachekey = implode(',', $this->list)
-            . $REV
-            . $this->getExportConfig('template')
-            . $this->getExportConfig('pagesize')
-            . $this->getExportConfig('orientation')
-            . $this->getExportConfig('font-size')
-            . $this->getExportConfig('doublesided')
-            . $this->getExportConfig('headernumber')
-            . ($this->getExportConfig('hasToC') ? implode('-', $this->getExportConfig('levels')) : '0')
-            . $this->title;
-        $cache = new Cache($cachekey, '.dw2.pdf');
-
-        $dependencies = [];
-        foreach ($this->list as $pageid) {
-            $relations = p_get_metadata($pageid, 'relation');
-
-            if (is_array($relations)) {
-                if (array_key_exists('media', $relations) && is_array($relations['media'])) {
-                    foreach ($relations['media'] as $mediaid => $exists) {
-                        if ($exists) {
-                            $dependencies[] = mediaFN($mediaid);
-                        }
-                    }
-                }
-
-                if (array_key_exists('haspart', $relations) && is_array($relations['haspart'])) {
-                    foreach ($relations['haspart'] as $part_pageid => $exists) {
-                        if ($exists) {
-                            $dependencies[] = wikiFN($part_pageid);
-                        }
-                    }
-                }
-            }
-
-            $dependencies[] = metaFN($pageid, '.meta');
-        }
-
-        $depends['files'] = array_map('wikiFN', $this->list);
-        $depends['files'][] = __FILE__;
-        $depends['files'][] = __DIR__ . '/renderer.php';
-        $depends['files'][] = __DIR__ . '/mpdf/mpdf.php';
-        $depends['files'] = array_merge(
-            $depends['files'],
-            $dependencies,
-            getConfigFiles('main')
-        );
-        return $cache;
-    }
 
     /**
      * Returns the parsed Wikitext in dw2pdf for the given id and revision
@@ -279,41 +130,28 @@ class action_plugin_dw2pdf extends ActionPlugin
      * @param Event $event
      * @throws MpdfException
      */
-    protected function generatePDF($cachefile, $event)
+    protected function generatePDF(Config $config, AbstractCollector $collector, $cachefile, $event)
     {
         global $REV, $INPUT, $DATE_AT;
 
-        if ($event->data == 'export_pdf') { //only one page is exported
-            $rev = $REV;
-            $date_at = $DATE_AT;
-        } else {
-            //we are exporting entire namespace, ommit revisions
-            $rev = '';
-            $date_at = '';
-        }
-
-        $config = new Config($this->conf, $this->getDocumentLanguage($this->list[0]));
-        $mpdf = new DokuPDF($config);
+        $mpdf = new DokuPDF($config, $collector->getLanguage());
         $styles = new Styles($config);
-        $template = new Template($this->getConf('template'), $this->getConf('qrcodescale'));
+        $template = new Template($config);
         $writer = new Writer($mpdf, $template, $styles, $config->isDebugEnabled());
 
-        $writer->startDocument($this->title);
+        $writer->startDocument($collector->getTitle());
         $writer->cover();
 
-        if($config->hasToC()) {
+        if ($config->hasToC()) {
             $writer->toc($this->getLang('tocheader'));
         }
 
         // loop over all pages
         $counter = 0;
-        foreach ($this->list as $page) {
-            $template->setContext($page, $this->title, $rev, $date_at, $INPUT->server->str('REMOTE_USER', '', true));
-
-            $this->currentBookChapter = $counter;
-            $counter++;
-            $pagehtml = $this->wikiToDW2PDF($page, $rev, $date_at);
-            $writer->wikiPage($pagehtml);
+        foreach ($collector->getPages() as $page) {
+            $template->setContext($collector, $page, $INPUT->server->str('REMOTE_USER', '', true));
+            $this->currentBookChapter = $counter++;  //FIXME I don't like this
+            $writer->renderWikiPage($collector, $page);
         }
 
         // insert the back page
@@ -494,26 +332,5 @@ class action_plugin_dw2pdf extends ActionPlugin
         array_splice($event->data['items'], -1, 0, [new MenuItem()]);
     }
 
-    /**
-     * Get the language of the current document
-     *
-     * Uses the translation plugin if available
-     * @return string
-     */
-    protected function getDocumentLanguage($pageid)
-    {
-        global $conf;
 
-        $lang = $conf['lang'];
-        /** @var helper_plugin_translation $trans */
-        $trans = plugin_load('helper', 'translation');
-        if ($trans) {
-            $tr = $trans->getLangPart($pageid);
-            if ($tr) {
-                $lang = $tr;
-            }
-        }
-
-        return $lang;
-    }
 }

@@ -98,6 +98,41 @@ class Writer
     }
 
     /**
+     * Render and write a wiki page into the PDF
+     *
+     * This caches the rendered page individually (unless a specific revision is requested). So even
+     * when PDF needs to be regenerated, pages that have not changed will be loaded from cache.
+     *
+     * @param AbstractCollector $collector The collector providing the page context
+     * @param string $pageId The page ID to render
+     * @return void
+     * @throws MpdfException
+     */
+    public function renderWikiPage(AbstractCollector $collector, string $pageId): void
+    {
+        $rev = $collector->getRev();
+        $at = $collector->getAt();
+        $file = wikiFN($pageId, );
+
+        //ensure $id is in global $ID (needed for parsing)
+        global $ID;
+        $keep = $ID;
+        $ID = $pageId;
+
+        if ($collector->getRev()) {
+            //no caching on old revisions
+            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $pageId, $rev)), $info, $at);
+        } else {
+            $ret = p_cached_output($file, 'dw2pdf', $pageId);
+        }
+
+        //restore ID (just in case)
+        $ID = $keep;
+
+        $this->wikiPage($ret);
+    }
+
+    /**
      * Write the Table of Contents
      *
      * For double-sided documents the ToC is always on an even number of pages, so that the

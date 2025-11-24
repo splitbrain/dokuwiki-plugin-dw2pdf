@@ -21,18 +21,20 @@ class DokuPdf extends Mpdf
      * DokuPDF constructor.
      *
      * @param Config $config
+     * @param string $lang The language code to use for this document
      * @throws MpdfException
-     * @throws \Exception
      */
-    public function __construct(Config $config)
+    public function __construct(Config $config, string $lang)
     {
 
         // FIXME this needs to be passed differently
         // 'ImageProcessorClass' => DokuImageProcessorDecorator::class,
         // either by monkeypatching the property to protected or via reflection
 
-        parent::__construct($config->getMPdfConfig());
-        $this->SetDirectionality($config->getDirectionality());
+        $initConfig = $config->getMPdfConfig();
+        $initConfig['mode'] = $this->lang2mode($lang);
+        parent::__construct($initConfig);
+        $this->SetDirectionality($this->lang2direction($lang));
 
         // configure page numbering
         // https://mpdf.github.io/paging/page-numbering.html
@@ -60,12 +62,50 @@ class DokuPdf extends Mpdf
     /**
      * Decode all paths, since DokuWiki uses XHTML compliant URLs
      *
-     * @param string $path
-     * @param string $basepath
+     * @inheritdoc
      */
     public function GetFullPath(&$path, $basepath = '')
     {
         $path = htmlspecialchars_decode($path);
         parent::GetFullPath($path, $basepath);
+    }
+
+    /**
+     * Get the mode to use based on the given language
+     *
+     * @link https://mpdf.github.io/reference/mpdf-functions/construct.html
+     * @link https://mpdf.github.io/reference/mpdf-variables/useadobecjk.html
+     * @todo it might be more sensible to pass a language string instead
+     * @param string $lang
+     * @return string
+     */
+    protected function lang2mode(string $lang): string
+    {
+        switch ($lang) {
+            case 'zh':
+            case 'zh-tw':
+            case 'ja':
+            case 'ko':
+                return '+aCJK';
+            default:
+                return 'UTF-8-s';
+        }
+    }
+
+    /**
+     * Return the writing direction based on the set language
+     *
+     * @param string $lang
+     * @return string
+     */
+    protected function lang2direction(string $lang): string
+    {
+        switch ($lang) {
+            case 'ar':
+            case 'he':
+                return 'rtl';
+            default:
+                return 'ltr';
+        }
     }
 }
