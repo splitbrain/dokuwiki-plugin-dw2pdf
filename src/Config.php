@@ -13,6 +13,7 @@ class Config
     protected bool $hasToC = false;
     protected array $tocLevels = [];
     protected int $maxBookmarks = 5;
+    protected bool $numberedHeaders = false;
     protected string $watermark = '';
     protected string $template = 'default';
     protected bool $isDebug = false;
@@ -49,6 +50,7 @@ class Config
         if (isset($conf['toc'])) $this->hasToC = (bool)$conf['toc'];
         if (isset($conf['toclevels'])) $this->tocLevels = $this->parseTocLevels($conf['toclevels']);
         if (isset($conf['maxbookmarks'])) $this->maxBookmarks = (int)$conf['maxbookmarks'];
+        if (isset($conf['headernumber'])) $this->numberedHeaders = (bool)$conf['headernumber'];
         if (isset($conf['template'])) $this->template = $conf['template'];
         if (isset($conf['usestyles'])) {
             $this->useStyles = explode(',', $conf['usestyles']);
@@ -123,6 +125,26 @@ class Config
     }
 
     /**
+     * Get the maximum number of bookmarks to include
+     *
+     * @return int
+     */
+    public function getMaxBookmarks(): int
+    {
+        return $this->maxBookmarks;
+    }
+
+    /**
+     * Check whether numbered headers are to be used
+     *
+     * @return bool
+     */
+    public function useNumberedHeaders(): bool
+    {
+        return $this->numberedHeaders;
+    }
+
+    /**
      * Get the QR code scale
      *
      * @return float
@@ -146,6 +168,8 @@ class Config
             $this->fontSize,
             $this->isDoublesided ? 'D' : 'S',
             $this->hasToC ? 'T' : 'N',
+            $this->maxBookmarks,
+            $this->numberedHeaders ? 'H' : 'N',
             implode('-', $this->tocLevels)
         ]);
     }

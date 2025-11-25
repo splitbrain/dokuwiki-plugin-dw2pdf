@@ -2,6 +2,8 @@
 
 // phpcs:disable: PSR1.Methods.CamelCapsMethodName.NotCamelCaps
 // phpcs:disable: PSR2.Methods.MethodDeclaration.Underscore
+use dokuwiki\plugin\dw2pdf\src\AbstractCollector;
+use dokuwiki\plugin\dw2pdf\src\Config;
 
 /**
  * DokuWiki Plugin dw2pdf (Renderer Component)
@@ -18,35 +20,22 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     private static $header_count = [];
     private static $previous_level = 0;
 
-    /**
-     * Stores action instance
-     *
-     * @var action_plugin_dw2pdf
-     */
-    private $actioninstance;
-
-    /**
-     * load action plugin instance
-     */
-    public function __construct()
-    {
-        $this->actioninstance = plugin_load('action', 'dw2pdf');
-    }
-
     public function document_start()
     {
         global $ID;
 
         parent::document_start();
 
-        //ancher for rewritten links to included pages
+        //anchor for rewritten links to included pages
         $check = false;
         $pid = sectionID($ID, $check);
 
         $this->doc .= "<a name=\"{$pid}__\">";
         $this->doc .= "</a>";
 
-        self::$header_count[1] = $this->actioninstance->getCurrentBookChapter();
+        static $chapter = 0; // FIXME we can probably do without a static here and use a class property
+        $chapter++;
+        self::$header_count[1] = $chapter;
     }
 
     /**
@@ -89,7 +78,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
 
 
         // retrieve numbered headings option
-        $isnumberedheadings = $this->actioninstance->getExportConfig('headernumber');
+        $isnumberedheadings = $this->getConf('headernumber');
 
         $header_prefix = "";
         if ($isnumberedheadings) {
@@ -110,7 +99,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
 
         // add PDF bookmark
         $bookmark = '';
-        $maxbookmarklevel = $this->actioninstance->getExportConfig('maxbookmarks');
+        $maxbookmarklevel = $this->getConf('maxbookmarks');
         // 0: off, 1-6: show down to this level
         if ($maxbookmarklevel && $maxbookmarklevel >= $level) {
             $bookmarklevel = $this->calculateBookmarklevel($level);
@@ -238,21 +227,15 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     /**
      * reformat links if needed
      *
+     * Because the output of this renderer will be cached, but might be part of a larger PDF
+     * including multiple pages, the links are not rewritten here.
+     * Instead they will be rewritten in the created HTML after rendering but before feeding to mPDF.
+     *
      * @param array $link
      * @return string
      */
     public function _formatLink($link)
     {
-
-        // for internal links contains the title the pageid
-        if (in_array($link['title'], $this->actioninstance->getExportedPages())) {
-            [/* url */, $hash] = sexplode('#', $link['url'], 2, '');
-
-            $check = false;
-            $pid = sectionID($link['title'], $check);
-            $link['url'] = "#" . $pid . '__' . $hash;
-        }
-
         // prefix interwiki links with interwiki icon
         if ($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/', $link['class'], $m)) {
             if (file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.png')) {

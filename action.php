@@ -132,12 +132,12 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     protected function generatePDF(Config $config, AbstractCollector $collector, $cachefile, $event)
     {
-        global $REV, $INPUT, $DATE_AT;
+        global $INPUT;
 
         $mpdf = new DokuPDF($config, $collector->getLanguage());
         $styles = new Styles($config);
         $template = new Template($config);
-        $writer = new Writer($mpdf, $template, $styles, $config->isDebugEnabled());
+        $writer = new Writer($mpdf, $config, $template, $styles, $config->isDebugEnabled());
 
         $writer->startDocument($collector->getTitle());
         $writer->cover();

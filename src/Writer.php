@@ -11,6 +11,9 @@ class Writer
     /** @var DokuPdf Our MPDF instance */
     protected DokuPdf $mpdf;
 
+    /** @var Config The configuration */
+    protected Config $config;
+
     /** @var Template The template used */
     protected Template $template;
 
@@ -31,9 +34,10 @@ class Writer
      * @param Template $template
      * @param bool $debug
      */
-    public function __construct(DokuPdf $mpdf, Template $template, Styles $styles, bool $debug = false)
+    public function __construct(DokuPdf $mpdf, Config $config, Template $template, Styles $styles, bool $debug = false)
     {
         $this->mpdf = $mpdf;
+        $this->config = $config;
         $this->template = $template;
         $this->styles = $styles;
         $this->debug = $debug;
@@ -121,15 +125,40 @@ class Writer
 
         if ($collector->getRev()) {
             //no caching on old revisions
-            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $pageId, $rev)), $info, $at);
+            $html = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $pageId, $rev)), $info, $at);
         } else {
-            $ret = p_cached_output($file, 'dw2pdf', $pageId);
+            $html = p_cached_output($file, 'dw2pdf', $pageId);
         }
 
         //restore ID (just in case)
         $ID = $keep;
 
-        $this->wikiPage($ret);
+        // Fix internal links then write the page
+        $html = $this->fixInternalLinks($collector, $html);
+        $this->wikiPage($html);
+    }
+
+    /**
+     * If the given HTML contains internal links to pages that are part of the exported PDF,
+     * fix the links to point to the correct section within the PDF.
+     *
+     * @todo implement
+     * @param AbstractCollector $collector
+     * @param string $html The rendered HTML of the wiki page
+     * @return string
+     */
+    protected function fixInternalLinks(AbstractCollector $collector, string $html): string
+    {
+
+//        // for internal links contains the title the pageid
+//        if (in_array($link['title'], $this->actioninstance->getExportedPages())) {
+//            [/* url */, $hash] = sexplode('#', $link['url'], 2, '');
+//
+//            $check = false;
+//            $pid = sectionID($link['title'], $check);
+//            $link['url'] = "#" . $pid . '__' . $hash;
+//        }
+        return $html;
     }
 
     /**
