@@ -27,16 +27,6 @@ use Mpdf\MpdfException;
 class action_plugin_dw2pdf extends ActionPlugin
 {
 
-    protected $currentBookChapter = 0;
-
-    /**
-     * Return the value of currentBookChapter, which is the order of the file to be added in a book generation
-     */
-    public function getCurrentBookChapter()
-    {
-        return $this->currentBookChapter;
-    }
-
     /**
      * Register the events
      *
@@ -86,41 +76,6 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         // deliver the file
         $this->sendPDFFile($cache->cache);  //exits
-    }
-
-
-    /**
-     * Returns the parsed Wikitext in dw2pdf for the given id and revision
-     *
-     * @param string $id page id
-     * @param string|int $rev revision timestamp or empty string
-     * @param string $date_at
-     * @return null|string
-     */
-    protected function wikiToDW2PDF($id, $rev = '', $date_at = '')
-    {
-        $file = wikiFN($id, $rev);
-
-        if (!file_exists($file)) {
-            return '';
-        }
-
-        //ensure $id is in global $ID (needed for parsing)
-        global $ID;
-        $keep = $ID;
-        $ID = $id;
-
-        if ($rev || $date_at) {
-            //no caching on old revisions
-            $ret = p_render('dw2pdf', p_get_instructions(io_readWikiPage($file, $id, $rev)), $info, $date_at);
-        } else {
-            $ret = p_cached_output($file, 'dw2pdf', $id);
-        }
-
-        //restore ID (just in case)
-        $ID = $keep;
-
-        return $ret;
     }
 
     /**
@@ -204,114 +159,6 @@ class action_plugin_dw2pdf extends ActionPlugin
         exit();
     }
 
-    /**
-     * Returns array of pages which will be included in the exported pdf
-     *
-     * @return array
-     */
-    public function getExportedPages()
-    {
-        return $this->list;
-    }
-
-
-    /**
-     * Collects settings from:
-     *   1. url parameters
-     *   2. plugin config
-     *   3. global config
-     */
-    protected function loadExportConfig()
-    {
-        global $INPUT;
-        global $conf;
-
-        $this->exportConfig = [];
-
-        // decide on the paper setup from param or config
-        $this->exportConfig['pagesize'] = $INPUT->str('pagesize', $this->getConf('pagesize'), true);
-        $this->exportConfig['orientation'] = $INPUT->str('orientation', $this->getConf('orientation'), true);
-
-        // decide on the font-size from param or config
-        $this->exportConfig['font-size'] = $INPUT->str('font-size', $this->getConf('font-size'), true);
-
-        $doublesided = $INPUT->bool('doublesided', (bool)$this->getConf('doublesided'));
-        $this->exportConfig['doublesided'] = $doublesided ? '1' : '0';
-
-        $this->exportConfig['watermark'] = $INPUT->str('watermark', '');
-
-        $hasToC = $INPUT->bool('toc', (bool)$this->getConf('toc'));
-        $levels = [];
-        if ($hasToC) {
-            $toclevels = $INPUT->str('toclevels', $this->getConf('toclevels'), true);
-            [$top_input, $max_input] = array_pad(explode('-', $toclevels, 2), 2, '');
-            [$top_conf, $max_conf] = array_pad(explode('-', $this->getConf('toclevels'), 2), 2, '');
-            $bounds_input = [
-                'top' => [
-                    (int)$top_input,
-                    (int)$top_conf
-                ],
-                'max' => [
-                    (int)$max_input,
-                    (int)$max_conf
-                ]
-            ];
-            $bounds = [
-                'top' => $conf['toptoclevel'],
-                'max' => $conf['maxtoclevel']
-
-            ];
-            foreach ($bounds_input as $bound => $values) {
-                foreach ($values as $value) {
-                    if ($value > 0 && $value <= 5) {
-                        //stop at valid value and store
-                        $bounds[$bound] = $value;
-                        break;
-                    }
-                }
-            }
-
-            if ($bounds['max'] < $bounds['top']) {
-                $bounds['max'] = $bounds['top'];
-            }
-
-            for ($level = $bounds['top']; $level <= $bounds['max']; $level++) {
-                $levels["H$level"] = $level - 1;
-            }
-        }
-        $this->exportConfig['hasToC'] = $hasToC;
-        $this->exportConfig['levels'] = $levels;
-
-        $this->exportConfig['maxbookmarks'] = $INPUT->int('maxbookmarks', $this->getConf('maxbookmarks'), true);
-
-        $tplconf = $this->getConf('template');
-        $tpl = $INPUT->str('tpl', $tplconf, true);
-        if (!is_dir(DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl)) {
-            $tpl = $tplconf;
-        }
-        if (!$tpl) {
-            $tpl = 'default';
-        }
-        $this->exportConfig['template'] = $tpl;
-
-        $this->exportConfig['isDebug'] = $conf['allowdebug'] && $INPUT->has('debughtml');
-    }
-
-    /**
-     * Returns requested config
-     *
-     * @param string $name
-     * @param mixed $notset
-     * @return mixed|bool
-     */
-    public function getExportConfig($name, $notset = false)
-    {
-        if ($this->exportConfig === null) {
-            $this->loadExportConfig();
-        }
-
-        return $this->exportConfig[$name] ?? $notset;
-    }
 
     /**
      * Add 'export pdf' button to page tools, new SVG based mechanism
