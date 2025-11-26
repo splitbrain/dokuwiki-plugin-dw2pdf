@@ -283,11 +283,10 @@ class Writer
      */
     public function back(): void
     {
-        $this->conditionalPageBreak();
-
         $html = $this->template->getHTML('back');
         if (!$html) return;
 
+        $this->conditionalPageBreak();
         $this->write($html, HTMLParserMode::HTML_BODY, false, false);
     }
 
