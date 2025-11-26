@@ -17,7 +17,7 @@ class NamespaceCollector extends AbstractCollector
      * Initialize variables from global input
      *
      * @return void
-     * @throws Exception
+     * @throws \Exception
      */
     protected function initVars(): void
     {
@@ -32,7 +32,7 @@ class NamespaceCollector extends AbstractCollector
 
         // check namespace exists
         $nsdir = dirname(wikiFN($this->namespace . ':dummy'));
-        if (!@is_dir($nsdir)) throw new Exception('needns');
+        if (!@is_dir($nsdir)) throw new \Exception('needns');
     }
 
     /**
@@ -46,7 +46,7 @@ class NamespaceCollector extends AbstractCollector
 
         try {
             $this->initVars();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return [];
         }
 
