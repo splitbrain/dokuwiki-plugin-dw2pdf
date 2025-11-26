@@ -12,9 +12,6 @@ use ReflectionClass;
  */
 class NamespaceCollectorSortTest extends DokuWikiTest
 {
-    /** @var string[] */
-    protected $pluginsEnabled = ['dw2pdf'];
-
     /**
      * Provide a list of page orderings that should remain stable after sorting.
      *
@@ -67,10 +64,10 @@ class NamespaceCollectorSortTest extends DokuWikiTest
     }
 
     /**
-     * @dataProvider providerPageNameSort
+     * Ensure natural name sorting remains stable for multiple namespace scenarios.
      *
+     * @dataProvider providerPageNameSort
      * @param array $expected
-     * @return void
      */
     public function testPagenameSort(array $expected): void
     {
@@ -92,4 +89,3 @@ class NamespaceCollectorSortTest extends DokuWikiTest
         $this->assertSame($prepared, $input);
     }
 }
-
