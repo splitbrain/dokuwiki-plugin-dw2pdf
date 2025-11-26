@@ -54,14 +54,6 @@ class DokuPdf extends Mpdf
     }
 
     /**
-     * Cleanup temp dir
-     */
-    public function __destruct()
-    {
-        // FIXME do we still need to clean up ourselves?
-    }
-
-    /**
      * Decode all paths, since DokuWiki uses XHTML compliant URLs
      *
      * @inheritdoc

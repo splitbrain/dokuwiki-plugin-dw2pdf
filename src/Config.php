@@ -67,7 +67,7 @@ class Config
             $this->useStyles = array_map('trim', $this->useStyles);
             $this->useStyles = array_filter($this->useStyles);
         }
-        if (isset($conf['watermark'])) $this->watermark = $conf['watermark']; // FIXME currently not in default config
+        if (isset($conf['watermark'])) $this->watermark = $conf['watermark'];
         if (isset($conf['qrcodescale'])) $this->qrCodeScale = (float)$conf['qrcodescale'];
     }
 

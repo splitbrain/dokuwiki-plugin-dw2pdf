@@ -8,6 +8,7 @@ $conf['toc']              = 0;
 $conf['toclevels']        = '';
 $conf['headernumber']     = 0;
 $conf['maxbookmarks']     = 5;
+$conf['watermark']        = '';
 $conf['template']         = 'default';
 $conf['output']           = 'file';
 $conf['usecache']         = 1;
