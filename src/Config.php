@@ -20,6 +20,16 @@ class Config
     protected array $useStyles = [];
     protected float $qrCodeScale = 0.0;
 
+    // Collector-specific request data
+    protected ?string $bookTitle = null;
+    protected string $bookNamespace = '';
+    protected string $bookSortOrder = 'natural';
+    protected int $bookNamespaceDepth = 0;
+    protected array $bookExcludePages = [];
+    protected array $bookExcludeNamespaces = [];
+    protected ?string $liveSelection = null;
+    protected ?string $savedSelection = null;
+
     /**
      * @param array $pluginConf Plugin configuration
      */
@@ -82,6 +92,19 @@ class Config
         }
         $this->watermark = $INPUT->str('watermark', $this->watermark);
         $this->isDebug = $INPUT->bool('debug', $this->isDebug);
+
+        $this->bookTitle = $INPUT->str('book_title') ?: null;
+        $this->bookNamespace = cleanID($INPUT->str('book_ns'));
+        $this->bookSortOrder = $INPUT->str('book_order', $this->bookSortOrder, true);
+        $this->bookNamespaceDepth = max(0, $INPUT->int('book_nsdepth', $this->bookNamespaceDepth));
+        $this->bookExcludePages = array_map('cleanID', $INPUT->arr('excludes'));
+        $this->bookExcludeNamespaces = array_map('cleanID', $INPUT->arr('excludesns'));
+
+        $selection = $INPUT->has('selection') ? $INPUT->str('selection', '', true) : null;
+        $this->liveSelection = ($selection !== null && $selection !== '') ? $selection : null;
+
+        $saved = $INPUT->has('savedselection') ? $INPUT->str('savedselection') : null;
+        $this->savedSelection = ($saved !== null && $saved !== '') ? $saved : null;
     }
 
     /**
@@ -251,5 +274,105 @@ class Config
             'ignore_invalid_utf8' => true,
             'tabSpaces' => 4,
         ];
+    }
+
+    /**
+     * Get the requested book title override if provided.
+     *
+     * @return string|null
+     */
+    public function getBookTitle(): ?string
+    {
+        return $this->bookTitle;
+    }
+
+    /**
+     * Get the namespace to export for namespace/book selections.
+     *
+     * @return string
+     */
+    public function getBookNamespace(): string
+    {
+        return $this->bookNamespace;
+    }
+
+    /**
+     * Get the page sort order selected for namespace exports.
+     *
+     * @return string
+     */
+    public function getBookSortOrder(): string
+    {
+        return $this->bookSortOrder;
+    }
+
+    /**
+     * Get the maximum namespace depth to traverse for namespace exports.
+     *
+     * @return int
+     */
+    public function getBookNamespaceDepth(): int
+    {
+        return $this->bookNamespaceDepth;
+    }
+
+    /**
+     * Get the list of explicitly excluded page IDs.
+     *
+     * @return string[]
+     */
+    public function getBookExcludedPages(): array
+    {
+        return $this->bookExcludePages;
+    }
+
+    /**
+     * Get the list of excluded namespaces.
+     *
+     * @return string[]
+     */
+    public function getBookExcludedNamespaces(): array
+    {
+        return $this->bookExcludeNamespaces;
+    }
+
+    /**
+     * Get the raw JSON payload representing a live book selection.
+     *
+     * @return string|null
+     */
+    public function getLiveSelection(): ?string
+    {
+        return $this->liveSelection;
+    }
+
+    /**
+     * Check whether a live selection payload was supplied.
+     *
+     * @return bool
+     */
+    public function hasLiveSelection(): bool
+    {
+        return $this->liveSelection !== null;
+    }
+
+    /**
+     * Get the identifier of a saved book selection.
+     *
+     * @return string|null
+     */
+    public function getSavedSelection(): ?string
+    {
+        return $this->savedSelection;
+    }
+
+    /**
+     * Check whether a saved selection identifier was supplied.
+     *
+     * @return bool
+     */
+    public function hasSavedSelection(): bool
+    {
+        return $this->savedSelection !== null;
     }
 }

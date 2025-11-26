@@ -11,9 +11,8 @@ class BookCreatorLiveSelectionCollector extends AbstractCollector
      */
     protected function collect(): array
     {
-        global $INPUT;
-
-        $selection = $INPUT->str('selection', '', true);
+        $selection = $this->getConfig()->getLiveSelection();
+        if ($selection === null) return [];
         $list = json_decode($selection, true, 512, JSON_THROW_ON_ERROR);
         return (array) $list;
     }

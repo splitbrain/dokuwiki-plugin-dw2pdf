@@ -21,14 +21,14 @@ class NamespaceCollector extends AbstractCollector
      */
     protected function initVars(): void
     {
-        global $INPUT;
+        $config = $this->getConfig();
 
-        $this->namespace = cleanID($INPUT->str('book_ns'));
-        $this->sortorder = $INPUT->str('book_order', 'natural', true);
-        $this->depth = $INPUT->int('book_nsdepth', 0);
+        $this->namespace = $config->getBookNamespace();
+        $this->sortorder = $config->getBookSortOrder();
+        $this->depth = $config->getBookNamespaceDepth();
         if ($this->depth < 0) $this->depth = 0;
-        $this->excludePages = array_map('cleanID', $INPUT->arr('excludes'));
-        $this->excludeNamespaces = array_map('cleanID', $INPUT->arr('excludesns'));
+        $this->excludePages = $config->getBookExcludedPages();
+        $this->excludeNamespaces = $config->getBookExcludedNamespaces();
 
         // check namespace exists
         $nsdir = dirname(wikiFN($this->namespace . ':dummy'));

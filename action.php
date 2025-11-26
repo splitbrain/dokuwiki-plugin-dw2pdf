@@ -45,7 +45,7 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     public function convert(Event $event)
     {
-        global $REV, $DATE_AT;
+        global $REV, $DATE_AT, $INPUT;
 
         // our event?
         $allowedEvents = ['export_pdfbook', 'export_pdf', 'export_pdfns'];
@@ -55,7 +55,7 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         $this->loadConfig();
         $config = new Config($this->conf);
-        $collector = CollectorFactory::create($event->data, ((int) $REV) ?: null, ((int) $DATE_AT) ?: null);
+        $collector = CollectorFactory::create($event->data, $config, ((int) $REV) ?: null, ((int) $DATE_AT) ?: null);
         $cache = new Cache($config, $collector);
 
 

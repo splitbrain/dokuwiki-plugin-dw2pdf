@@ -16,23 +16,33 @@ abstract class AbstractCollector
      * @var int|null
      */
     protected ?int $at;
+    protected Config $config;
 
     /**
      * Constructor
      */
-    public function __construct(?int $rev = null, ?int $at = null)
+    public function __construct(Config $config, ?int $rev = null, ?int $at = null)
     {
-        global $INPUT;
-
+        $this->config = $config;
         $this->rev = $rev;
         $this->at = $at;
-        $this->title = $INPUT->str('book_title');
+        $this->title = $config->getBookTitle() ?? '';
 
         // collected pages are cleaned and checked for read access
         $this->pages = array_filter(
             array_map('cleanID', $this->collect()),
             fn($page) => auth_quickaclcheck($page) >= AUTH_READ
         );
+    }
+
+    /**
+     * Get the combined configuration/request context for this export.
+     *
+     * @return Config
+     */
+    protected function getConfig(): Config
+    {
+        return $this->config;
     }
 
     /**

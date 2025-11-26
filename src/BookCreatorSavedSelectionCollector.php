@@ -11,13 +11,14 @@ class BookCreatorSavedSelectionCollector extends AbstractCollector
      */
     protected function collect(): array
     {
-        global $INPUT;
-
         /** @var action_plugin_bookcreator_handleselection $bcPlugin */
         $bcPlugin = plugin_load('action', 'bookcreator_handleselection');
         if( !$bcPlugin ) return [];
 
-        $savedselection = $bcPlugin->loadSavedSelection($INPUT->str('savedselection'));
+        $savedSelectionId = $this->getConfig()->getSavedSelection();
+        if ($savedSelectionId === null) return [];
+
+        $savedselection = $bcPlugin->loadSavedSelection($savedSelectionId);
         if(!$this->title && !empty($savedselection['title'])) {
             $this->title = $savedselection['title'];
         }
