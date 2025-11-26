@@ -4,6 +4,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
+use Mpdf\Container\SimpleContainer;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 
@@ -26,14 +27,15 @@ class DokuPdf extends Mpdf
      */
     public function __construct(Config $config, string $lang)
     {
-
-        // FIXME this needs to be passed differently
-        // 'ImageProcessorClass' => DokuImageProcessorDecorator::class,
-        // either by monkeypatching the property to protected or via reflection
-
         $initConfig = $config->getMPdfConfig();
         $initConfig['mode'] = $this->lang2mode($lang);
-        parent::__construct($initConfig);
+
+        $container = new SimpleContainer([
+            'httpClient' => new HttpClient(),
+            'localContentLoader' => new LocalContentLoader(),
+        ]);
+
+        parent::__construct($initConfig, $container);
         $this->SetDirectionality($this->lang2direction($lang));
 
         // configure page numbering
