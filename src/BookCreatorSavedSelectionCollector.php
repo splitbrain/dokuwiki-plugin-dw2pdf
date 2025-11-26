@@ -23,6 +23,7 @@ class BookCreatorSavedSelectionCollector extends AbstractCollector
             $this->title = $savedselection['title'];
         }
 
-        return (array) $savedselection['selection'];
+        $list = (array) $savedselection['selection'];
+        return array_filter($list, fn($page) => page_exists($page));
     }
 }

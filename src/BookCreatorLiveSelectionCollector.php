@@ -13,7 +13,7 @@ class BookCreatorLiveSelectionCollector extends AbstractCollector
     {
         $selection = $this->getConfig()->getLiveSelection();
         if ($selection === null) return [];
-        $list = json_decode($selection, true, 512, JSON_THROW_ON_ERROR);
-        return (array) $list;
+        $list = (array)json_decode($selection, true, 512, JSON_THROW_ON_ERROR);
+        return array_filter($list, fn($page) => page_exists($page));
     }
 }

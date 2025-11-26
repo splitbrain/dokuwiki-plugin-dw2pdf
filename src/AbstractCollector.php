@@ -48,6 +48,10 @@ abstract class AbstractCollector
     /**
      * Collect the pages to be included in the PDF
      *
+     * The collected pages will be cleaned and checked for read access automatically.
+     *
+     * This method should check for page existence, though (might depend on $rev/$at).
+     *
      * @return string[] The list of page ids
      */
     abstract protected function collect(): array;
