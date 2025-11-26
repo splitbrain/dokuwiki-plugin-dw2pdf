@@ -18,6 +18,7 @@ class Config
     protected bool $isDebug = false;
     protected array $useStyles = [];
     protected float $qrCodeScale = 0.0;
+    protected string $outputTarget = 'file';
 
     // Collector-specific request data
     protected ?string $bookTitle = null;
@@ -68,6 +69,7 @@ class Config
             $this->useStyles = array_filter($this->useStyles);
         }
         if (isset($conf['watermark'])) $this->watermark = $conf['watermark'];
+        if (isset($conf['output'])) $this->outputTarget = $conf['output'];
         if (isset($conf['qrcodescale'])) $this->qrCodeScale = (float)$conf['qrcodescale'];
     }
 
@@ -92,6 +94,7 @@ class Config
         }
         $this->watermark = $INPUT->str('watermark', $this->watermark);
         $this->isDebug = $INPUT->bool('debug', $this->isDebug);
+        $this->outputTarget = $INPUT->str('outputTarget', $this->outputTarget);
 
         $this->bookTitle = $INPUT->str('book_title') ?: null;
         $this->bookNamespace = cleanID($INPUT->str('book_ns'));
@@ -178,6 +181,16 @@ class Config
     public function getQRScale(): float
     {
         return $this->qrCodeScale;
+    }
+
+    /**
+     * Get desired PDF delivery target (inline or file download)
+     *
+     * @return string
+     */
+    public function getOutputTarget(): string
+    {
+        return $this->outputTarget;
     }
 
     /**

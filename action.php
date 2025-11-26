@@ -4,14 +4,10 @@ use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\plugin\dw2pdf\MenuItem;
-use dokuwiki\plugin\dw2pdf\src\AbstractCollector;
 use dokuwiki\plugin\dw2pdf\src\Cache;
 use dokuwiki\plugin\dw2pdf\src\CollectorFactory;
 use dokuwiki\plugin\dw2pdf\src\Config;
-use dokuwiki\plugin\dw2pdf\src\DokuPdf;
-use dokuwiki\plugin\dw2pdf\src\Styles;
-use dokuwiki\plugin\dw2pdf\src\Template;
-use dokuwiki\plugin\dw2pdf\src\Writer;
+use dokuwiki\plugin\dw2pdf\src\PdfExportService;
 use Mpdf\MpdfException;
 
 /**
@@ -26,7 +22,6 @@ use Mpdf\MpdfException;
  */
 class action_plugin_dw2pdf extends ActionPlugin
 {
-
     /**
      * Register the events
      *
@@ -46,114 +41,32 @@ class action_plugin_dw2pdf extends ActionPlugin
      */
     public function convert(Event $event)
     {
-        global $REV, $DATE_AT;
+        global $REV, $DATE_AT, $INPUT;
 
         // our event?
         $allowedEvents = ['export_pdfbook', 'export_pdf', 'export_pdfns'];
         if (!in_array($event->data, $allowedEvents)) {
             return;
         }
+        $event->preventDefault();
+        $event->stopPropagation();
+
 
         $this->loadConfig();
         $config = new Config($this->conf);
         $collector = CollectorFactory::create($event->data, $config, ((int) $REV) ?: null, ((int) $DATE_AT) ?: null);
         $cache = new Cache($config, $collector);
 
+        $pdfService = new PdfExportService(
+            $config,
+            $collector,
+            $cache,
+            $this->getLang('tocheader'),
+            $INPUT->server->str('REMOTE_USER', '', true)
+        );
 
-        if (!$cache->useCache() || $config->isDebugEnabled()) {
-            // generating the pdf may take a long time for larger wikis / namespaces with many pages
-            set_time_limit(0);
-
-            // Exceptions bubble up and should be handled by DokuWiki
-            $this->generatePDF($config, $collector, $cache->cache, $event);
-            // FIXME there was special handling for BookCreator with $INPUT->has('selection') before
-        }
-
-        $event->preventDefault(); // after prevent, $event->data cannot be changed
-
-        // deliver the file
-        $this->sendPDFFile($cache->cache, $collector->getTitle());  //exits
-    }
-
-    /**
-     * Build a pdf from the html
-     *
-     * @param Config $config
-     * @param AbstractCollector $collector
-     * @param string $cachefile
-     * @throws MpdfException
-     */
-    protected function generatePDF(Config $config, AbstractCollector $collector, string $cachefile)
-    {
-        global $INPUT;
-
-        $mpdf = new DokuPDF($config, $collector->getLanguage());
-        $styles = new Styles($config);
-        $template = new Template($config);
-        $writer = new Writer($mpdf, $config, $template, $styles, $config->isDebugEnabled());
-
-        $writer->startDocument($collector->getTitle());
-        $writer->cover();
-
-        if ($config->hasToC()) {
-            $writer->toc($this->getLang('tocheader'));
-        }
-
-        // loop over all pages
-        foreach ($collector->getPages() as $page) {
-            $template->setContext($collector, $page, $INPUT->server->str('REMOTE_USER', '', true));
-            $writer->renderWikiPage($collector, $page);
-        }
-
-        // insert the back page
-        $writer->back();
-        $writer->endDocument();
-
-        //Return html for debugging
-        if ($config->isDebugEnabled()) {
-            header('Content-Type: text/html; charset=utf-8');
-            echo $writer->getDebugHTML();
-            exit();
-        }
-
-        // write to cache file
-        $mpdf->Output($cachefile, 'F');
-    }
-
-    /**
-     * @param string $cachefile
-     * @param string $title
-     */
-    protected function sendPDFFile(string $cachefile, string $title)
-    {
-        header('Content-Type: application/pdf');
-        header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
-        header('Pragma: public');
-        http_conditionalRequest(filemtime($cachefile));
-        global $INPUT;
-        $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
-
-        $filename = rawurlencode(cleanID(strtr($title, ':/;"', '    ')));
-        if ($outputTarget === 'file') {
-            header('Content-Disposition: attachment; filename="' . $filename . '.pdf";');
-        } else {
-            header('Content-Disposition: inline; filename="' . $filename . '.pdf";');
-        }
-
-        //Bookcreator uses jQuery.fileDownload.js, which requires a cookie.
-        header('Set-Cookie: fileDownload=true; path=/');
-
-        //try to send file, and exit if done
-        http_sendfile($cachefile);
-
-        $fp = @fopen($cachefile, "rb");
-        if ($fp) {
-            http_rangeRequest($fp, filesize($cachefile), 'application/pdf');
-        } else {
-            header("HTTP/1.0 500 Internal Server Error");
-            echo "Could not read file - bad permissions?";
-        }
-        exit();
+        $cacheFile = $pdfService->getPdf(); // dumps HTML when in debug mode and exits
+        $pdfService->sendPdf($cacheFile);  //exits after sending
     }
 
 
