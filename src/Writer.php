@@ -29,6 +29,9 @@ class Writer
     /** @var string Store HTML when debugging */
     protected string $debugHTML = '';
 
+    /** @var false Is this the first page being written? */
+    protected bool $isFirstPage = true;
+
     /**
      * @param DokuPdf $mpdf
      * @param Template $template

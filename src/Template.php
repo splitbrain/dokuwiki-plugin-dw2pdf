@@ -143,7 +143,7 @@ class Template
         ];
         $event = new Event('PLUGIN_DW2PDF_REPLACE', $evdata);
         if ($event->advise_before()) {
-            $content = str_replace(array_keys($replace), array_values($replace), $html);
+            $html = str_replace(array_keys($replace), array_values($replace), $html);
         }
         // plugins may post-process HTML, e.g to clean up unused replacements
         $event->advise_after();
@@ -151,7 +151,14 @@ class Template
         // @DATE(<date>[, <format>])@
         $html = preg_replace_callback(
             '/@DATE\((.*?)(?:,\s*(.*?))?\)@/',
-            [$this, 'replaceDate'],
+            function ($match) {
+                global $conf;
+                //no 2nd argument for default date format
+                if ($match[2] == null) {
+                    $match[2] = $conf['dformat'];
+                }
+                return strftime($match[2], strtotime($match[1]));
+            },
             $html
         );
 

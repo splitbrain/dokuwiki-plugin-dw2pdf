@@ -12,8 +12,10 @@ class Cache extends \dokuwiki\Cache\Cache
     {
         $this->collector = $collector;
 
+        $pages = $collector->getPages();
+        sort($pages);
         $key = join(':', [
-            join(',', sort($collector->getPages())),
+            join(',', $pages),
             $config->getCacheKey(),
             $collector->getTitle(),
         ]);
@@ -55,7 +57,7 @@ class Cache extends \dokuwiki\Cache\Cache
 
         // images and included pages
         $dependencies = [];
-        foreach ($this->list as $pageid) {
+        foreach ($this->collector->getPages() as $pageid) {
             $relations = p_get_metadata($pageid, 'relation');
 
             if (is_array($relations)) {

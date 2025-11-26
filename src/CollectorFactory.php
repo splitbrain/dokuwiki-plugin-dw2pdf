@@ -19,7 +19,7 @@ class CollectorFactory
         global $INPUT;
 
         switch ($event) {
-            case 'export_page':
+            case 'export_pdf':
                 return new PageCollector($rev);
             case 'export_pdfns':
                 return new NamespaceCollector(null, $at); // $at would make sense but is not supported yet

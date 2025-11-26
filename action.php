@@ -55,27 +55,23 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         $this->loadConfig();
         $config = new Config($this->conf);
-        $collector = CollectorFactory::create($event->data, $REV, $DATE_AT);
+        $collector = CollectorFactory::create($event->data, ((int) $REV) ?: null, ((int) $DATE_AT) ?: null);
         $cache = new Cache($config, $collector);
 
 
-        if (!$cache->useCache()) {
+        if (!$cache->useCache() || $config->isDebugEnabled()) {
             // generating the pdf may take a long time for larger wikis / namespaces with many pages
             set_time_limit(0);
 
-            try {
-                $this->generatePDF($config, $collector, $cache->cache, $event);
-            } catch (Exception $e) {
-                // FIXME should we log here?
-                // FIXME there was special handling for BookCreator with $INPUT->has('selection') before
-                nice_die($e->getMessage());
-            }
+            // Exceptions bubble up and should be handled by DokuWiki
+            $this->generatePDF($config, $collector, $cache->cache, $event);
+            // FIXME there was special handling for BookCreator with $INPUT->has('selection') before
         }
 
         $event->preventDefault(); // after prevent, $event->data cannot be changed
 
         // deliver the file
-        $this->sendPDFFile($cache->cache);  //exits
+        $this->sendPDFFile($cache->cache, $collector->getTitle());  //exits
     }
 
     /**
@@ -126,8 +122,9 @@ class action_plugin_dw2pdf extends ActionPlugin
 
     /**
      * @param string $cachefile
+     * @param string $title
      */
-    protected function sendPDFFile($cachefile)
+    protected function sendPDFFile(string $cachefile, string $title)
     {
         header('Content-Type: application/pdf');
         header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
@@ -136,7 +133,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         global $INPUT;
         $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
 
-        $filename = rawurlencode(cleanID(strtr($this->title, ':/;"', '    ')));
+        $filename = rawurlencode(cleanID(strtr($title, ':/;"', '    ')));
         if ($outputTarget === 'file') {
             header('Content-Disposition: attachment; filename="' . $filename . '.pdf";');
         } else {
