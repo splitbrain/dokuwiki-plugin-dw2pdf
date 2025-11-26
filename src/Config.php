@@ -29,6 +29,7 @@ class Config
     protected array $bookExcludeNamespaces = [];
     protected ?string $liveSelection = null;
     protected ?string $savedSelection = null;
+    protected string $exportId = '';
 
     /**
      * @param array $pluginConf Plugin configuration
@@ -80,7 +81,7 @@ class Config
      */
     public function loadInputConfig()
     {
-        global $INPUT;
+        global $INPUT, $ID;
         $this->pagesize = $INPUT->str('pagesize', $this->pagesize);
         if ($INPUT->has('orientation')) {
             $this->isLandscape = $INPUT->str('orientation') === 'landscape';
@@ -105,6 +106,9 @@ class Config
 
         $saved = $INPUT->has('savedselection') ? $INPUT->str('savedselection') : null;
         $this->savedSelection = ($saved !== null && $saved !== '') ? $saved : null;
+
+        $requestID = $INPUT->str('id', $ID ?? '', true);
+        $this->exportId = cleanID($requestID);
     }
 
     /**
@@ -374,5 +378,15 @@ class Config
     public function hasSavedSelection(): bool
     {
         return $this->savedSelection !== null;
+    }
+
+    /**
+     * Get the requested page ID for single page exports.
+     *
+     * @return string
+     */
+    public function getExportId(): string
+    {
+        return $this->exportId;
     }
 }

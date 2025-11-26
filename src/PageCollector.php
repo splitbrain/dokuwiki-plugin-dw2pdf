@@ -8,14 +8,17 @@ class PageCollector extends AbstractCollector
     /** @inheritdoc */
     protected function collect(): array
     {
-        global $ID;
-
-        // no export for non existing page
-        if (!page_exists($ID, $this->rev)) {
+        $exportID = $this->getConfig()->getExportId();
+        if ($exportID === '') {
             return [];
         }
 
-        return [$ID];
+        // no export for non existing page
+        if (!page_exists($exportID, $this->rev)) {
+            return [];
+        }
+
+        return [$exportID];
     }
 
 }
