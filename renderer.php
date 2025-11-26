@@ -236,6 +236,22 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
      */
     public function _formatLink($link)
     {
+        // mark internal wiki links for later processing by the writer
+        if (
+            !empty($link['more']) &&
+            str_contains($link['more'], 'data-wiki-id=')
+        ) {
+            [, $hash] = sexplode('#', $link['url'], 2, '');
+            $target = $link['title'] ?? ''; // for internal links, 'title' holds the target page id
+            if ($target !== '') {
+                $attrs = ['data-dw2pdf-target="' . hsc($target) . '"'];
+                if ($hash !== '') {
+                    $attrs[] = 'data-dw2pdf-hash="' . hsc($hash) . '"';
+                }
+                $link['more'] = trim($link['more'] . ' ' . implode(' ', $attrs));
+            }
+        }
+
         // prefix interwiki links with interwiki icon
         if ($link['name'][0] != '<' && preg_match('/\binterwiki iw_(.\w+)\b/', $link['class'], $m)) {
             if (file_exists(DOKU_INC . 'lib/images/interwiki/' . $m[1] . '.png')) {

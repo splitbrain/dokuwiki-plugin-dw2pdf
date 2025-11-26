@@ -12,6 +12,8 @@
         }
     },
     "require": {
+        "ext-dom": "*",
+        "ext-libxml": "*",
         "mpdf/mpdf": "8.2.*",
         "mpdf/qrcode": "^1.2"
     },

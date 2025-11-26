@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
+use DOMDocument;
 use dokuwiki\ErrorHandler;
 use Mpdf\HTMLParserMode;
 use Mpdf\MpdfException;
@@ -145,23 +146,83 @@ class Writer
      * If the given HTML contains internal links to pages that are part of the exported PDF,
      * fix the links to point to the correct section within the PDF.
      *
-     * @todo implement
      * @param AbstractCollector $collector
      * @param string $html The rendered HTML of the wiki page
      * @return string
      */
     protected function fixInternalLinks(AbstractCollector $collector, string $html): string
     {
+        if ($html === '') return $html;
 
-//        // for internal links contains the title the pageid
-//        if (in_array($link['title'], $this->actioninstance->getExportedPages())) {
-//            [/* url */, $hash] = sexplode('#', $link['url'], 2, '');
-//
-//            $check = false;
-//            $pid = sectionID($link['title'], $check);
-//            $link['url'] = "#" . $pid . '__' . $hash;
-//        }
-        return $html;
+        // quick bail out if the page has no internal link markers
+        if (!str_contains($html, 'data-dw2pdf-target')) {
+            return $html;
+        }
+
+        $pages = $collector->getPages();
+        if ($pages === []) {
+            return $html;
+        }
+        $pages = array_fill_keys($pages, true);
+
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $previous = libxml_use_internal_errors(true);
+        $loaded = $dom->loadHTML(
+            '<?xml encoding="utf-8"?>' . '<div>' . $html . '</div>',
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+        );
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        if (!$loaded) {
+            return $html;
+        }
+
+        $anchors = $dom->getElementsByTagName('a');
+        if ($anchors->length === 0) {
+            return $html;
+        }
+
+        $pageAnchors = [];
+        foreach ($anchors as $anchor) {
+            /** @var \DOMElement $anchor */
+            if (!$anchor->hasAttribute('data-dw2pdf-target')) {
+                continue;
+            }
+
+            $target = $anchor->getAttribute('data-dw2pdf-target');
+            if ($target === '' || !isset($pages[$target])) {
+                $anchor->removeAttribute('data-dw2pdf-target');
+                $anchor->removeAttribute('data-dw2pdf-hash');
+                continue;
+            }
+
+            if (!isset($pageAnchors[$target])) {
+                $check = false;
+                $pageAnchors[$target] = sectionID($target, $check);
+            }
+
+            $hash = $anchor->getAttribute('data-dw2pdf-hash');
+            $anchor->setAttribute(
+                'href',
+                '#' . $pageAnchors[$target] . '__' . $hash
+            );
+
+            $anchor->removeAttribute('data-dw2pdf-target');
+            $anchor->removeAttribute('data-dw2pdf-hash');
+        }
+
+        $wrapper = $dom->getElementsByTagName('div')->item(0);
+        if (!$wrapper) {
+            return $html;
+        }
+
+        $result = '';
+        foreach ($wrapper->childNodes as $node) {
+            $result .= $dom->saveHTML($node);
+        }
+
+        return $result;
     }
 
     /**
