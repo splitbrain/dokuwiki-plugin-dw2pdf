@@ -4,7 +4,6 @@ namespace dokuwiki\plugin\dw2pdf\src;
 
 class Cache extends \dokuwiki\Cache\Cache
 {
-
     protected AbstractCollector $collector;
 
     /** @inheritdoc */
@@ -14,8 +13,8 @@ class Cache extends \dokuwiki\Cache\Cache
 
         $pages = $collector->getPages();
         sort($pages);
-        $key = join(':', [
-            join(',', $pages),
+        $key = implode(':', [
+            implode(',', $pages),
             $config->getCacheKey(),
             $collector->getTitle(),
         ]);

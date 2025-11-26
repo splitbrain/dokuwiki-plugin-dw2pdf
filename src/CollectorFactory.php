@@ -4,7 +4,6 @@ namespace dokuwiki\plugin\dw2pdf\src;
 
 class CollectorFactory
 {
-
     /**
      * Returns the appropriate collector for the given export event
      *
@@ -15,7 +14,7 @@ class CollectorFactory
      * @throws \InvalidArgumentException If the event is not recognized
      * @return AbstractCollector
      */
-    static public function create(string $event, Config $config, ?int $rev, ?int $at)
+    public static function create(string $event, Config $config, ?int $rev, ?int $at)
     {
         switch ($event) {
             case 'export_pdf':
@@ -23,9 +22,9 @@ class CollectorFactory
             case 'export_pdfns':
                 return new NamespaceCollector($config, $rev, $at); // $at would make sense but is not supported yet
             case 'export_pdfbook':
-                if( $config->hasLiveSelection() ) {
+                if ($config->hasLiveSelection()) {
                     return new BookCreatorLiveSelectionCollector($config, $rev, $at);
-                } elseif($config->hasSavedSelection()) {
+                } elseif ($config->hasSavedSelection()) {
                     return new BookCreatorSavedSelectionCollector($config, $rev, $at);
                 }
                 // fallthrough
@@ -33,5 +32,4 @@ class CollectorFactory
                 throw new \InvalidArgumentException('Invalid export configuration');
         }
     }
-
 }

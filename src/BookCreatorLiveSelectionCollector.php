@@ -4,7 +4,6 @@ namespace dokuwiki\plugin\dw2pdf\src;
 
 class BookCreatorLiveSelectionCollector extends AbstractCollector
 {
-
     /**
      * @inheritdoc
      * @throws \JsonException

@@ -26,7 +26,10 @@ use Mpdf\MpdfException;
  */
 class action_plugin_dw2pdf extends ActionPlugin
 {
-
+    /**
+     * @var int
+     */
+    public $currentBookChapter;
     /**
      * Register the events
      *
@@ -175,6 +178,4 @@ class action_plugin_dw2pdf extends ActionPlugin
 
         array_splice($event->data['items'], -1, 0, [new MenuItem()]);
     }
-
-
 }

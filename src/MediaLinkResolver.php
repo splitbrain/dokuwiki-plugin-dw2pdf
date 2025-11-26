@@ -9,7 +9,6 @@ namespace dokuwiki\plugin\dw2pdf\src;
  */
 class MediaLinkResolver
 {
-
     /**
      * Resolve a Dokuwiki media URL or local path to a cached file path.
      *
@@ -28,21 +27,20 @@ class MediaLinkResolver
         if ($mediaID !== null) {
             [$w, $h, $rev] = $this->extractMediaParams($file);
             [$ext, $mime] = mimetype($mediaID);
-            if(!$ext) return null;
+            if (!$ext) return null;
             $localFile = $this->localMediaFile($mediaID, $ext, $rev);
             if (!$localFile) return null;
-            if(strpos($mime, 'image/') === 0) {
+            if (str_starts_with($mime, 'image/')) {
                 $localFile = $this->resizedMedia($localFile, $ext, $w, $h);
             }
         } else {
             [, $mime] = mimetype($file);
-            if (strpos($mime, 'image/') !== 0) return null;
+            if (!str_starts_with($mime, 'image/')) return null;
             $localFile = $this->extractLocalImage($file);
         }
 
         if (!$localFile) return null;
         return ['path' => $localFile, 'mime' => $mime];
-
     }
 
     /**
@@ -171,7 +169,7 @@ class MediaLinkResolver
     protected function extractLocalImage($file)
     {
         $local = null;
-        if (substr($file, 0, 9) === 'dw2pdf://') {
+        if (str_starts_with($file, 'dw2pdf://')) {
             // support local files passed from plugins
             $local = substr($file, 9);
         } elseif (!preg_match('/(\.php|\?)/', $file)) {
@@ -180,8 +178,8 @@ class MediaLinkResolver
             $local = preg_replace("/^$base/i", DOKU_INC, $file, 1);
         }
 
-        if(!file_exists($local)) return null;
-        if(!is_readable($local)) return null;
+        if (!file_exists($local)) return null;
+        if (!is_readable($local)) return null;
 
         return $local;
     }

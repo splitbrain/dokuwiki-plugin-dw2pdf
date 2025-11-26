@@ -6,8 +6,6 @@ use dokuwiki\StyleUtils;
 
 class Styles
 {
-
-
     protected Config $config;
 
     /**
@@ -127,5 +125,4 @@ class Styles
 
         return $list;
     }
-
 }

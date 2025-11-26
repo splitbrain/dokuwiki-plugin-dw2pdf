@@ -64,7 +64,7 @@ class NamespaceCollector extends AbstractCollector
         // Sort pages, let plugins modify sorting
         $eventData = ['pages' => &$result, 'sort' => $this->sortorder];
         $event = new Event('DW2PDF_NAMESPACEEXPORT_SORT', $eventData);
-        if($event->advise_before()) {
+        if ($event->advise_before()) {
             $result = $this->sortPages($result);
         }
         $event->advise_after();
@@ -92,12 +92,10 @@ class NamespaceCollector extends AbstractCollector
      */
     protected function excludePages(array $pages)
     {
-        $pages = array_filter($pages, function ($page) {
-            return !in_array($page['id'], $this->excludePages);
-        });
+        $pages = array_filter($pages, fn($page) => !in_array($page['id'], $this->excludePages));
         $pages = array_filter($pages, function ($page) {
             foreach ($this->excludeNamespaces as $ns) {
-                if (strpos($page['id'], $ns . ':') === 0) {
+                if (str_starts_with($page['id'], $ns . ':')) {
                     return false;
                 }
             }

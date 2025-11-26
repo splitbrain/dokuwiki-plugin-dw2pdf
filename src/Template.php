@@ -108,7 +108,7 @@ class Template
         global $conf;
 
         $params = [];
-        if(!empty($this->context['at'])) {
+        if (!empty($this->context['at'])) {
             $params['at'] = $this->context['at'];
         } elseif (!empty($this->context['rev'])) {
             $params['rev'] = $this->context['rev'];

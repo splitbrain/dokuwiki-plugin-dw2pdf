@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
+use Psr\Http\Message\UriInterface;
 use dokuwiki\HTTP\DokuHTTPClient;
 use Mpdf\Http\ClientInterface;
 use Mpdf\PsrHttpMessageShim\Response;
@@ -27,9 +28,6 @@ class HttpClient implements ClientInterface, LoggerAwareInterface
     public function sendRequest(RequestInterface $request)
     {
         $uri = $request->getUri();
-        if ($uri === null) {
-            return new Response();
-        }
 
         $url = (string)$uri;
 
@@ -56,7 +54,7 @@ class HttpClient implements ClientInterface, LoggerAwareInterface
         }
 
         $method = strtoupper($request->getMethod());
-        $success = $client->sendRequest($url, $body, $method);
+        $client->sendRequest($url, $body, $method);
 
         $response = (new Response())->withStatus($client->status ?: 500);
 

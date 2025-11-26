@@ -4,7 +4,6 @@ namespace dokuwiki\plugin\dw2pdf\src;
 
 class PageCollector extends AbstractCollector
 {
-
     /** @inheritdoc */
     protected function collect(): array
     {
@@ -20,5 +19,4 @@ class PageCollector extends AbstractCollector
 
         return [$exportID];
     }
-
 }

@@ -120,7 +120,7 @@ class Writer
     {
         $rev = $collector->getRev();
         $at = $collector->getAt();
-        $file = wikiFN($pageId, );
+        $file = wikiFN($pageId,);
 
         //ensure $id is in global $ID (needed for parsing)
         global $ID;
@@ -399,11 +399,10 @@ class Writer
      */
     protected function write(
         string $html,
-        int    $mode = HTMLParserMode::DEFAULT_MODE,
-        bool   $init = true,
-        bool   $close = true
-    )
-    {
+        int $mode = HTMLParserMode::DEFAULT_MODE,
+        bool $init = true,
+        bool $close = true
+    ) {
         if (!$this->debug) {
             try {
                 $this->mpdf->WriteHTML($html, $mode, $init, $close);

@@ -18,7 +18,8 @@ class LocalContentLoader implements LocalContentLoaderInterface
     public function load($path)
     {
         // try to translate URLs and fetch.php calls into local cache files
-        $resolved = $resolved = (new MediaLinkResolver())->resolve($path);;
+        $resolved = (new MediaLinkResolver())->resolve($path);
+        ;
         if ($resolved) {
             $path = $resolved['path'];
         }

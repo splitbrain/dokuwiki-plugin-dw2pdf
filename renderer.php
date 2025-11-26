@@ -276,7 +276,6 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
      * no obfuscation for email addresses
      *
      * @param string $address
-     * @param null $name
      * @param bool $returnonly
      * @return string|void
      */

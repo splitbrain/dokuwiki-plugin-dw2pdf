@@ -4,7 +4,6 @@ namespace dokuwiki\plugin\dw2pdf\src;
 
 class Config
 {
-
     protected string $tempDir = '';
     protected string $pagesize = 'A4';
     protected bool $isLandscape = false;
@@ -188,7 +187,7 @@ class Config
      */
     public function getCacheKey(): string
     {
-        return join(',', [
+        return implode(',', [
             $this->template,
             $this->pagesize,
             $this->isLandscape ? 'L' : 'P',
