@@ -26,10 +26,7 @@ use Mpdf\MpdfException;
  */
 class action_plugin_dw2pdf extends ActionPlugin
 {
-    /**
-     * @var int
-     */
-    public $currentBookChapter;
+
     /**
      * Register the events
      *
@@ -45,10 +42,11 @@ class action_plugin_dw2pdf extends ActionPlugin
      * Do the HTML to PDF conversion work
      *
      * @param Event $event
+     * @throws MpdfException
      */
     public function convert(Event $event)
     {
-        global $REV, $DATE_AT, $INPUT;
+        global $REV, $DATE_AT;
 
         // our event?
         $allowedEvents = ['export_pdfbook', 'export_pdf', 'export_pdfns'];
@@ -80,11 +78,12 @@ class action_plugin_dw2pdf extends ActionPlugin
     /**
      * Build a pdf from the html
      *
+     * @param Config $config
+     * @param AbstractCollector $collector
      * @param string $cachefile
-     * @param Event $event
      * @throws MpdfException
      */
-    protected function generatePDF(Config $config, AbstractCollector $collector, $cachefile, $event)
+    protected function generatePDF(Config $config, AbstractCollector $collector, string $cachefile)
     {
         global $INPUT;
 
@@ -101,10 +100,8 @@ class action_plugin_dw2pdf extends ActionPlugin
         }
 
         // loop over all pages
-        $counter = 0;
         foreach ($collector->getPages() as $page) {
             $template->setContext($collector, $page, $INPUT->server->str('REMOTE_USER', '', true));
-            $this->currentBookChapter = $counter++;  //FIXME I don't like this
             $writer->renderWikiPage($collector, $page);
         }
 
