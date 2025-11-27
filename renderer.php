@@ -20,6 +20,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     private $header_count = [];
     private $previous_level = 0;
     private int $chapter = 0;
+    private ?Config $config;
 
     /**
      * The Writer will reinitialize the renderer for each export, but the object will be reused within one export.
@@ -31,9 +32,24 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
         return true;
     }
 
+    /**
+     * Set the active configuration
+     *
+     * @param Config $config
+     * @return void
+     */
+    public function setConfig(Config $config): void
+    {
+        $this->config = $config;
+    }
+
     public function document_start()
     {
         global $ID;
+
+        if($this->config === null) {
+            throw new RuntimeException('DW2PDF Renderer configuration not set');
+        }
 
         parent::document_start();
 
@@ -89,7 +105,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
 
 
         // retrieve numbered headings option
-        $isnumberedheadings = $this->getConf('headernumber');
+        $isnumberedheadings = $this->config->useNumberedHeaders();
 
         $header_prefix = '';
         if ($isnumberedheadings) {
@@ -113,7 +129,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
 
         // add PDF bookmark
         $bookmark = '';
-        $maxbookmarklevel = $this->getConf('maxbookmarks');
+        $maxbookmarklevel = $this->config->getMaxBookmarks();
         // 0: off, 1-6: show down to this level
         if ($maxbookmarklevel && $maxbookmarklevel >= $level) {
             $bookmarklevel = $this->calculateBookmarklevel($level);

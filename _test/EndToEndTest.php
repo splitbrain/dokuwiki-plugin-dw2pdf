@@ -59,8 +59,6 @@ class EndToEndTest extends \DokuWikiTest
      */
     public function testNumberedHeaders(): void
     {
-        global $conf;
-        $conf['plugin']['dw2pdf']['headernumber'] = 1; // Currently Config values are not passed to the renderer
         $html = $this->getDebugHTML('headers', ['headernumber' => 1]);
 
         $dom = (new Document())->html($html);
@@ -85,8 +83,6 @@ class EndToEndTest extends \DokuWikiTest
      */
     public function testNumberedHeadersMultipage(): void
     {
-        global $conf;
-        $conf['plugin']['dw2pdf']['headernumber'] = 1; // Currently Config values are not passed to the renderer
         $html = $this->getDebugHTML(['headers', 'simple'], ['headernumber' => 1]);
 
         $dom = (new Document())->html($html);
