@@ -91,9 +91,7 @@ class Writer
     public function wikiPage(string $html): void
     {
         $this->conditionalPageBreak();
-
         $this->applyHeaderFooters();
-
         $this->write($html, HTMLParserMode::HTML_BODY, false, false);
 
         // add citation box if any
@@ -262,11 +260,11 @@ class Writer
      */
     public function cover(): void
     {
-        $this->conditionalPageBreak();
-
         $html = $this->template->getHTML('cover');
         if (!$html) return;
 
+        $this->conditionalPageBreak();
+        $this->applyHeaderFooters();
         $this->write($html, HTMLParserMode::HTML_BODY, false, false);
 
         $this->breakAfterMe();

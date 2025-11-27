@@ -93,6 +93,7 @@ class Config
             $this->tocLevels = $this->parseTocLevels($INPUT->str('toclevels'));
         }
         $this->watermark = $INPUT->str('watermark', $this->watermark);
+        $this->template = $INPUT->str('tpl', $this->template, true);
         $this->isDebug = $INPUT->bool('debug', $this->isDebug);
         $this->outputTarget = $INPUT->str('outputTarget', $this->outputTarget);
 
@@ -265,7 +266,7 @@ class Config
     /**
      * Get all configuration for mpdf as array
      *
-     * Note: mode and wrtiting direction are set in DokuPDF based on the language
+     * Note: mode and writing direction are set in DokuPDF based on the language
      *
      * @link https://mpdf.github.io/reference/mpdf-variables/overview.html
      * @return array
