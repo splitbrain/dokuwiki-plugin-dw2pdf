@@ -36,15 +36,15 @@ class Writer
     /**
      * @param DokuPdf $mpdf
      * @param Template $template
-     * @param bool $debug
+     * @param Styles $styles
      */
-    public function __construct(DokuPdf $mpdf, Config $config, Template $template, Styles $styles, bool $debug = false)
+    public function __construct(DokuPdf $mpdf, Config $config, Template $template, Styles $styles)
     {
         $this->mpdf = $mpdf;
         $this->config = $config;
         $this->template = $template;
         $this->styles = $styles;
-        $this->debug = $debug;
+        $this->debug = $config->isDebugEnabled();
     }
 
     /**
@@ -382,6 +382,18 @@ class Writer
     public function getDebugHTML(): string
     {
         return $this->debugHTML;
+    }
+
+    /**
+     * Persist the generated PDF to the provided destination file.
+     *
+     * @param string $cacheFile Absolute file path that should receive the PDF output
+     * @return void
+     * @throws MpdfException
+     */
+    public function outputToFile(string $cacheFile): void
+    {
+        $this->mpdf->Output($cacheFile, 'F');
     }
 
     /**

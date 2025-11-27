@@ -68,7 +68,7 @@ class PdfExportService
      * @return void
      * @throws MpdfException
      */
-    public function sendPdf(string $cacheFile = null): void
+    public function sendPdf(?string $cacheFile = null): void
     {
         $cacheFile ??= $this->getPdf();
         $title = $this->collector->getTitle();
@@ -109,10 +109,44 @@ class PdfExportService
      */
     protected function buildDocument(string $cacheFile): void
     {
+        $writer = $this->renderDocument();
+
+        if ($this->config->isDebugEnabled()) {
+            header('Content-Type: text/html; charset=utf-8');
+            echo $writer->getDebugHTML();
+            exit();
+        }
+
+        $writer->outputToFile($cacheFile);
+    }
+
+    /**
+     * Build the PDF document without writing it to disk and expose the debug HTML.
+     *
+     * @return string Debug HTML collected while rendering the document
+     * @throws MpdfException
+     */
+    public function getDebugHtml(): string
+    {
+        if (!$this->config->isDebugEnabled()) {
+            throw new \RuntimeException('Debug HTML is only available when debug mode is enabled');
+        }
+
+        return $this->renderDocument()->getDebugHTML();
+    }
+
+    /**
+     * Compose the document using the collector and return the writer.
+     *
+     * @return Writer Writer instance containing the rendered document
+     * @throws MpdfException
+     */
+    protected function renderDocument(): Writer
+    {
         $mpdf = new DokuPdf($this->config, $this->collector->getLanguage());
         $styles = new Styles($this->config);
         $template = new Template($this->config);
-        $writer = new Writer($mpdf, $this->config, $template, $styles, $this->config->isDebugEnabled());
+        $writer = new Writer($mpdf, $this->config, $template, $styles);
 
         $writer->startDocument($this->collector->getTitle());
         $writer->cover();
@@ -128,13 +162,6 @@ class PdfExportService
 
         $writer->back();
         $writer->endDocument();
-
-        if ($this->config->isDebugEnabled()) {
-            header('Content-Type: text/html; charset=utf-8');
-            echo $writer->getDebugHTML();
-            exit();
-        }
-
-        $mpdf->Output($cacheFile, 'F');
+        return $writer;
     }
 }

@@ -26,7 +26,9 @@ class Styles
     public function getCSS(): string
     {
         //reuse the CSS dispatcher functions without triggering the main function
-        define('SIMPLE_TEST', 1);
+        if (!defined('SIMPLE_TEST')) {
+            define('SIMPLE_TEST', 1);
+        }
         require_once(DOKU_INC . 'lib/exe/css.php');
 
         // prepare CSS files
