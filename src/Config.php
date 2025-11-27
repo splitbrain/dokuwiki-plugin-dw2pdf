@@ -2,33 +2,61 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
+use dokuwiki\plugin\dw2pdf\src\attributes\FromConfig;
+use dokuwiki\plugin\dw2pdf\src\attributes\FromInput;
+
 class Config
 {
     protected string $tempDir = '';
+
+    // General PDF configuration
+    #[FromConfig, FromInput]
     protected string $pagesize = 'A4';
+    #[FromConfig('orientation'), FromInput('orientation')]
     protected bool $isLandscape = false;
+    #[FromConfig('font-size'), FromInput('font-size')]
     protected int $fontSize = 11;
+    #[FromConfig('doublesided'), FromInput('doublesided')]
     protected bool $isDoublesided = false;
+    #[FromConfig('toc')]
     protected bool $hasToC = false;
+    #[FromConfig, FromInput('toclevels')]
     protected array $tocLevels = [];
+    #[FromConfig]
     protected int $maxBookmarks = 5;
+    #[FromConfig('headernumber')]
     protected bool $numberedHeaders = false;
+    #[FromConfig, FromInput]
     protected string $watermark = '';
+    #[FromConfig('tpl'), FromInput]
     protected string $template = 'default';
+    #[FromConfig('debug'), FromInput('debug')]
     protected bool $isDebug = false;
+    #[FromConfig]
     protected array $useStyles = [];
+    #[FromConfig]
     protected float $qrCodeScale = 0.0;
+    #[FromConfig, FromInput('outputTarget')]
     protected string $outputTarget = 'file';
 
     // Collector-specific request data
+    #[FromConfig, FromInput('book_title')]
     protected ?string $bookTitle = null;
+    #[FromConfig, FromInput('book_ns')]
     protected string $bookNamespace = '';
+    #[FromConfig, FromInput('book_order')]
     protected string $bookSortOrder = 'natural';
+    #[FromConfig, FromInput('book_nsdepth')]
     protected int $bookNamespaceDepth = 0;
+    #[FromConfig, FromInput('excludes')]
     protected array $bookExcludePages = [];
+    #[FromConfig, FromInput('excludesns')]
     protected array $bookExcludeNamespaces = [];
+    #[FromConfig, FromInput('selection')]
     protected ?string $liveSelection = null;
+    #[FromConfig, FromInput('savedselection')]
     protected ?string $savedSelection = null;
+    #[FromConfig, FromInput('id')]
     protected string $exportId = '';
 
     /**
@@ -48,29 +76,59 @@ class Config
     }
 
     /**
+     * Set a property with type casting and custom parsing
+     *
+     * @param string $prop The property name to set
+     * @param string|null $type The property type
+     * @param mixed $value The value to set
+     * @return void
+     * @see loadPluginConfig
+     * @see loadInputConfig
+     */
+    protected function setProperty(string $prop, ?string $type, $value)
+    {
+        // custom parsing
+        $value = match ($prop) {
+            'isLandscape' => ($value === 'landscape'),
+            'toclevels' => $this->parseTocLevels((string)$value),
+            'exportId' => cleanID((string)$value),
+            default => $value,
+        };
+
+        // standard type casting
+        $this->$prop = match ($type) {
+            'int' => (int)$value,
+            'bool' => (bool)$value,
+            'float' => (float)$value,
+            'array' => is_array($value)
+                ? $value
+                : array_filter(array_map('trim', explode(',', (string)$value))),
+            default => $value,
+        };
+    }
+
+    /**
      * Apply the given configuration
      *
-     * @param array $conf Plugin configuration
+     * This will set all properties annotated with FromConfig
+     *
+     * @param array $conf (Plugin) configuration
      */
-    public function loadPluginConfig(array $conf)
+    public function loadPluginConfig(array $conf = [])
     {
-        if (isset($conf['pagesize'])) $this->pagesize = $conf['pagesize'];
-        if (isset($conf['orientation'])) $this->isLandscape = ($conf['orientation'] === 'landscape');
-        if (isset($conf['font-size'])) $this->fontSize = (int)$conf['font-size'];
-        if (isset($conf['doublesided'])) $this->isDoublesided = (bool)$conf['doublesided'];
-        if (isset($conf['toc'])) $this->hasToC = (bool)$conf['toc'];
-        if (isset($conf['toclevels'])) $this->tocLevels = $this->parseTocLevels($conf['toclevels']);
-        if (isset($conf['maxbookmarks'])) $this->maxBookmarks = (int)$conf['maxbookmarks'];
-        if (isset($conf['headernumber'])) $this->numberedHeaders = (bool)$conf['headernumber'];
-        if (isset($conf['template'])) $this->template = $conf['template'];
-        if (isset($conf['usestyles'])) {
-            $this->useStyles = explode(',', $conf['usestyles']);
-            $this->useStyles = array_map('trim', $this->useStyles);
-            $this->useStyles = array_filter($this->useStyles);
+        $reflection = new \ReflectionClass($this);
+        foreach ($reflection->getProperties() as $property) {
+            $attributes = $property->getAttributes(FromConfig::class);
+            if ($attributes === []) continue;
+            $attribute = $attributes[0]->newInstance(); // we only expect one
+
+            $prop = $property->getName();
+            $confName = $attribute->name ?? strtolower($prop);
+            $type = $property->getType()?->getName();
+
+            if (!isset($conf[$confName])) continue;
+            $this->setProperty($prop, $type, $conf[$confName]);
         }
-        if (isset($conf['watermark'])) $this->watermark = $conf['watermark'];
-        if (isset($conf['output'])) $this->outputTarget = $conf['output'];
-        if (isset($conf['qrcodescale'])) $this->qrCodeScale = (float)$conf['qrcodescale'];
     }
 
     /**
@@ -83,35 +141,22 @@ class Config
     public function loadInputConfig()
     {
         global $INPUT, $ID;
-        $this->pagesize = $INPUT->str('pagesize', $this->pagesize);
-        if ($INPUT->has('orientation')) {
-            $this->isLandscape = $INPUT->str('orientation') === 'landscape';
+
+        if ($ID) $this->exportId = $ID; // default exportId to current page ID
+
+        $reflection = new \ReflectionClass($this);
+        foreach ($reflection->getProperties() as $property) {
+            $attributes = $property->getAttributes(FromInput::class);
+            if ($attributes === []) continue;
+            $attribute = $attributes[0]->newInstance(); // we only expect one
+
+            $prop = $property->getName();
+            $confName = $attribute->name ?? strtolower($prop);
+            $type = $property->getType()?->getName();
+
+            if (!$INPUT->has($confName)) continue;
+            $this->setProperty($prop, $type, $INPUT->param($confName));
         }
-        $this->fontSize = $INPUT->int('font-size', $this->fontSize);
-        $this->isDoublesided = $INPUT->bool('doublesided', $this->isDoublesided);
-        if ($INPUT->has('toclevels')) {
-            $this->tocLevels = $this->parseTocLevels($INPUT->str('toclevels'));
-        }
-        $this->watermark = $INPUT->str('watermark', $this->watermark);
-        $this->template = $INPUT->str('tpl', $this->template, true);
-        $this->isDebug = $INPUT->bool('debug', $this->isDebug);
-        $this->outputTarget = $INPUT->str('outputTarget', $this->outputTarget);
-
-        $this->bookTitle = $INPUT->str('book_title') ?: null;
-        $this->bookNamespace = cleanID($INPUT->str('book_ns'));
-        $this->bookSortOrder = $INPUT->str('book_order', $this->bookSortOrder, true);
-        $this->bookNamespaceDepth = max(0, $INPUT->int('book_nsdepth', $this->bookNamespaceDepth));
-        $this->bookExcludePages = array_map('cleanID', $INPUT->arr('excludes'));
-        $this->bookExcludeNamespaces = array_map('cleanID', $INPUT->arr('excludesns'));
-
-        $selection = $INPUT->has('selection') ? $INPUT->str('selection', '', true) : null;
-        $this->liveSelection = ($selection !== null && $selection !== '') ? $selection : null;
-
-        $saved = $INPUT->has('savedselection') ? $INPUT->str('savedselection') : null;
-        $this->savedSelection = ($saved !== null && $saved !== '') ? $saved : null;
-
-        $requestID = $INPUT->str('id', $ID ?? '', true);
-        $this->exportId = cleanID($requestID);
     }
 
     /**
