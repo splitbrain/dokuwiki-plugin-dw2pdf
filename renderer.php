@@ -34,8 +34,8 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
         $this->doc .= "</a>";
 
         static $chapter = 0; // FIXME we can probably do without a static here and use a class property
-        $chapter++;
         self::$header_count[1] = $chapter;
+        $chapter++;
     }
 
     /**
@@ -80,7 +80,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
         // retrieve numbered headings option
         $isnumberedheadings = $this->getConf('headernumber');
 
-        $header_prefix = "";
+        $header_prefix = '';
         if ($isnumberedheadings) {
             if ($level > 0) {
                 if (self::$previous_level > $level) {
@@ -89,12 +89,15 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
                     }
                 }
             }
-            self::$header_count[$level]++;
+            self::$header_count[$level] = (self::$header_count[$level] ?? 0) + 1;
 
             // $header_prefix = "";
             for ($i = 1; $i <= $level; $i++) {
                 $header_prefix .= self::$header_count[$i] . ".";
             }
+        }
+        if($header_prefix !== '') {
+            $header_prefix .= ' ';
         }
 
         // add PDF bookmark
