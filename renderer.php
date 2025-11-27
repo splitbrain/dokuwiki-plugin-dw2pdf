@@ -17,8 +17,19 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     private $lastHeaderLevel = -1;
     private $originalHeaderLevel = 0;
     private $difference = 0;
-    private static $header_count = [];
-    private static $previous_level = 0;
+    private $header_count = [];
+    private $previous_level = 0;
+    private int $chapter = 0;
+
+    /**
+     * The Writer will reinitialize the renderer for each export, but the object will be reused within one export.
+     *
+     * @inheritdoc
+     */
+    public function isSingleton()
+    {
+        return true;
+    }
 
     public function document_start()
     {
@@ -33,9 +44,9 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
         $this->doc .= "<a name=\"{$pid}__\">";
         $this->doc .= "</a>";
 
-        static $chapter = 0; // FIXME we can probably do without a static here and use a class property
-        self::$header_count[1] = $chapter;
-        $chapter++;
+
+        $this->header_count[1] = $this->chapter;
+        $this->chapter++;
     }
 
     /**
@@ -83,17 +94,17 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
         $header_prefix = '';
         if ($isnumberedheadings) {
             if ($level > 0) {
-                if (self::$previous_level > $level) {
-                    for ($i = $level + 1; $i <= self::$previous_level; $i++) {
-                        self::$header_count[$i] = 0;
+                if ($this->previous_level > $level) {
+                    for ($i = $level + 1; $i <= $this->previous_level; $i++) {
+                        $this->header_count[$i] = 0;
                     }
                 }
             }
-            self::$header_count[$level] = (self::$header_count[$level] ?? 0) + 1;
+            $this->header_count[$level] = ($this->header_count[$level] ?? 0) + 1;
 
             // $header_prefix = "";
             for ($i = 1; $i <= $level; $i++) {
-                $header_prefix .= self::$header_count[$i] . ".";
+                $header_prefix .= $this->header_count[$i] . ".";
             }
         }
         if($header_prefix !== '') {
@@ -120,7 +131,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
         $this->doc .= "</h$level>" . DOKU_LF;
-        self::$previous_level = $level;
+        $this->previous_level = $level;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\test;
 
+use dokuwiki\plugin\dw2pdf\src\BookCreatorLiveSelectionCollector;
 use dokuwiki\plugin\dw2pdf\src\Cache;
 use dokuwiki\plugin\dw2pdf\src\Config;
 use dokuwiki\plugin\dw2pdf\src\PageCollector;
@@ -26,28 +27,36 @@ class EndToEndTest extends \DokuWikiTest
 
 
     /**
-     * Create the page, render it through the PdfExportService in debug mode and return the resulting HTML.
+     * Create the pages, render them through the PdfExportService in debug mode and return the resulting HTML.
      *
-     * @param string $pageId
-     * @return string
-     * @throws \Mpdf\MpdfException
+     * @param string|string[] $pages One or more pages to be included in the export
+     * @return string Rendered HTML output
      */
-    protected function getDebugHTML(string $pageId, $conf = []): string
+    protected function getDebugHTML($pages, $conf = []): string
     {
-        $data = file_get_contents(__DIR__ . '/pages/' . $pageId . '.txt');
-        saveWikiText($pageId, $data, 'dw2pdf end-to-end test');
+        $pages = (array)$pages;
+
+        foreach ($pages as $page) {
+            $data = file_get_contents(__DIR__ . '/pages/' . $page . '.txt');
+            saveWikiText($page, $data, 'dw2pdf end-to-end test');
+        }
 
         $config = new Config(array_merge(
             $conf,
-            ['debug' => 1, 'exportid' => $pageId]
+            [
+                'debug' => 1,
+                'liveselection' => json_encode($pages)
+            ]
         ));
-        $collector = new PageCollector($config);
+        $collector = new BookCreatorLiveSelectionCollector($config);
         $cache = new Cache($config, $collector);
         $service = new PdfExportService($config, $collector, $cache, 'Contents', 'tester');
         return $service->getDebugHtml();
     }
 
-
+    /**
+     * Test that numbered headers are rendered correctly
+     */
     public function testNumberedHeaders(): void
     {
         global $conf;
@@ -66,6 +75,25 @@ class EndToEndTest extends \DokuWikiTest
 
         $dom->find('h3')->each(function ($h) {
             $this->assertMatchesRegularExpression('/^\d\.\d\.\d\. Header/', $h->text());
+        });
+    }
+
+    /**
+     * Test that numbered headers are rendered correctly across multiple pages
+     *
+     * Each new page should increase the top-level header number
+     */
+    public function testNumberedHeadersMultipage(): void
+    {
+        global $conf;
+        $conf['plugin']['dw2pdf']['headernumber'] = 1; // Currently Config values are not passed to the renderer
+        $html = $this->getDebugHTML(['headers', 'simple'], ['headernumber' => 1]);
+
+        $dom = (new Document())->html($html);
+
+        $count = 1;
+        $dom->find('h1')->each(function ($h) use (&$count) {
+            $this->assertMatchesRegularExpression('/^' . ($count++) . '\. /', $h->text());
         });
     }
 }

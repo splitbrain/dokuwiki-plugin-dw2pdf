@@ -45,6 +45,10 @@ class Writer
         $this->template = $template;
         $this->styles = $styles;
         $this->debug = $config->isDebugEnabled();
+
+        // initialize a new renderer instance (singleton instance will be reused in later p_* calls)
+        $renderer = plugin_load('renderer', 'dw2pdf', true);
+        // FIXME set configuration on the renderer here
     }
 
     /**
