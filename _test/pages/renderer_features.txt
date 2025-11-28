@@ -1,0 +1,29 @@
+====== Renderer Feature Playground ======
+
+===== Local Navigation =====
+
+[[#remote_section|Jump to Remote Section]]
+
+===== Internal Links =====
+
+[[target|Target page link]] and [[target#sub_section|Target section link]]
+
+===== Media =====
+
+{{ wiki:dokuwiki-128.png?50 }}
+
+===== Acronym =====
+
+This is an example of an acronym: FAQ.
+
+===== Email =====
+
+Contact <test@example.com> for mission details.
+
+===== Interwiki =====
+
+See [[doku>syntax|DokuWiki Syntax]] for more.
+
+===== Remote Section =====
+
+This section anchors local jump links.
