@@ -18,7 +18,7 @@ class Config
     protected int $fontSize = 11;
     #[FromConfig('doublesided'), FromInput('doublesided')]
     protected bool $isDoublesided = false;
-    #[FromConfig('toc')]
+    #[FromConfig('toc'), FromInput('toc')]
     protected bool $hasToC = false;
     #[FromConfig, FromInput('toclevels')]
     protected array $tocLevels = [];
@@ -28,7 +28,7 @@ class Config
     protected bool $numberedHeaders = false;
     #[FromConfig, FromInput]
     protected string $watermark = '';
-    #[FromConfig('tpl'), FromInput]
+    #[FromConfig, FromInput('tpl')]
     protected string $template = 'default';
     #[FromConfig('debug'), FromInput('debug')]
     protected bool $isDebug = false;
@@ -36,7 +36,7 @@ class Config
     protected array $useStyles = [];
     #[FromConfig]
     protected float $qrCodeScale = 0.0;
-    #[FromConfig, FromInput('outputTarget')]
+    #[FromConfig('output'), FromInput('outputTarget')]
     protected string $outputTarget = 'file';
 
     // Collector-specific request data
@@ -56,7 +56,7 @@ class Config
     protected ?string $liveSelection = null;
     #[FromConfig, FromInput('savedselection')]
     protected ?string $savedSelection = null;
-    #[FromConfig, FromInput('id')]
+    #[FromConfig] // also read from global $ID
     protected string $exportId = '';
 
     /**
@@ -87,11 +87,11 @@ class Config
      */
     protected function setProperty(string $prop, ?string $type, $value)
     {
-        // custom parsing
-        $value = match ($prop) {
-            'isLandscape' => ($value === 'landscape'),
-            'toclevels' => $this->parseTocLevels((string)$value),
-            'exportId' => cleanID((string)$value),
+        // custom value parsing (lowercased property names to avoid mistakes)
+        $value = match (strtolower($prop)) {
+            'islandscape' => ($value === 'landscape'),
+            'toclevels' => is_array($value) ? $value : $this->parseTocLevels((string)$value),
+            'exportid' => cleanID((string)$value),
             default => $value,
         };
 
