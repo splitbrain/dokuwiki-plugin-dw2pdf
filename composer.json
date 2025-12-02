@@ -15,7 +15,8 @@
         "ext-dom": "*",
         "ext-libxml": "*",
         "mpdf/mpdf": "8.2.*",
-        "mpdf/qrcode": "^1.2"
+        "mpdf/qrcode": "^1.2",
+        "psr/log": "^1.0"
     },
     "replace": {
         "paragonie/random_compat": "*"
