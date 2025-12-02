@@ -1,9 +1,10 @@
 <?php
+
 /**
  * This file is part of FPDI
  *
  * @package   setasign\Fpdi
- * @copyright Copyright (c) 2020 Setasign GmbH & Co. KG (https://www.setasign.com)
+ * @copyright Copyright (c) 2024 Setasign GmbH & Co. KG (https://www.setasign.com)
  * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 
@@ -11,8 +12,6 @@ namespace setasign\Fpdi\PdfParser\Filter;
 
 /**
  * Class for handling zlib/deflate encoded data
- *
- * @package setasign\Fpdi\PdfParser\Filter
  */
 class Flate implements FilterInterface
 {
@@ -32,7 +31,7 @@ class Flate implements FilterInterface
     /**
      * Decodes a flate compressed string.
      *
-     * @param string $data The input string
+     * @param string|false $data The input string
      * @return string
      * @throws FlateException
      */
@@ -40,35 +39,26 @@ class Flate implements FilterInterface
     {
         if ($this->extensionLoaded()) {
             $oData = $data;
-            $data = @((\strlen($data) > 0) ? \gzuncompress($data) : '');
+            $data = (($data !== '') ? @\gzuncompress($data) : '');
             if ($data === false) {
                 // let's try if the checksum is CRC32
                 $fh = fopen('php://temp', 'w+b');
                 fwrite($fh, "\x1f\x8b\x08\x00\x00\x00\x00\x00" . $oData);
-                stream_filter_append($fh, 'zlib.inflate', STREAM_FILTER_READ, ['window' => 30]);
+                // "window" == 31 -> 16 + (8 to 15): Uses the low 4 bits of the value as the window size logarithm.
+                //                   The input must include a gzip header and trailer (via 16).
+                stream_filter_append($fh, 'zlib.inflate', STREAM_FILTER_READ, ['window' => 31]);
                 fseek($fh, 0);
-                $data = stream_get_contents($fh);
+                $data = @stream_get_contents($fh);
                 fclose($fh);
 
                 if ($data) {
                     return $data;
                 }
 
-                // Try this fallback
-                $tries = 0;
+                // Try this fallback (remove the zlib stream header)
+                $data = @(gzinflate(substr($oData, 2)));
 
-                $oDataLen = strlen($oData);
-                while ($tries < 6 && ($data === false || (strlen($data) < (strlen($oDataLen) - $tries - 1)))) {
-                    $data = @(gzinflate(substr($oData, $tries)));
-                    $tries++;
-                }
-
-                // let's use this fallback only if the $data is longer than the original data
-                if (strlen($data) > ($oDataLen - $tries - 1)) {
-                    return $data;
-                }
-
-                if (!$data) {
+                if ($data === false) {
                     throw new FlateException(
                         'Error while decompressing stream.',
                         FlateException::DECOMPRESS_ERROR

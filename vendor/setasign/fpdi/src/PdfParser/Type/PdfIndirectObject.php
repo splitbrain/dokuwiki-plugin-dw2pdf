@@ -1,9 +1,10 @@
 <?php
+
 /**
  * This file is part of FPDI
  *
  * @package   setasign\Fpdi
- * @copyright Copyright (c) 2020 Setasign GmbH & Co. KG (https://www.setasign.com)
+ * @copyright Copyright (c) 2024 Setasign GmbH & Co. KG (https://www.setasign.com)
  * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 
@@ -15,25 +16,23 @@ use setasign\Fpdi\PdfParser\Tokenizer;
 
 /**
  * Class representing an indirect object
- *
- * @package setasign\Fpdi\PdfParser\Type
  */
 class PdfIndirectObject extends PdfType
 {
     /**
      * Parses an indirect object from a tokenizer, parser and stream-reader.
      *
-     * @param int $objectNumberToken
-     * @param int $objectGenerationNumberToken
+     * @param int $objectNumber
+     * @param int $objectGenerationNumber
      * @param PdfParser $parser
      * @param Tokenizer $tokenizer
      * @param StreamReader $reader
-     * @return bool|self
+     * @return self|false
      * @throws PdfTypeException
      */
     public static function parse(
-        $objectNumberToken,
-        $objectGenerationNumberToken,
+        $objectNumber,
+        $objectGenerationNumber,
         PdfParser $parser,
         Tokenizer $tokenizer,
         StreamReader $reader
@@ -50,9 +49,9 @@ class PdfIndirectObject extends PdfType
             $tokenizer->pushStack($nextToken);
         }
 
-        $v = new self;
-        $v->objectNumber = (int) $objectNumberToken;
-        $v->generationNumber = (int) $objectGenerationNumberToken;
+        $v = new self();
+        $v->objectNumber = (int) $objectNumber;
+        $v->generationNumber = (int) $objectGenerationNumber;
         $v->value = $value;
 
         return $v;
@@ -68,7 +67,7 @@ class PdfIndirectObject extends PdfType
      */
     public static function create($objectNumber, $generationNumber, PdfType $value)
     {
-        $v = new self;
+        $v = new self();
         $v->objectNumber = (int) $objectNumber;
         $v->generationNumber = (int) $generationNumber;
         $v->value = $value;

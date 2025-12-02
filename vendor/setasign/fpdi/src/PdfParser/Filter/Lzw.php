@@ -1,9 +1,10 @@
 <?php
+
 /**
  * This file is part of FPDI
  *
  * @package   setasign\Fpdi
- * @copyright Copyright (c) 2020 Setasign GmbH & Co. KG (https://www.setasign.com)
+ * @copyright Copyright (c) 2024 Setasign GmbH & Co. KG (https://www.setasign.com)
  * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 
@@ -11,8 +12,6 @@ namespace setasign\Fpdi\PdfParser\Filter;
 
 /**
  * Class for handling LZW encoded data
- *
- * @package setasign\Fpdi\PdfParser\Filter
  */
 class Lzw implements FilterInterface
 {
@@ -88,38 +87,28 @@ class Lzw implements FilterInterface
         $this->nextData = 0;
         $this->nextBits = 0;
 
-        $oldCode = 0;
+        $prevCode = 0;
 
         $uncompData = '';
 
         while (($code = $this->getNextCode()) !== 257) {
             if ($code === 256) {
                 $this->initsTable();
-                $code = $this->getNextCode();
-
-                if ($code === 257) {
-                    break;
-                }
-
+            } elseif ($prevCode === 256) {
                 $uncompData .= $this->sTable[$code];
-                $oldCode = $code;
+            } elseif ($code < $this->tIdx) {
+                $string = $this->sTable[$code];
+                $uncompData .= $string;
 
+                $this->addStringToTable($this->sTable[$prevCode], $string[0]);
             } else {
-                if ($code < $this->tIdx) {
-                    $string = $this->sTable[$code];
-                    $uncompData .= $string;
+                $string = $this->sTable[$prevCode];
+                $string .= $string[0];
+                $uncompData .= $string;
 
-                    $this->addStringToTable($this->sTable[$oldCode], $string[0]);
-                    $oldCode = $code;
-                } else {
-                    $string = $this->sTable[$oldCode];
-                    $string .= $string[0];
-                    $uncompData .= $string;
-
-                    $this->addStringToTable($string);
-                    $oldCode = $code;
-                }
+                $this->addStringToTable($string);
             }
+            $prevCode = $code;
         }
 
         return $uncompData;
@@ -165,7 +154,7 @@ class Lzw implements FilterInterface
     /**
      * Returns the next 9, 10, 11 or 12 bits.
      *
-     * @return integer
+     * @return int
      */
     protected function getNextCode()
     {

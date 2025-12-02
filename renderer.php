@@ -2,6 +2,8 @@
 
 // phpcs:disable: PSR1.Methods.CamelCapsMethodName.NotCamelCaps
 // phpcs:disable: PSR2.Methods.MethodDeclaration.Underscore
+use dokuwiki\plugin\dw2pdf\src\AbstractCollector;
+use dokuwiki\plugin\dw2pdf\src\Config;
 
 /**
  * DokuWiki Plugin dw2pdf (Renderer Component)
@@ -15,38 +17,52 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     private $lastHeaderLevel = -1;
     private $originalHeaderLevel = 0;
     private $difference = 0;
-    private static $header_count = [];
-    private static $previous_level = 0;
+    private $header_count = [];
+    private $previous_level = 0;
+    private int $chapter = 0;
+    private ?Config $config;
 
     /**
-     * Stores action instance
+     * The Writer will reinitialize the renderer for each export, but the object will be reused within one export.
      *
-     * @var action_plugin_dw2pdf
+     * @inheritdoc
      */
-    private $actioninstance;
+    public function isSingleton()
+    {
+        return true;
+    }
 
     /**
-     * load action plugin instance
+     * Set the active configuration
+     *
+     * @param Config $config
+     * @return void
      */
-    public function __construct()
+    public function setConfig(Config $config): void
     {
-        $this->actioninstance = plugin_load('action', 'dw2pdf');
+        $this->config = $config;
     }
 
     public function document_start()
     {
         global $ID;
 
+        if($this->config === null) {
+            throw new RuntimeException('DW2PDF Renderer configuration not set');
+        }
+
         parent::document_start();
 
-        //ancher for rewritten links to included pages
+        //anchor for rewritten links to included pages
         $check = false;
         $pid = sectionID($ID, $check);
 
         $this->doc .= "<a name=\"{$pid}__\">";
         $this->doc .= "</a>";
 
-        self::$header_count[1] = $this->actioninstance->getCurrentBookChapter();
+
+        $this->header_count[1] = $this->chapter;
+        $this->chapter++;
     }
 
     /**
@@ -89,28 +105,31 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
 
 
         // retrieve numbered headings option
-        $isnumberedheadings = $this->actioninstance->getExportConfig('headernumber');
+        $isnumberedheadings = $this->config->useNumberedHeaders();
 
-        $header_prefix = "";
+        $header_prefix = '';
         if ($isnumberedheadings) {
             if ($level > 0) {
-                if (self::$previous_level > $level) {
-                    for ($i = $level + 1; $i <= self::$previous_level; $i++) {
-                        self::$header_count[$i] = 0;
+                if ($this->previous_level > $level) {
+                    for ($i = $level + 1; $i <= $this->previous_level; $i++) {
+                        $this->header_count[$i] = 0;
                     }
                 }
             }
-            self::$header_count[$level]++;
+            $this->header_count[$level] = ($this->header_count[$level] ?? 0) + 1;
 
             // $header_prefix = "";
             for ($i = 1; $i <= $level; $i++) {
-                $header_prefix .= self::$header_count[$i] . ".";
+                $header_prefix .= $this->header_count[$i] . ".";
             }
+        }
+        if($header_prefix !== '') {
+            $header_prefix .= ' ';
         }
 
         // add PDF bookmark
         $bookmark = '';
-        $maxbookmarklevel = $this->actioninstance->getExportConfig('maxbookmarks');
+        $maxbookmarklevel = $this->config->getMaxBookmarks();
         // 0: off, 1-6: show down to this level
         if ($maxbookmarklevel && $maxbookmarklevel >= $level) {
             $bookmarklevel = $this->calculateBookmarklevel($level);
@@ -128,7 +147,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
         $this->doc .= $this->_xmlEntities($text);
         $this->doc .= "</a>";
         $this->doc .= "</h$level>" . DOKU_LF;
-        self::$previous_level = $level;
+        $this->previous_level = $level;
     }
 
     /**
@@ -238,19 +257,29 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     /**
      * reformat links if needed
      *
+     * Because the output of this renderer will be cached, but might be part of a larger PDF
+     * including multiple pages, the links are not rewritten here.
+     * Instead they will be rewritten in the created HTML after rendering but before feeding to mPDF.
+     *
      * @param array $link
      * @return string
      */
     public function _formatLink($link)
     {
-
-        // for internal links contains the title the pageid
-        if (in_array($link['title'], $this->actioninstance->getExportedPages())) {
-            [/* url */, $hash] = sexplode('#', $link['url'], 2, '');
-
-            $check = false;
-            $pid = sectionID($link['title'], $check);
-            $link['url'] = "#" . $pid . '__' . $hash;
+        // mark internal wiki links for later processing by the writer
+        if (
+            !empty($link['more']) &&
+            str_contains($link['more'], 'data-wiki-id=')
+        ) {
+            [, $hash] = sexplode('#', $link['url'], 2, '');
+            $target = $link['title'] ?? ''; // for internal links, 'title' holds the target page id
+            if ($target !== '') {
+                $attrs = ['data-dw2pdf-target="' . hsc($target) . '"'];
+                if ($hash !== '') {
+                    $attrs[] = 'data-dw2pdf-hash="' . hsc($hash) . '"';
+                }
+                $link['more'] = trim($link['more'] . ' ' . implode(' ', $attrs));
+            }
         }
 
         // prefix interwiki links with interwiki icon
@@ -277,7 +306,6 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
      * no obfuscation for email addresses
      *
      * @param string $address
-     * @param null $name
      * @param bool $returnonly
      * @return string|void
      */

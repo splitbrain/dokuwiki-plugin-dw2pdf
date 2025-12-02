@@ -8,12 +8,15 @@
     ],
     "config": {
         "platform": {
-            "php": "7.2"
+            "php": "8.0"
         }
     },
     "require": {
-        "mpdf/mpdf": "8.0.*",
-        "mpdf/qrcode": "^1.2"
+        "ext-dom": "*",
+        "ext-libxml": "*",
+        "mpdf/mpdf": "8.2.*",
+        "mpdf/qrcode": "^1.2",
+        "psr/log": "^1.0"
     },
     "replace": {
         "paragonie/random_compat": "*"
