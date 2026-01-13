@@ -184,17 +184,17 @@
         },
         {
             "name": "mpdf/qrcode",
-            "version": "v1.2.1",
-            "version_normalized": "1.2.1.0",
+            "version": "v1.2.2",
+            "version_normalized": "1.2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mpdf/qrcode.git",
-                "reference": "5320c512776aa3c199bd8be8f707ec83d9779d85"
+                "reference": "d4fa19117a7241c30ac84902b6236a02c7a3f268"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mpdf/qrcode/zipball/5320c512776aa3c199bd8be8f707ec83d9779d85",
-                "reference": "5320c512776aa3c199bd8be8f707ec83d9779d85",
+                "url": "https://api.github.com/repos/mpdf/qrcode/zipball/d4fa19117a7241c30ac84902b6236a02c7a3f268",
+                "reference": "d4fa19117a7241c30ac84902b6236a02c7a3f268",
                 "shasum": ""
             },
             "require": {
@@ -202,7 +202,7 @@
                 "php": "^5.6 || ^7.0 || ^8.0"
             },
             "require-dev": {
-                "mockery/mockery": "^0.9.5",
+                "mockery/mockery": "^0.9.5 || ^1.0",
                 "squizlabs/php_codesniffer": "^3.4",
                 "tracy/tracy": "^2.5",
                 "yoast/phpunit-polyfills": "^1.0"
@@ -211,7 +211,7 @@
                 "ext-gd": "To output QR codes to PNG files",
                 "ext-simplexml": "To output QR codes to SVG files"
             },
-            "time": "2024-06-04T13:40:39+00:00",
+            "time": "2025-12-19T16:21:49+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -243,7 +243,7 @@
             ],
             "support": {
                 "issues": "https://github.com/mpdf/qrcode/issues",
-                "source": "https://github.com/mpdf/qrcode/tree/v1.2.1"
+                "source": "https://github.com/mpdf/qrcode/tree/v1.2.2"
             },
             "funding": [
                 {

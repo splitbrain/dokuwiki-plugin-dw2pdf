@@ -1639,17 +1639,6 @@ vendor/mpdf/mpdf/src/QrCode/data/rsc7.dat
 vendor/mpdf/mpdf/src/RemoteContentFetcher.php
 vendor/myclabs/deep-copy/.github/FUNDING.yml
 vendor/psr/log/.gitignore
-vendor/psr/log/Psr/Log/AbstractLogger.php
-vendor/psr/log/Psr/Log/InvalidArgumentException.php
-vendor/psr/log/Psr/Log/LogLevel.php
-vendor/psr/log/Psr/Log/LoggerAwareInterface.php
-vendor/psr/log/Psr/Log/LoggerAwareTrait.php
-vendor/psr/log/Psr/Log/LoggerInterface.php
-vendor/psr/log/Psr/Log/LoggerTrait.php
-vendor/psr/log/Psr/Log/NullLogger.php
-vendor/psr/log/Psr/Log/Test/DummyTest.php
-vendor/psr/log/Psr/Log/Test/LoggerInterfaceTest.php
-vendor/psr/log/Psr/Log/Test/TestLogger.php
 vendor/psr/log/src/AbstractLogger.php
 vendor/psr/log/src/InvalidArgumentException.php
 vendor/psr/log/src/LogLevel.php

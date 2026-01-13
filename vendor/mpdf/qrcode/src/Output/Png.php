@@ -57,7 +57,10 @@ class Png
 		$data = ob_get_contents();
 		ob_end_clean();
 
-		imagedestroy($im);
+		//This function has been DEPRECATED as of PHP 8.5.0
+		if (PHP_VERSION_ID < 80500) {
+			imagedestroy($im);
+		}
 
 		return $data;
 	}

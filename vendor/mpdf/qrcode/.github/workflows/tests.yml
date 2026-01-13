@@ -30,6 +30,10 @@ jobs:
           - "7.4"
           - "8.0"
           - "8.1"
+          - "8.2"
+          - "8.3"
+          - "8.4"
+          - "8.5"
         operating-system: [ubuntu-latest, windows-latest]
 
     steps:
@@ -44,7 +48,7 @@ jobs:
           extensions: "mbstring, gd, bcmath, bz2"
           tools: composer:v2
           ini-values: error_reporting=-1
-
+      
       - name: "Install dependencies"
         run: "composer install --no-interaction --no-progress"
 
