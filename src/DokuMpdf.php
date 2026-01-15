@@ -16,7 +16,7 @@ use Mpdf\MpdfException;
  *
  * @author Andreas Gohr <andi@splitbrain.org>
  */
-class DokuPdf extends Mpdf
+class DokuMpdf extends Mpdf
 {
     /**
      * DokuPDF constructor.

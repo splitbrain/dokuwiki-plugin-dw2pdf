@@ -143,7 +143,7 @@ class PdfExportService
      */
     protected function renderDocument(): Writer
     {
-        $mpdf = new DokuPdf($this->config, $this->collector->getLanguage());
+        $mpdf = new DokuMpdf($this->config, $this->collector->getLanguage());
         $styles = new Styles($this->config);
         $template = new Template($this->config);
         $writer = new Writer($mpdf, $this->config, $template, $styles);
