@@ -53,7 +53,7 @@ class PdfExportService
      */
     public function getPdf(): string
     {
-        if (!$this->cache->useCache() || $this->config->isDebugEnabled()) {
+        if (!$this->config->useCache() || !$this->cache->useCache() || $this->config->isDebugEnabled()) {
             set_time_limit(0);
             $this->buildDocument($this->cache->cache);
         }
