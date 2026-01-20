@@ -3,7 +3,7 @@
         'name' => 'splitbrain/dw2pdf',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => 'de48af63d128621e38f807a2772256d73df280db',
+        'reference' => '11391995207ea0ded5c26bd9ea9ea8d44c25d554',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,12 +11,14 @@
     ),
     'versions' => array(
         'mpdf/mpdf' => array(
-            'pretty_version' => 'v8.2.7',
-            'version' => '8.2.7.0',
-            'reference' => 'b59670a09498689c33ce639bac8f5ba26721dab3',
+            'pretty_version' => 'dev-development',
+            'version' => 'dev-development',
+            'reference' => '0afceb7c205ef4eaa7465d622f7f48af63e40c0a',
             'type' => 'library',
             'install_path' => __DIR__ . '/../mpdf/mpdf',
-            'aliases' => array(),
+            'aliases' => array(
+                0 => '9999999-dev',
+            ),
             'dev_requirement' => false,
         ),
         'mpdf/psr-http-message-shim' => array(
@@ -91,7 +93,7 @@
         'splitbrain/dw2pdf' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => 'de48af63d128621e38f807a2772256d73df280db',
+            'reference' => '11391995207ea0ded5c26bd9ea9ea8d44c25d554',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
