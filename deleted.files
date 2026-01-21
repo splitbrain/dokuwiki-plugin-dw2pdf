@@ -1356,7 +1356,9 @@ mpdf/utils/font_names.php
 mpdf/utils/image_details.php
 mpdf/utils/index.php
 src/DokuImageProcessorDecorator.php
+src/LocalContentLoader.php
 src/DokuPDF.php
+src/DokuPdf.php
 src/Exception.php
 user/user.css
 vendor/mpdf/mpdf/.github/ISSUE_TEMPLATE.md

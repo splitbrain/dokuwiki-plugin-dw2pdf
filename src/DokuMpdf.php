@@ -7,6 +7,8 @@ namespace dokuwiki\plugin\dw2pdf\src;
 use Mpdf\Container\SimpleContainer;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
+use Mpdf\File\LocalContentLoader as MpdfContenLoader;
+use Psr\Log\NullLogger;
 
 /**
  * Wrapper around the mpdf library class
@@ -16,7 +18,7 @@ use Mpdf\MpdfException;
  *
  * @author Andreas Gohr <andi@splitbrain.org>
  */
-class DokuPdf extends Mpdf
+class DokuMpdf extends Mpdf
 {
     /**
      * DokuPDF constructor.
@@ -30,9 +32,11 @@ class DokuPdf extends Mpdf
         $initConfig = $config->getMPdfConfig();
         $initConfig['mode'] = $this->lang2mode($lang);
 
+        $http = new HttpClient();
+
         $container = new SimpleContainer([
-            'httpClient' => new HttpClient(),
-            'localContentLoader' => new LocalContentLoader(),
+            'httpClient' => $http,
+            'assetFetcher' => new DokuAssetFetcher($this, new MpdfContenLoader(), $http, new NullLogger())
         ]);
 
         parent::__construct($initConfig, $container);
@@ -42,7 +46,7 @@ class DokuPdf extends Mpdf
         // https://mpdf.github.io/paging/page-numbering.html
         $this->PageNumSubstitutions[] = ['from' => 1, 'reset' => 0, 'type' => '1', 'suppress' => 'off'];
         // add watermark text if configured
-        $this->setWatermarkText($config->getWatermarkText());
+        $this->SetWatermarkText($config->getWatermarkText());
 
         // let mpdf fix local links
         $self = parse_url(DOKU_URL);

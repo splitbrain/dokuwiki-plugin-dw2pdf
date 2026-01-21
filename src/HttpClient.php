@@ -2,7 +2,6 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
-use Psr\Http\Message\UriInterface;
 use dokuwiki\HTTP\DokuHTTPClient;
 use Mpdf\Http\ClientInterface;
 use Mpdf\PsrHttpMessageShim\Response;
@@ -31,16 +30,7 @@ class HttpClient implements ClientInterface, LoggerAwareInterface
 
         $url = (string)$uri;
 
-        // short-circuit to cached/local copies whenever possible
-        $resolved = (new MediaLinkResolver())->resolve($url);
-        if ($resolved && is_readable($resolved['path'])) {
-            return (new Response())
-                ->withStatus(200)
-                ->withHeader('Content-Type', $resolved['mime'])
-                ->withBody(Stream::create(file_get_contents($resolved['path'])));
-        }
-
-        // fall back to the standard Dokuwiki HTTP client for any remote content
+        // standard Dokuwiki HTTP client for any remote content
         $client = new DokuHTTPClient();
         $client->headers = $this->buildHeaders($request);
         $client->referer = $request->getHeaderLine('Referer');

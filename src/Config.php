@@ -33,6 +33,8 @@ class Config
     #[FromConfig('debug'), FromInput('debug')]
     protected bool $isDebug = false;
     #[FromConfig]
+    protected bool $usecache;
+    #[FromConfig]
     protected array $useStyles = [];
     #[FromConfig]
     protected float $qrCodeScale = 0.0;
@@ -177,6 +179,16 @@ class Config
     public function isDebugEnabled(): bool
     {
         return $this->isDebug;
+    }
+
+    /**
+     * Check if caching is enabled
+     *
+     * @return bool
+     */
+    public function useCache(): bool
+    {
+        return $this->usecache;
     }
 
     /**

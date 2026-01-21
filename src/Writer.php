@@ -9,8 +9,8 @@ use Mpdf\MpdfException;
 
 class Writer
 {
-    /** @var DokuPdf Our MPDF instance */
-    protected DokuPdf $mpdf;
+    /** @var DokuMpdf Our MPDF instance */
+    protected DokuMpdf $mpdf;
 
     /** @var Config The configuration */
     protected Config $config;
@@ -34,11 +34,11 @@ class Writer
     protected bool $isFirstPage = true;
 
     /**
-     * @param DokuPdf $mpdf
+     * @param DokuMpdf $mpdf
      * @param Template $template
      * @param Styles $styles
      */
-    public function __construct(DokuPdf $mpdf, Config $config, Template $template, Styles $styles)
+    public function __construct(DokuMpdf $mpdf, Config $config, Template $template, Styles $styles)
     {
         $this->mpdf = $mpdf;
         $this->config = $config;
