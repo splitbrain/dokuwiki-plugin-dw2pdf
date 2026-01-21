@@ -26,7 +26,7 @@ class DokuPDF extends Mpdf
      * @throws MpdfException
      * @throws Exception
      */
-    public function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11, $docLang = 'en')
+    public function __construct($pagesize = 'A4', $orientation = 'portrait', $fontsize = 11, $docLang = 'en', $tpl = 'default')
     {
         global $conf;
         global $lang;
@@ -52,6 +52,23 @@ class DokuPDF extends Mpdf
                 $mode = 'UTF-8-s';
         }
 
+        // Get the default font data
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        // Get the default font dirs 
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        // Append the custom path to it
+        $tplfonts = DOKU_PLUGIN . 'dw2pdf/tpl/' . $tpl . '/fonts';
+        if (file_exists($tplfonts . '.php')) {
+            $fontDirs[] = $tplfonts;
+            
+            $fontDefs = array($fontData, include($tplfonts . '.php'));
+            $fontData = array_reduce($fontDefs, 'array_merge', array());
+        }
+
         parent::__construct([
             'mode' => $mode,
             'format' => $format,
@@ -59,6 +76,8 @@ class DokuPDF extends Mpdf
             'ImageProcessorClass' => DokuImageProcessorDecorator::class,
             'tempDir' => _MPDF_TEMP_PATH, //$conf['tmpdir'] . '/tmp/dwpdf'
             'SHYlang' => $docLang,
+            'fontDir' => $fontDirs,
+            'fontdata' => $fontData
         ]);
 
         $this->autoScriptToLang = true;

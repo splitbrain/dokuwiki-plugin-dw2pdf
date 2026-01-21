@@ -7,7 +7,7 @@
  * @author Schopf <pschopf@gmail.com>
  * @author Juliano Marconi Lanigra <juliano.marconi@gmail.com>
  */
-$lang['pagesize']              = 'O formato de página como suportado pelo mPDF. Normalmente <code>A4</code> ou <code>carta</code>.';
+$lang['pagesize']              = 'O formato de página como suportado pelo mPDF. Normalmente <code>A4</code> ou <code>letter</code>.';
 $lang['orientation']           = 'A orientação da página.';
 $lang['orientation_o_portrait'] = 'Retrato';
 $lang['orientation_o_landscape'] = 'Paisagem';
@@ -25,3 +25,4 @@ $lang['usecache']              = 'Os PDFs devem ser armazenados em cache? Imagen
 $lang['usestyles']             = 'Você pode gerar uma lista de plugins separadas por vírgula nos quais <code>style.css</code> ou <code>screen.css</code> devem ser usadas para a gerar um PDF.';
 $lang['qrcodescale']           = 'Escala de tamanho do código QR incorporado. Vazio ou <code>0</code> para desativar.';
 $lang['showexportbutton']      = 'Mostrar botão de exportação de PDF (se suportado pelo modelo)';
+$lang['showexporttemplate']    = 'Mostrar seleção de template de exportação de PDF';
