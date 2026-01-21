@@ -576,6 +576,7 @@ class action_plugin_dw2pdf extends ActionPlugin
         header('Content-Type: application/pdf');
         header('Cache-Control: must-revalidate, no-transform, post-check=0, pre-check=0');
         header('Pragma: public');
+        header('X-Robots-Tag: noindex, nofollow');
         http_conditionalRequest(filemtime($cachefile));
         global $INPUT;
         $outputTarget = $INPUT->str('outputTarget', $this->getConf('output'));
