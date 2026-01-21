@@ -7,6 +7,7 @@ namespace dokuwiki\plugin\dw2pdf\src;
 use Mpdf\Container\SimpleContainer;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
+use Mpdf\File\LocalContentLoader as MpdfContenLoader;
 use Psr\Log\NullLogger;
 
 /**
@@ -35,7 +36,7 @@ class DokuMpdf extends Mpdf
 
         $container = new SimpleContainer([
             'httpClient' => $http,
-            'assetFetcher' => new DokuAssetFetcher($this, new \Mpdf\File\LocalContentLoader(), $http, new NullLogger())
+            'assetFetcher' => new DokuAssetFetcher($this, new MpdfContenLoader(), $http, new NullLogger())
         ]);
 
         parent::__construct($initConfig, $container);

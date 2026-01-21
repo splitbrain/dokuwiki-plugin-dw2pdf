@@ -14,7 +14,7 @@
     "require": {
         "ext-dom": "*",
         "ext-libxml": "*",
-        "mpdf/mpdf": "dev-development",
+        "mpdf/mpdf": "dev-development#0afceb7",
         "mpdf/qrcode": "^1.2",
         "psr/log": "^1.0"
     },

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5a52f789428f797c901d813f38724f00",
+    "content-hash": "c2eb70c77adc5863fec8dad91b049b72",
     "packages": [
         {
             "name": "mpdf/mpdf",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/mpdf/mpdf.git",
-                "reference": "0afceb7c205ef4eaa7465d622f7f48af63e40c0a"
+                "reference": "0afceb7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mpdf/mpdf/zipball/0afceb7c205ef4eaa7465d622f7f48af63e40c0a",
-                "reference": "0afceb7c205ef4eaa7465d622f7f48af63e40c0a",
+                "url": "https://api.github.com/repos/mpdf/mpdf/zipball/0afceb7",
+                "reference": "0afceb7",
                 "shasum": ""
             },
             "require": {
