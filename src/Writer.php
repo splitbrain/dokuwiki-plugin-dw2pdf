@@ -125,7 +125,7 @@ class Writer
     {
         $rev = $collector->getRev();
         $at = $collector->getAt();
-        $file = wikiFN($pageId,);
+        $file = wikiFN($pageId, $rev);
 
         //ensure $id is in global $ID (needed for parsing)
         global $ID;
