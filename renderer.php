@@ -47,7 +47,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     {
         global $ID;
 
-        if($this->config === null) {
+        if ($this->config === null) {
             throw new RuntimeException('DW2PDF Renderer configuration not set');
         }
 
@@ -123,7 +123,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
                 $header_prefix .= $this->header_count[$i] . ".";
             }
         }
-        if($header_prefix !== '') {
+        if ($header_prefix !== '') {
             $header_prefix .= ' ';
         }
 

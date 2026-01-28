@@ -8,6 +8,7 @@ DokuPDF.class.php
 _test/ActionPagenameSortTest.php
 _test/DokuImageProcessor.test.php
 _test/DokuImageProcessorTest.php
+_test/LocalContentLoaderTest.php
 _test/action_pagenamesort.test.php
 _test/renderer_dw2pdf.test.php
 _test/syntax_exportlink.test.php
