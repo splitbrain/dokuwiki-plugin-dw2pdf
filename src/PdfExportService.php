@@ -149,6 +149,8 @@ class PdfExportService
         $writer = new Writer($mpdf, $this->config, $template, $styles);
 
         $writer->startDocument($this->collector->getTitle());
+        // initial context for placeholder replacements, before any pages are loaded
+        $template->setContext($this->collector, $this->collector->getPages()[0], null);
         $writer->cover();
 
         if ($this->config->hasToC()) {

@@ -47,14 +47,13 @@ class Template
     }
 
     /**
-     * Set the context for the current page
+     * Set the context for the current page. For books / namespace export, initially
+     * seed the context with the first page in collection.
      *
      * This will be used in placeholders in headers/footers/cover/back pages.
      *
-     * @param string $id The page ID
-     * @param string $title The title of the page
-     * @param string|null $rev The revision of the page (if any)
-     * @param string|null $at The dateat mechanism in use (if any)
+     * @param AbstractCollector $collector
+     * @param string $id The page ID. For ns/book export, first page in collection.
      * @param string|null $username The username of the user generating the PDF (if any)
      * @return void
      */
