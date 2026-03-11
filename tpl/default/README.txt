@@ -41,14 +41,16 @@ footer files.
 
   * ''@PAGE@'' -- current page number in the PDF
   * ''@PAGES@'' -- number of all pages in the PDF
-  * ''@TITLE@'' -- The article's title
-  * ''@WIKI@'' -- The wiki's title
+  * ''@TITLE@'' -- the article's title
+  * ''@WIKI@'' -- the wiki's title
   * ''@WIKIURL@'' -- URL to the wiki
   * ''@DATE@'' -- time when the PDF was created (might be in the past if cached)
   * ''@BASE@'' -- the wiki base directory
   * ''@INC@'' -- the absolute wiki install directory on the filesystem
   * ''@TPLBASE@'' -- the PDF template base directory (use to reference images)
   * ''@TPLINC@'' -- the absolute path to the PDF template directory on the filesystem
+  * ''@DATE(<date>[, <format>])@'' -- formats the given date with [[config:dformat]] or with the given format such as ''%Y-%m-%e'', e.g. this would give just the current year ''@DATE(@DATE@,%Y)@''
+  * ''@USERNAME@'' -- name of the user who creates the PDF
 
 //Remark about Bookcreator//:
 The page depended replacements are only for ''citation.html'' updated for every page.
@@ -58,12 +60,48 @@ In the headers and footers the ID of the bookmanager page of the Bookcreator is 
   * ''@UPDATE@'' -- Time of the last update of the article
   * ''@QRCODE@'' -- QR code image pointing to the original page url (requires an online generator, see config setting)
 
+===== Revisions Replacements =====
+
+You can use ''@OLDREVISIONS@'' to display page changelog. Custom HTML can be provided
+by using ''@OLDREVISIONS("<html>")@''. You can display the first X revisions by using
+''@OLDREVISIONS("<html>",<first>)@'', where ''<first>'' can also be a negative value.
+
+The following replacement patterns can be used within the revisions.
+
+  * ''@REVDATE@'' -- date of revision. You can use modifiers to format the revision date, e.g. ''@REVDATE(%m)@'' returns the revision month
+  * ''@REVIP@'' -- ip from user name of revision
+  * ''@REVTYPE@'' -- type of revision (e.g. "E" [edit], "C" [create])
+  * ''@REVID@'' -- id of revision
+  * ''@REVUSER@'' -- user name of revision
+  * ''@REVSUM@'' -- summary of revision
+  * ''@REVEXTRA@'' -- revision extra data
+  * ''@REVSIZECHANGE@'' -- size change of revision
+
 ===== Styles =====
 
 Custom stylings can be provided in the following file of your dw2pdf-template folder:
 
   * style.css
 
+The custom PDF selector ''@page last-page :first'' allows you to customize the CSS of the last PDF page.
+
 You can use all the CSS that is understood by mpdf
 (See http://mpdf1.com/manual/index.php?tid=34)
 
+===== Fonts =====
+
+You can use custom fonts with your template by creating file ''fonts.php'' within your template folder. E.g.:
+
+<code>
+<?php
+return [
+    'frutiger' => [
+            'R' => 'Frutiger-Normal.ttf',
+            'I' => 'FrutigerObl-Normal.ttf',
+    ]
+];
+</code>
+
+Copy the font files to the ''fonts/'' subfolder within your template folder.
+
+You can use them on your template by using CSS style ''font-family: asap'', where "asap" is the name of the font on your ''fonts.php'' file.
