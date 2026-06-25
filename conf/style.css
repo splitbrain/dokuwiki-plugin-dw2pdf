@@ -64,3 +64,7 @@ blockquote {
 .leftalign {
     text-align: left;
 }
+
+img.icon.smiley {
+    height: 1.2em;
+}
