@@ -20,7 +20,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     private $header_count = [];
     private $previous_level = 0;
     private int $chapter = 0;
-    private ?Config $config;
+    private ?Config $config = null;
 
     /**
      * The Writer will reinitialize the renderer for each export, but the object will be reused within one export.
@@ -47,7 +47,7 @@ class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
     {
         global $ID;
 
-        if ($this->config === null) {
+        if (!$this->config instanceof Config) {
             throw new RuntimeException('DW2PDF Renderer configuration not set');
         }
 

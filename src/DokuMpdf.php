@@ -79,15 +79,10 @@ class DokuMpdf extends Mpdf
      */
     protected function lang2mode(string $lang): string
     {
-        switch ($lang) {
-            case 'zh':
-            case 'zh-tw':
-            case 'ja':
-            case 'ko':
-                return '+aCJK';
-            default:
-                return 'UTF-8-s';
-        }
+        return match ($lang) {
+            'zh', 'zh-tw', 'ja', 'ko' => '+aCJK',
+            default => 'UTF-8-s',
+        };
     }
 
     /**
@@ -98,12 +93,9 @@ class DokuMpdf extends Mpdf
      */
     protected function lang2direction(string $lang): string
     {
-        switch ($lang) {
-            case 'ar':
-            case 'he':
-                return 'rtl';
-            default:
-                return 'ltr';
-        }
+        return match ($lang) {
+            'ar', 'he' => 'rtl',
+            default => 'ltr',
+        };
     }
 }

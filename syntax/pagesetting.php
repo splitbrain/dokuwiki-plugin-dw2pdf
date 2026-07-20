@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\Parsing\Handler;
 use dokuwiki\Extension\SyntaxPlugin;
 
 /**
@@ -60,10 +61,10 @@ class syntax_plugin_dw2pdf_pagesetting extends SyntaxPlugin
      * @param   string       $match   The text matched by the patterns
      * @param   int          $state   The lexer state for the match
      * @param   int          $pos     The character position of the matched text
-     * @param   Doku_Handler $handler The Doku_Handler object
+     * @param Handler $handler The Doku_Handler object
      * @return  bool|array Return an array with all data you want to use in render, false don't add an instruction
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler)
+    public function handle($match, $state, $pos, Handler $handler)
     {
         return [$match, $state, $pos];
     }
