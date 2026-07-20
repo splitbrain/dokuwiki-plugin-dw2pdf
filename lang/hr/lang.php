@@ -12,4 +12,3 @@ $lang['notexist']              = 'Tražena stranica ne postoji.';
 $lang['empty']                 = 'Nemate još odabranih stranica.';
 $lang['tocheader']             = 'Sadržaj';
 $lang['export_ns']             = 'Izvoz imenskog prostora "%s:" u %s.pdf';
-$lang['forbidden']             = 'Nemate pristup ovim stranicama: %s.<br/><br/>Koristite opciju \'Skip Forbidden Pages\' da kreirate knjigu s raspoloživim stranicama.';

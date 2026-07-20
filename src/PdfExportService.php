@@ -156,7 +156,11 @@ class PdfExportService
 
         $pages = $this->collector->getPages();
         if ($pages === []) {
-            throw new ExportException('empty');
+            // tell an empty selection apart from one where every page was forbidden, without
+            // exposing anything about the skipped pages
+            throw $this->collector->getSkippedPages() === []
+                ? new ExportException('empty')
+                : new ExportException('forbidden');
         }
 
         $writer->startDocument($this->collector->getTitle());

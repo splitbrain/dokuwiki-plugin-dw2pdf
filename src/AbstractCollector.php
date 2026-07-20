@@ -10,6 +10,9 @@ abstract class AbstractCollector
     /** @var string[] */
     protected array $pages = [];
 
+    /** @var string[] Pages removed from the selection because of missing read access */
+    protected array $skipped = [];
+
     /** @var int|null */
     protected ?int $rev;
     /**
@@ -19,7 +22,14 @@ abstract class AbstractCollector
     protected Config $config;
 
     /**
-     * Constructor
+     * Collect the pages for this export and partition them by read access
+     *
+     * Pages the current user may not read are skipped but remembered, so callers can tell an
+     * empty selection apart from one where every selected page was forbidden.
+     *
+     * @param Config $config Combined plugin and request configuration
+     * @param int|null $rev Specific revision to export, if any
+     * @param int|null $at Specific dateat timestamp to export, if any
      */
     public function __construct(Config $config, ?int $rev = null, ?int $at = null)
     {
@@ -28,11 +38,15 @@ abstract class AbstractCollector
         $this->at = $at;
         $this->title = $config->getBookTitle() ?? '';
 
-        // collected pages are cleaned and checked for read access
-        $this->pages = array_filter(
-            array_map('cleanID', $this->collect()),
-            fn($page) => auth_quickaclcheck($page) >= AUTH_READ
-        );
+        // clean and partition collected pages into readable and forbidden ones in a single pass
+        foreach ($this->collect() as $page) {
+            $page = cleanID($page);
+            if (auth_quickaclcheck($page) >= AUTH_READ) {
+                $this->pages[] = $page;
+            } else {
+                $this->skipped[] = $page;
+            }
+        }
     }
 
     /**
@@ -126,6 +140,16 @@ abstract class AbstractCollector
     public function getPages(): array
     {
         return $this->pages;
+    }
+
+    /**
+     * Get the pages that were removed from the selection because of missing read access
+     *
+     * @return string[]
+     */
+    public function getSkippedPages(): array
+    {
+        return $this->skipped;
     }
 
     /**
