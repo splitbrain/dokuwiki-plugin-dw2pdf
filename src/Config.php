@@ -144,7 +144,7 @@ class Config
     {
         global $INPUT, $ID;
 
-        if ($ID) $this->exportId = $ID; // default exportId to current page ID
+        if (!blank($ID)) $this->exportId = $ID; // default exportId to current page ID
 
         $reflection = new \ReflectionClass($this);
         foreach ($reflection->getProperties() as $property) {
