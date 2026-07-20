@@ -11,6 +11,7 @@ class CollectorFactory
      * @param Config $config Combined plugin and request configuration
      * @param int|null $rev A specific revision to export
      * @param int|null $at A specific dateat timestamp to export
+     * @throws ExportException If a book export is requested without a selection
      * @throws \InvalidArgumentException If the event is not recognized
      * @return AbstractCollector
      */
@@ -27,7 +28,7 @@ class CollectorFactory
                 } elseif ($config->hasSavedSelection()) {
                     return new BookCreatorSavedSelectionCollector($config, $rev, $at);
                 }
-                // fallthrough
+                throw new ExportException('empty'); // book export without a selection
             default:
                 throw new \InvalidArgumentException('Invalid export configuration');
         }

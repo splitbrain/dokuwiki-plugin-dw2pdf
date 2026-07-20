@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\ErrorHandler;
 use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
@@ -7,6 +8,7 @@ use dokuwiki\plugin\dw2pdf\MenuItem;
 use dokuwiki\plugin\dw2pdf\src\Cache;
 use dokuwiki\plugin\dw2pdf\src\CollectorFactory;
 use dokuwiki\plugin\dw2pdf\src\Config;
+use dokuwiki\plugin\dw2pdf\src\ExportException;
 use dokuwiki\plugin\dw2pdf\src\PdfExportService;
 use Mpdf\MpdfException;
 
@@ -48,25 +50,73 @@ class action_plugin_dw2pdf extends ActionPlugin
         if (!in_array($event->data, $allowedEvents)) {
             return;
         }
+
+        $this->loadConfig();
+
+        try {
+            $config = new Config($this->conf);
+            $collector = CollectorFactory::create(
+                $event->data,
+                $config,
+                ((int) $REV) ?: null,
+                ((int) $DATE_AT) ?: null
+            );
+            $cache = new Cache($config, $collector);
+
+            $pdfService = new PdfExportService(
+                $config,
+                $collector,
+                $cache,
+                $this->getLang('tocheader'),
+                $INPUT->server->str('REMOTE_USER', '', true)
+            );
+
+            $cacheFile = $pdfService->getPdf(); // dumps HTML when in debug mode and exits
+        } catch (ExportException $e) {
+            // expected failure carrying a message meant for the user; escape dynamic parts as
+            // the message may end up in an HTML sink (see exportError())
+            $args = array_map('hsc', $e->getArgs());
+            $this->exportError($event, vsprintf($this->getLang($e->getMessage()), $args));
+            return;
+        } catch (\Exception $e) {
+            // unexpected failure, keep the details out of the user's way but log them
+            ErrorHandler::logException($e);
+            $this->exportError($event, $this->getLang('exportfailed'));
+            return;
+        }
+
+        // take over the request and deliver the file
         $event->preventDefault();
         $event->stopPropagation();
 
+        $pdfService->sendPdf($cacheFile); // exits after sending
+    }
 
-        $this->loadConfig();
-        $config = new Config($this->conf);
-        $collector = CollectorFactory::create($event->data, $config, ((int) $REV) ?: null, ((int) $DATE_AT) ?: null);
-        $cache = new Cache($config, $collector);
+    /**
+     * Surface an export failure to the user
+     *
+     * BookCreator triggers export_pdfbook as a background download via the jQuery.fileDownload
+     * plugin, which cannot be redirected. It reads the response body and injects it into an error
+     * dialog through jQuery.html(), so failures for that action are answered with an HTTP error and
+     * the message in the body. Any dynamic parts of the message must therefore be HTML escaped by
+     * the caller. All other actions are regular navigations and get a flash message plus a redirect
+     * back to the current page.
+     *
+     * @param Event $event The export event being handled
+     * @param string $message The localized message to show the user, safe for HTML output
+     * @return void
+     */
+    protected function exportError(Event $event, string $message): void
+    {
+        if ($event->data === 'export_pdfbook') {
+            http_status(400);
+            header('Content-Type: text/html; charset=utf-8');
+            echo $message;
+            exit();
+        }
 
-        $pdfService = new PdfExportService(
-            $config,
-            $collector,
-            $cache,
-            $this->getLang('tocheader'),
-            $INPUT->server->str('REMOTE_USER', '', true)
-        );
-
-        $cacheFile = $pdfService->getPdf(); // dumps HTML when in debug mode and exits
-        $pdfService->sendPdf($cacheFile);  //exits after sending
+        msg($message, -1);
+        $event->data = 'redirect';
     }
 
 

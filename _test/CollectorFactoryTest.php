@@ -6,6 +6,7 @@ use dokuwiki\plugin\dw2pdf\src\BookCreatorLiveSelectionCollector;
 use dokuwiki\plugin\dw2pdf\src\BookCreatorSavedSelectionCollector;
 use dokuwiki\plugin\dw2pdf\src\CollectorFactory;
 use dokuwiki\plugin\dw2pdf\src\Config;
+use dokuwiki\plugin\dw2pdf\src\ExportException;
 use dokuwiki\plugin\dw2pdf\src\NamespaceCollector;
 use dokuwiki\plugin\dw2pdf\src\PageCollector;
 use DokuWikiTest;
@@ -27,6 +28,11 @@ class CollectorFactoryTest extends DokuWikiTest
      */
     public function testCreatesPageCollector(): void
     {
+        global $ID, $INPUT;
+        $ID = 'playground:dw2pdffactory';
+        $INPUT->set('id', $ID);
+        saveWikiText($ID, 'factory test content', 'create test page');
+
         $config = new Config();
         $collector = CollectorFactory::create('export_pdf', $config, null, null);
         $this->assertInstanceOf(PageCollector::class, $collector);
@@ -73,7 +79,8 @@ class CollectorFactoryTest extends DokuWikiTest
      */
     public function testBadSelectionCollector(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ExportException::class);
+        $this->expectExceptionMessage('empty');
         $config = new Config();
         CollectorFactory::create('export_pdfbook', $config, null, null);
     }

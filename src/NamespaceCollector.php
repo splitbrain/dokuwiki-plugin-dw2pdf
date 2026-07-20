@@ -17,7 +17,7 @@ class NamespaceCollector extends AbstractCollector
      * Initialize variables from global input
      *
      * @return void
-     * @throws \Exception
+     * @throws ExportException When the requested namespace does not exist
      */
     protected function initVars(): void
     {
@@ -32,23 +32,20 @@ class NamespaceCollector extends AbstractCollector
 
         // check namespace exists
         $nsdir = dirname(wikiFN($this->namespace . ':dummy'));
-        if (!@is_dir($nsdir)) throw new \Exception('needns');
+        if (!@is_dir($nsdir)) throw new ExportException('needns');
     }
 
     /**
      * @inheritdoc
      * @triggers DW2PDF_NAMESPACEEXPORT_SORT
+     * @throws ExportException When the requested namespace does not exist
      * @todo currently we do not support the 'at' parameter. We would need to search pages in the attic for this.
      */
     protected function collect(): array
     {
         global $conf;
 
-        try {
-            $this->initVars();
-        } catch (\Exception $e) {
-            return [];
-        }
+        $this->initVars();
 
         //page search
         $result = [];

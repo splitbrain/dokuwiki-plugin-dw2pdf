@@ -3,6 +3,7 @@
 namespace dokuwiki\plugin\dw2pdf\test;
 
 use dokuwiki\plugin\dw2pdf\src\Config;
+use dokuwiki\plugin\dw2pdf\src\ExportException;
 use dokuwiki\plugin\dw2pdf\src\PageCollector;
 use DokuWikiTest;
 
@@ -33,9 +34,9 @@ class PageCollectorTest extends DokuWikiTest
     }
 
     /**
-     * Missing pages should not be exported.
+     * Missing pages should fail with a message for the user.
      */
-    public function testReturnsEmptyForMissingPage(): void
+    public function testThrowsForMissingPage(): void
     {
         global $ID, $INPUT;
         $ID = 'playground:missingdw2pdf';
@@ -43,7 +44,8 @@ class PageCollectorTest extends DokuWikiTest
 
         @unlink(wikiFN($ID));
 
-        $collector = new PageCollector(new Config());
-        $this->assertSame([], $collector->getPages());
+        $this->expectException(ExportException::class);
+        $this->expectExceptionMessage('notexist');
+        new PageCollector(new Config());
     }
 }

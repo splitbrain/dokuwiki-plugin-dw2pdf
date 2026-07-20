@@ -4,17 +4,20 @@ namespace dokuwiki\plugin\dw2pdf\src;
 
 class PageCollector extends AbstractCollector
 {
-    /** @inheritdoc */
+    /**
+     * @inheritdoc
+     * @throws ExportException When no page is given or the requested page does not exist
+     */
     protected function collect(): array
     {
         $exportID = $this->getConfig()->getExportId();
         if ($exportID === '') {
-            return [];
+            throw new ExportException('empty');
         }
 
         // no export for non existing page
         if (!page_exists($exportID, $this->rev)) {
-            return [];
+            throw new ExportException('notexist');
         }
 
         return [$exportID];

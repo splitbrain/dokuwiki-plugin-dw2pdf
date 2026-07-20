@@ -50,6 +50,7 @@ class PdfExportService
      *
      * @return string
      * @throws MpdfException
+     * @throws ExportException When the collector yields no pages to export
      */
     public function getPdf(): string
     {
@@ -67,6 +68,7 @@ class PdfExportService
      * @param string|null $cacheFile Absolute path to an already generated PDF file, if available
      * @return void
      * @throws MpdfException
+     * @throws ExportException When the collector yields no pages to export
      */
     public function sendPdf(?string $cacheFile = null): void
     {
@@ -86,6 +88,7 @@ class PdfExportService
             header('Content-Disposition: inline; filename="' . $filename . '.pdf";');
         }
 
+        // used by jQuery.fileDownload plugin used by bookcreator to detect when the download has started
         header('Set-Cookie: fileDownload=true; path=/');
 
         http_sendfile($cacheFile);
@@ -106,6 +109,7 @@ class PdfExportService
      * @param string $cacheFile Destination path for the generated PDF file
      * @return void
      * @throws MpdfException
+     * @throws ExportException When the collector yields no pages to export
      */
     protected function buildDocument(string $cacheFile): void
     {
@@ -125,6 +129,7 @@ class PdfExportService
      *
      * @return string Debug HTML collected while rendering the document
      * @throws MpdfException
+     * @throws ExportException When the collector yields no pages to export
      */
     public function getDebugHtml(): string
     {
@@ -140,6 +145,7 @@ class PdfExportService
      *
      * @return Writer Writer instance containing the rendered document
      * @throws MpdfException
+     * @throws ExportException When the collector yields no pages to export
      */
     protected function renderDocument(): Writer
     {
@@ -148,9 +154,14 @@ class PdfExportService
         $template = new Template($this->config);
         $writer = new Writer($mpdf, $this->config, $template, $styles);
 
+        $pages = $this->collector->getPages();
+        if ($pages === []) {
+            throw new ExportException('empty');
+        }
+
         $writer->startDocument($this->collector->getTitle());
         // initial context for placeholder replacements, before any pages are loaded
-        $template->setContext($this->collector, $this->collector->getPages()[0], null);
+        $template->setContext($this->collector, $pages[0], null);
         $writer->cover();
 
         if ($this->config->hasToC()) {

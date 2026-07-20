@@ -3,6 +3,7 @@
 namespace dokuwiki\plugin\dw2pdf\test;
 
 use dokuwiki\plugin\dw2pdf\src\Config;
+use dokuwiki\plugin\dw2pdf\src\ExportException;
 use dokuwiki\plugin\dw2pdf\src\NamespaceCollector;
 use DokuWikiTest;
 
@@ -44,15 +45,16 @@ class NamespaceCollectorCollectTest extends DokuWikiTest
     }
 
     /**
-     * Invalid namespaces must be ignored gracefully.
+     * A missing namespace must be reported to the user.
      */
-    public function testCollectReturnsEmptyForMissingNamespace(): void
+    public function testThrowsForMissingNamespace(): void
     {
         global $INPUT;
         $INPUT->set('book_ns', 'missing:dw2pdfns');
 
-        $collector = new NamespaceCollector(new Config());
-        $this->assertSame([], $collector->getPages());
+        $this->expectException(ExportException::class);
+        $this->expectExceptionMessage('needns');
+        new NamespaceCollector(new Config());
     }
 
     private function createPage(string $id, string $content): void
