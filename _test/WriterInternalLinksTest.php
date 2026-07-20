@@ -38,7 +38,6 @@ class WriterInternalLinksTest extends DokuWikiTest
 
         $writer = (new \ReflectionClass(Writer::class))->newInstanceWithoutConstructor();
         $method = (new \ReflectionClass(Writer::class))->getMethod('fixInternalLinks');
-        $method->setAccessible(true);
         $result = $method->invoke($writer, $collector, $html);
 
         $check = false;

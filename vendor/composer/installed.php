@@ -3,7 +3,7 @@
         'name' => 'splitbrain/dw2pdf',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '3c796bb4e5739d22b5fbba150b0054929c16ab9f',
+        'reference' => '3ddddb3b2485c18a6aa6809af789c7abb6977134',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,14 +11,12 @@
     ),
     'versions' => array(
         'mpdf/mpdf' => array(
-            'pretty_version' => 'dev-development',
-            'version' => 'dev-development',
-            'reference' => '0afceb7',
+            'pretty_version' => 'v8.3.1',
+            'version' => '8.3.1.0',
+            'reference' => '2a454ec334109911fdb323a284c19dbf3f049810',
             'type' => 'library',
             'install_path' => __DIR__ . '/../mpdf/mpdf',
-            'aliases' => array(
-                0 => '9999999-dev',
-            ),
+            'aliases' => array(),
             'dev_requirement' => false,
         ),
         'mpdf/psr-http-message-shim' => array(
@@ -82,9 +80,9 @@
             'dev_requirement' => false,
         ),
         'setasign/fpdi' => array(
-            'pretty_version' => 'v2.6.4',
-            'version' => '2.6.4.0',
-            'reference' => '4b53852fde2734ec6a07e458a085db627c60eada',
+            'pretty_version' => 'v2.6.8',
+            'version' => '2.6.8.0',
+            'reference' => '881945be29a4996ad3d008eb18ddc01fa3df890c',
             'type' => 'library',
             'install_path' => __DIR__ . '/../setasign/fpdi',
             'aliases' => array(),
@@ -93,7 +91,7 @@
         'splitbrain/dw2pdf' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '3c796bb4e5739d22b5fbba150b0054929c16ab9f',
+            'reference' => '3ddddb3b2485c18a6aa6809af789c7abb6977134',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

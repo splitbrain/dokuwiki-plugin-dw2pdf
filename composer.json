@@ -8,13 +8,13 @@
     ],
     "config": {
         "platform": {
-            "php": "8.0"
+            "php": "8.2"
         }
     },
     "require": {
         "ext-dom": "*",
         "ext-libxml": "*",
-        "mpdf/mpdf": "dev-development#0afceb7",
+        "mpdf/mpdf": "^8.3",
         "mpdf/qrcode": "^1.2",
         "psr/log": "^1.0"
     },

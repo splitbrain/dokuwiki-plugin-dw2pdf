@@ -5,5 +5,5 @@ date    2026-01-08
 name    Dw2Pdf plugin
 desc    DokuWiki to PDF converter
 url     https://www.dokuwiki.org/plugin:dw2pdf
-phpmin  8.0
+phpmin  8.2
 
