@@ -142,7 +142,7 @@ class Config
      */
     public function loadInputConfig()
     {
-        global $INPUT, $ID;
+        global $INPUT, $ID, $conf;
 
         if (!blank($ID)) $this->exportId = $ID; // default exportId to current page ID
 
@@ -157,6 +157,11 @@ class Config
             $type = $property->getType()?->getName();
 
             if (!$INPUT->has($confName)) continue;
+
+            // debug output exposes the raw mPDF input and bypasses the cache, so it may only be
+            // requested via URL when core debugging is enabled
+            if ($prop === 'isDebug' && empty($conf['allowdebug'])) continue;
+
             $this->setProperty($prop, $type, $INPUT->param($confName));
         }
     }

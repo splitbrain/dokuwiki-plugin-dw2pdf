@@ -142,8 +142,9 @@ class ConfigTest extends DokuWikiTest
      */
     public function testloadInputConfig(): void
     {
-        global $INPUT, $ID;
+        global $INPUT, $ID, $conf;
         $ID = 'playground:start';
+        $conf['allowdebug'] = 1; // required for the debug URL parameter to take effect
         $INPUT->set('pagesize', 'Legal');
         $INPUT->set('orientation', 'landscape');
         $INPUT->set('font-size', '14');
@@ -190,5 +191,29 @@ class ConfigTest extends DokuWikiTest
 
     }
 
+    /**
+     * The debug flag may only be enabled through the URL when core debugging is allowed
+     */
+    public function testDebugUrlRequiresAllowDebug(): void
+    {
+        global $INPUT, $conf;
+        $INPUT->set('debug', '1');
 
+        $conf['allowdebug'] = 0;
+        $this->assertFalse((new Config())->isDebugEnabled(), 'debug via URL ignored without allowdebug');
+
+        $conf['allowdebug'] = 1;
+        $this->assertTrue((new Config())->isDebugEnabled(), 'debug via URL honored with allowdebug');
+    }
+
+    /**
+     * The debug flag set through the plugin configuration is trusted regardless of allowdebug
+     */
+    public function testDebugConfigIgnoresAllowDebug(): void
+    {
+        global $conf;
+        $conf['allowdebug'] = 0;
+
+        $this->assertTrue((new Config(['debug' => 1]))->isDebugEnabled(), 'debug via config honored');
+    }
 }
