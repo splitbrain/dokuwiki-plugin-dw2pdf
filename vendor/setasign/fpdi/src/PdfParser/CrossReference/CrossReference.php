@@ -1,9 +1,10 @@
 <?php
+
 /**
  * This file is part of FPDI
  *
  * @package   setasign\Fpdi
- * @copyright Copyright (c) 2020 Setasign GmbH & Co. KG (https://www.setasign.com)
+ * @copyright Copyright (c) 2026 Setasign GmbH & Co. KG (https://www.setasign.com)
  * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 
@@ -21,8 +22,6 @@ use setasign\Fpdi\PdfParser\Type\PdfTypeException;
  * Class CrossReference
  *
  * This class processes the standard cross reference of a PDF document.
- *
- * @package setasign\Fpdi\PdfParser\CrossReference
  */
 class CrossReference
 {
@@ -31,7 +30,7 @@ class CrossReference
      *
      * @var int
      */
-    static public $trailerSearchLength = 5500;
+    public static $trailerSearchLength = 5500;
 
     /**
      * @var int
@@ -57,11 +56,15 @@ class CrossReference
      */
     public function __construct(PdfParser $parser, $fileHeaderOffset = 0)
     {
+        // clear the token stack, if the parser instance is re-used
+        $parser->getTokenizer()->clearStack();
+
         $this->parser = $parser;
         $this->fileHeaderOffset = $fileHeaderOffset;
 
         $offset = $this->findStartXref();
         $reader = null;
+        $offsets = [$offset];
         /** @noinspection TypeUnsafeComparisonInspection */
         while ($offset != false) { // By doing an unsafe comparsion we ignore faulty references to byte offset 0
             try {
@@ -70,7 +73,7 @@ class CrossReference
                 // sometimes the file header offset is part of the byte offsets, so let's retry by resetting it to zero.
                 if ($e->getCode() === CrossReferenceException::INVALID_DATA && $this->fileHeaderOffset !== 0) {
                     $this->fileHeaderOffset = 0;
-                    $reader = $this->readXref($offset + $this->fileHeaderOffset);
+                    $reader = $this->readXref($offset);
                 } else {
                     throw $e;
                 }
@@ -82,8 +85,15 @@ class CrossReference
 
             if (isset($trailer->value['Prev'])) {
                 $offset = $trailer->value['Prev']->value;
+                if (\in_array($offset, $offsets, true)) {
+                    throw new CrossReferenceException(
+                        'Cross-references includes cyclic structure.',
+                        CrossReferenceException::CYCLIC_STRUCTURE
+                    );
+                }
+                $offsets[] = $offset;
             } else {
-                $offset = false;
+                break;
             }
         }
 
@@ -206,7 +216,7 @@ class CrossReference
         $this->parser->getStreamReader()->reset($offset);
         $this->parser->getTokenizer()->clearStack();
         $initValue = $this->parser->readValue();
-        
+
         return $this->initReaderInstance($initValue);
     }
 
@@ -237,7 +247,6 @@ class CrossReference
         if ($initValue instanceof PdfIndirectObject) {
             try {
                 $stream = PdfStream::ensure($initValue->value);
-
             } catch (PdfTypeException $e) {
                 throw new CrossReferenceException(
                     'Invalid object type at xref reference offset.',

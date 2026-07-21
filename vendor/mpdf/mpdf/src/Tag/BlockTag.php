@@ -3,7 +3,11 @@
 namespace Mpdf\Tag;
 
 use Mpdf\Conversion\DecToAlpha;
+use Mpdf\Conversion\DecToCjk;
+use Mpdf\Conversion\DecToHebrew;
+use Mpdf\Conversion\DecToOther;
 use Mpdf\Conversion\DecToRoman;
+use Mpdf\Mpdf;
 use Mpdf\Utils\Arrays;
 use Mpdf\Utils\UtfString;
 
@@ -154,6 +158,34 @@ abstract class BlockTag extends Tag
 						$this->mpdf->listtype[$this->mpdf->listlvl] = 'square';
 					}
 				}
+
+				// Override with HTML TYPE attribute (lower specificity than CSS)
+				if (!empty($attr['TYPE'])) {
+					$listtype = $attr['TYPE'];
+					switch ($listtype) {
+						case 'A':
+							$listtype = 'upper-latin';
+							break;
+						case 'a':
+							$listtype = 'lower-latin';
+							break;
+						case 'I':
+							$listtype = 'upper-roman';
+							break;
+						case 'i':
+							$listtype = 'lower-roman';
+							break;
+						case '1':
+							$listtype = 'decimal';
+							break;
+					}
+					$this->mpdf->listtype[$this->mpdf->listlvl] = $listtype;
+				}
+
+				// Override with CSS list-style-type if specified (highest specificity)
+				if (!empty($properties['LIST-STYLE-TYPE'])) {
+					$this->mpdf->listtype[$this->mpdf->listlvl] = strtolower($properties['LIST-STYLE-TYPE']);
+				}
 			}
 
 			// mPDF 6  Lists - in Tables
@@ -169,54 +201,161 @@ abstract class BlockTag extends Tag
 				//if in table - output here as a tabletextbuffer
 				//position:inside OR position:outside (always output in table as position:inside)
 
+				$currentListType = $this->mpdf->listtype[$this->mpdf->listlvl];
+
+				// Allow individual LI to override list type via HTML TYPE attribute
+				if (!empty($attr['TYPE'])) {
+					$liType = $attr['TYPE'];
+					switch ($liType) {
+						case 'A':
+							$liType = 'upper-latin';
+							break;
+						case 'a':
+							$liType = 'lower-latin';
+							break;
+						case 'I':
+							$liType = 'upper-roman';
+							break;
+						case 'i':
+							$liType = 'lower-roman';
+							break;
+						case '1':
+							$liType = 'decimal';
+							break;
+					}
+					$currentListType = $liType;
+				}
+
+				// Allow individual LI to override list type via CSS (highest specificity)
+				if (!empty($properties['LIST-STYLE-TYPE'])) {
+					$currentListType = strtolower($properties['LIST-STYLE-TYPE']);
+				}
+
 				$decToAlpha = new DecToAlpha();
 				$decToRoman = new DecToRoman();
+				$counter = $this->mpdf->listcounter[$this->mpdf->listlvl];
+				$list_item_color = '';
 
-				switch ($this->mpdf->listtype[$this->mpdf->listlvl]) {
+				switch ($currentListType) {
 					case 'upper-alpha':
 					case 'upper-latin':
 					case 'A':
-						$blt = $decToAlpha->convert($this->mpdf->listcounter[$this->mpdf->listlvl]) . $this->mpdf->list_number_suffix;
+						$blt = $decToAlpha->convert($counter) . $this->mpdf->list_number_suffix;
 						break;
 					case 'lower-alpha':
 					case 'lower-latin':
 					case 'a':
-						$blt = $decToAlpha->convert($this->mpdf->listcounter[$this->mpdf->listlvl], false) . $this->mpdf->list_number_suffix;
+						$blt = $decToAlpha->convert($counter, false) . $this->mpdf->list_number_suffix;
 						break;
 					case 'upper-roman':
 					case 'I':
-						$blt = $decToRoman->convert($this->mpdf->listcounter[$this->mpdf->listlvl]) . $this->mpdf->list_number_suffix;
+						$blt = $decToRoman->convert($counter) . $this->mpdf->list_number_suffix;
 						break;
 					case 'lower-roman':
 					case 'i':
-						$blt = $decToRoman->convert($this->mpdf->listcounter[$this->mpdf->listlvl]) . $this->mpdf->list_number_suffix;
+						$blt = $decToRoman->convert($counter, false) . $this->mpdf->list_number_suffix;
 						break;
 					case 'decimal':
 					case '1':
-						$blt = $this->mpdf->listcounter[$this->mpdf->listlvl] . $this->mpdf->list_number_suffix;
+						$blt = $counter . $this->mpdf->list_number_suffix;
+						break;
+					case 'hebrew':
+						$decToHebrew = new DecToHebrew();
+						$blt = $decToHebrew->convert($counter) . $this->mpdf->list_number_suffix;
+						break;
+					case 'cjk-decimal':
+						$decToCjk = new DecToCjk();
+						$blt = $decToCjk->convert($counter) . $this->mpdf->list_number_suffix;
+						break;
+					case 'arabic-indic':
+					case 'bengali':
+					case 'cambodian':
+					case 'devanagari':
+					case 'gujarati':
+					case 'gurmukhi':
+					case 'kannada':
+					case 'khmer':
+					case 'lao':
+					case 'malayalam':
+					case 'myanmar':
+					case 'oriya':
+					case 'persian':
+					case 'tamil':
+					case 'telugu':
+					case 'thai':
+					case 'urdu':
+						$decToOther = new DecToOther($this->mpdf);
+						$cp = $decToOther->getCodePage($currentListType);
+						$blt = $decToOther->convert($counter, $cp, true) . $this->mpdf->list_number_suffix;
+						break;
+					case 'disc':
+						$blt = '-';
+						if ($this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], 8226)) {
+							$blt = "\xe2\x80\xa2"; // U+2022 BULLET
+						}
+						break;
+					case 'circle':
+						$blt = '-';
+						if ($this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], 9900)) {
+							$blt = "\xe2\x9a\xac"; // U+26AC
+						}
+						break;
+					case 'square':
+						$blt = '-';
+						if ($this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], 9642)) {
+							$blt = "\xe2\x96\xaa"; // U+25AA
+						}
+						break;
+					case 'none':
+						$blt = '';
 						break;
 					default:
-						$blt = '-';
-						if ($this->mpdf->listlvl % 3 == 1 && $this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], 8226)) {
-							$blt = "\xe2\x80\xa2";
-						} // &#8226;
-						elseif ($this->mpdf->listlvl % 3 == 2 && $this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], 9900)) {
-							$blt = "\xe2\x9a\xac";
-						} // &#9900;
-						elseif ($this->mpdf->listlvl % 3 == 0 && $this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], 9642)) {
-							$blt = "\xe2\x96\xaa";
-						} // &#9642;
+						if (preg_match('/U\+([a-fA-F0-9]+)/i', $currentListType, $m)) {
+							$blt = '-';
+							if ($this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], hexdec($m[1]))) {
+								$blt = UtfString::codeHex2utf($m[1]);
+							}
+							if (preg_match('/rgb\(.*?\)/', $currentListType, $cm)) {
+								$list_item_color = $this->colorConverter->convert($cm[0], $this->mpdf->PDFAXwarnings);
+							}
+						} else {
+							$blt = '-';
+							if ($this->mpdf->_charDefined($this->mpdf->CurrentFont['cw'], 8226)) {
+								$blt = "\xe2\x80\xa2";
+							}
+						}
 						break;
 				}
 
 				// change to &nbsp; spaces
-				if ($this->mpdf->usingCoreFont) {
-					$ls = str_repeat(chr(160) . chr(160), ($this->mpdf->listlvl - 1) * 2) . $blt . ' ';
-				} else {
-					$ls = str_repeat("\xc2\xa0\xc2\xa0", ($this->mpdf->listlvl - 1) * 2) . $blt . ' ';
+				if ($currentListType !== 'none') {
+					if ($this->mpdf->usingCoreFont) {
+						$indent = str_repeat(chr(160) . chr(160), ($this->mpdf->listlvl - 1) * 2);
+					} else {
+						$indent = str_repeat("\xc2\xa0\xc2\xa0", ($this->mpdf->listlvl - 1) * 2);
+					}
+
+					if (!empty($list_item_color)) {
+						// Write indentation without color
+						if ($indent !== '') {
+							$this->mpdf->_saveCellTextBuffer($indent);
+							$this->mpdf->cell[$this->mpdf->row][$this->mpdf->col]['s'] += $this->mpdf->GetStringWidth($indent);
+						}
+						// Write marker with color
+						$save_colorarray = $this->mpdf->colorarray;
+						$this->mpdf->colorarray = $list_item_color;
+						$this->mpdf->_saveCellTextBuffer($blt);
+						$this->mpdf->cell[$this->mpdf->row][$this->mpdf->col]['s'] += $this->mpdf->GetStringWidth($blt);
+						$this->mpdf->colorarray = $save_colorarray;
+						// Write trailing space without color
+						$this->mpdf->_saveCellTextBuffer(' ');
+						$this->mpdf->cell[$this->mpdf->row][$this->mpdf->col]['s'] += $this->mpdf->GetStringWidth(' ');
+					} else {
+						$ls = $indent . $blt . ' ';
+						$this->mpdf->_saveCellTextBuffer($ls);
+						$this->mpdf->cell[$this->mpdf->row][$this->mpdf->col]['s'] += $this->mpdf->GetStringWidth($ls);
+					}
 				}
-				$this->mpdf->_saveCellTextBuffer($ls);
-				$this->mpdf->cell[$this->mpdf->row][$this->mpdf->col]['s'] += $this->mpdf->GetStringWidth($ls);
 			}
 
 			return;
@@ -246,11 +385,9 @@ abstract class BlockTag extends Tag
 		/* -- END CSS-PAGE -- */
 
 		// If page-box has changed AND/OR PAGE-BREAK-BEFORE
-		// mPDF 6 (uses $p - preview of properties so blklvl can be imcremented after page-break)
-		if (!$this->mpdf->tableLevel && (($pagesel && (!isset($this->mpdf->page_box['current'])
-						|| $pagesel != $this->mpdf->page_box['current']))
-				|| (isset($p['PAGE-BREAK-BEFORE'])
-					&& $p['PAGE-BREAK-BEFORE']))) {
+		// mPDF 6 (uses $p - preview of properties so blklvl can be incremented after page-break)
+		if (!$this->mpdf->tableLevel && (($pagesel && (!$this->mpdf->page_box['current'] || $pagesel != $this->mpdf->page_box['current']))
+				|| (isset($p['PAGE-BREAK-BEFORE']) && $p['PAGE-BREAK-BEFORE']))) {
 			// mPDF 6 pagebreaktype
 			$startpage = $this->mpdf->page;
 			$pagebreaktype = $this->mpdf->defaultPagebreakType;
@@ -258,7 +395,7 @@ abstract class BlockTag extends Tag
 			if ($this->mpdf->ColActive) {
 				$pagebreaktype = 'cloneall';
 			}
-			if ($pagesel && (!isset($this->mpdf->page_box['current']) || $pagesel != $this->mpdf->page_box['current'])) {
+			if ($pagesel && (!$this->mpdf->page_box['current'] || $pagesel != $this->mpdf->page_box['current'])) {
 				$pagebreaktype = 'cloneall';
 			}
 			$this->mpdf->_preForcedPagebreak($pagebreaktype);
@@ -317,7 +454,7 @@ abstract class BlockTag extends Tag
 				} // *CSS-PAGE*
 			} /* -- CSS-PAGE -- */
 			// Must Add new page if changed page properties
-			elseif (!isset($this->mpdf->page_box['current']) || $pagesel != $this->mpdf->page_box['current']) {
+			elseif (!$this->mpdf->page_box['current'] || $pagesel != $this->mpdf->page_box['current']) {
 				$this->mpdf->AddPage($this->mpdf->CurOrientation, '', '', '', '', '', '', '', '', '', '', '', '', '', '', 0, 0, 0, 0, $pagesel);
 			}
 			/* -- END CSS-PAGE -- */
@@ -992,7 +1129,7 @@ abstract class BlockTag extends Tag
 					$content = $this->mpdf->textbuffer[0][0];
 				} else {
 					for ($i = 0; $i < count($this->mpdf->textbuffer); $i++) {
-						if (0 !== strpos($this->mpdf->textbuffer[$i][0], "\xbb\xa4\xac")) { //inline object
+						if (0 !== strpos($this->mpdf->textbuffer[$i][0], Mpdf::OBJECT_IDENTIFIER)) { //inline object
 							$content .= $this->mpdf->textbuffer[$i][0];
 						}
 					}
@@ -1003,7 +1140,7 @@ abstract class BlockTag extends Tag
 					$objattr['type'] = 'toc';
 					$objattr['toclevel'] = $this->mpdf->h2toc[$tag];
 					$objattr['CONTENT'] = htmlspecialchars($content);
-					$e = "\xbb\xa4\xactype=toc,objattr=" . serialize($objattr) . "\xbb\xa4\xac";
+					$e = Mpdf::OBJECT_IDENTIFIER . "type=toc,objattr=" . serialize($objattr) . Mpdf::OBJECT_IDENTIFIER;
 					array_unshift($this->mpdf->textbuffer, [$e]);
 				}
 				/* -- END TOC -- */
@@ -1013,7 +1150,7 @@ abstract class BlockTag extends Tag
 					$objattr['type'] = 'bookmark';
 					$objattr['bklevel'] = $this->mpdf->h2bookmarks[$tag];
 					$objattr['CONTENT'] = $content;
-					$e = "\xbb\xa4\xactype=toc,objattr=" . serialize($objattr) . "\xbb\xa4\xac";
+					$e = Mpdf::OBJECT_IDENTIFIER . "type=toc,objattr=" . serialize($objattr) . Mpdf::OBJECT_IDENTIFIER;
 					array_unshift($this->mpdf->textbuffer, [$e]);
 				}
 				/* -- END BOOKMARKS -- */
@@ -1081,7 +1218,7 @@ abstract class BlockTag extends Tag
 
 		// called from after e.g. </table> </div> </div> ...    Outputs block margin/border and padding
 		if (count($this->mpdf->textbuffer) && $this->mpdf->textbuffer[count($this->mpdf->textbuffer) - 1]) {
-			if (0 !== strpos($this->mpdf->textbuffer[count($this->mpdf->textbuffer) - 1][0], "\xbb\xa4\xac")) { // not special content
+			if (0 !== strpos($this->mpdf->textbuffer[count($this->mpdf->textbuffer) - 1][0], Mpdf::OBJECT_IDENTIFIER)) { // not special content
 				// Right trim last content and adjust OTLdata
 				if (preg_match('/[ ]+$/', $this->mpdf->textbuffer[count($this->mpdf->textbuffer) - 1][0], $m)) {
 					$strip = strlen($m[0]);

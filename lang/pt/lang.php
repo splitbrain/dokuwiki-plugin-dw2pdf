@@ -14,5 +14,4 @@ $lang['notexist']              = 'A página solicitada não existe.';
 $lang['empty']                 = 'Você ainda não selecionou páginas.';
 $lang['tocheader']             = 'Tabela de Conteúdos';
 $lang['export_ns']             = 'Exportar o namespace "%s:" para arquivo %s.pdf';
-$lang['forbidden']             = 'Você não tem acesso a estas páginas: %s.<br/><br/>Use a opção \'Ignorar Páginas Proibidas\' para criar seu livro com as páginas disponíveis.';
 $lang['missingbookcreator']    = 'O Plugin Bookcreator não está instalado ou está desabilitado';

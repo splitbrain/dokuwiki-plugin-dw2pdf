@@ -4,12 +4,14 @@ namespace Mpdf\Writer;
 
 use Mpdf\Strict;
 use Mpdf\Mpdf;
+use Mpdf\PsrLogAwareTrait\PsrLogAwareTrait;
 use Psr\Log\LoggerInterface;
 
 final class ResourceWriter implements \Psr\Log\LoggerAwareInterface
 {
 
 	use Strict;
+	use PsrLogAwareTrait;
 
 	/**
 	 * @var \Mpdf\Mpdf
@@ -66,11 +68,6 @@ final class ResourceWriter implements \Psr\Log\LoggerAwareInterface
 	 */
 	private $javaScriptWriter;
 
-	/**
-	 * @var \Psr\Log\LoggerInterface
-	 */
-	private $logger;
-
 	public function __construct(
 		Mpdf $mpdf,
 		BaseWriter $writer,
@@ -124,7 +121,7 @@ final class ResourceWriter implements \Psr\Log\LoggerAwareInterface
 		$this->backgroundWriter->writePatterns();
 
 		// Resource dictionary
-		$this->mpdf->offsets[2] = strlen($this->mpdf->buffer);
+		$this->mpdf->offsets[2] = $this->mpdf->buffer->getLength();
 		$this->writer->write('2 0 obj');
 		$this->writer->write('<</ProcSet [/PDF /Text /ImageB /ImageC /ImageI]');
 
@@ -242,15 +239,5 @@ final class ResourceWriter implements \Psr\Log\LoggerAwareInterface
 			$this->writer->write('>>');
 			$this->writer->write('endobj');
 		}
-	}
-
-	/**
-	 * @param \Psr\Log\LoggerInterface $logger
-	 *
-	 * @return void
-	 */
-	public function setLogger(LoggerInterface $logger)
-	{
-		$this->logger = $logger;
 	}
 }

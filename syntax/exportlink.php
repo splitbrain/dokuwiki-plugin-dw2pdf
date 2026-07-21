@@ -9,6 +9,7 @@
  * @author     Sam Wilson <sam@samwilson.id.au>
  */
 
+use dokuwiki\Parsing\Handler;
 use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\File\PageResolver;
 
@@ -53,10 +54,10 @@ class syntax_plugin_dw2pdf_exportlink extends SyntaxPlugin
      * @param string $match The text matched by the patterns
      * @param int $state The lexer state for the match
      * @param int $pos The character position of the matched text
-     * @param Doku_Handler $handler The Doku_Handler object
+     * @param Handler $handler The Doku_Handler object
      * @return  array Return an array with all data you want to use in render, false don't add an instruction
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler)
+    public function handle($match, $state, $pos, Handler $handler)
     {
         global $ID;
         $ns = substr($match, 8, strpos($match, '|') - 8);

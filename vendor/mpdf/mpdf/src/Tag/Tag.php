@@ -8,7 +8,7 @@ use Mpdf\Cache;
 use Mpdf\Color\ColorConverter;
 use Mpdf\CssManager;
 use Mpdf\Form;
-use \dokuwiki\plugin\dw2pdf\DokuImageProcessorDecorator as ImageProcessor;
+use Mpdf\Image\ImageProcessor;
 use Mpdf\Language\LanguageToFontInterface;
 use Mpdf\Mpdf;
 use Mpdf\Otl;
@@ -61,7 +61,7 @@ abstract class Tag
 	protected $colorConverter;
 
 	/**
-	 * @var ImageProcessor
+	 * @var \Mpdf\Image\ImageProcessor
 	 */
 	protected $imageProcessor;
 

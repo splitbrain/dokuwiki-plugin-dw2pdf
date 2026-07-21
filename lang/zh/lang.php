@@ -15,5 +15,4 @@ $lang['notexist']              = '请求的页面不存在。';
 $lang['empty']                 = '您还没有选择的页面。';
 $lang['tocheader']             = '目录';
 $lang['export_ns']             = '将命名空间"%s:"转至%s.pdf文件';
-$lang['forbidden']             = '您无权访问这些页面：%s。<br/><br/>使用“跳过禁止访问的页面”选项来创建包含可用页面的图书。';
 $lang['missingbookcreator']    = 'Bookcreator 插件未安装或被禁用';

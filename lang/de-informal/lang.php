@@ -16,5 +16,4 @@ $lang['notexist']              = 'Die angeforderte Seite existiert nicht.';
 $lang['empty']                 = 'Du hast noch keine Seiten gewählt.';
 $lang['tocheader']             = 'Inhaltsverzeichnis';
 $lang['export_ns']             = 'Exportiere Namensraum "%s:" in Datei %s.pdf';
-$lang['forbidden']             = 'Du hast keine Berechtigung für folgende Seiten: %s.<br/><br/>Benutze die Option \'Seiten ohne Berechtigung auslassen\' um das Buch mit den verfügbaren Seiten zu erstellen.';
 $lang['missingbookcreator']    = 'Das Bookcreator Plugin ist nicht installiert oder deaktiviert';

@@ -16,5 +16,4 @@ $lang['notexist']              = 'La page demandée n\'existe pas.';
 $lang['empty']                 = 'Vous n\'avez encore sélectionné aucune page.';
 $lang['tocheader']             = 'Table des matières';
 $lang['export_ns']             = 'Exporter la catégorie  « %s » dans le fichier %s.pdf.';
-$lang['forbidden']             = 'Vous n\'avez pas accès à ces pages : %s.<br/><br/>Utilisez l\'option \'Sauter les pages interdites\' pour créer votre livre avec les pages disponibles.';
 $lang['missingbookcreator']    = 'Le greffon Bookcreator est désactivé ou n\'est pas installé.';

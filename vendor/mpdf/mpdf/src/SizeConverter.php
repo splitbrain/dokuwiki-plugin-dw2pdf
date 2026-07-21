@@ -4,9 +4,12 @@ namespace Mpdf;
 
 use Psr\Log\LoggerInterface;
 use Mpdf\Log\Context as LogContext;
+use Mpdf\PsrLogAwareTrait\PsrLogAwareTrait;
 
 class SizeConverter implements \Psr\Log\LoggerAwareInterface
 {
+
+	use PsrLogAwareTrait;
 
 	private $dpi;
 
@@ -17,21 +20,11 @@ class SizeConverter implements \Psr\Log\LoggerAwareInterface
 	 */
 	private $mpdf;
 
-	/**
-	 * @var \Psr\Log\LoggerInterface
-	 */
-	private $logger;
-
 	public function __construct($dpi, $defaultFontSize, Mpdf $mpdf, LoggerInterface $logger)
 	{
 		$this->dpi = $dpi;
 		$this->defaultFontSize = $defaultFontSize;
 		$this->mpdf = $mpdf;
-		$this->logger = $logger;
-	}
-
-	public function setLogger(LoggerInterface $logger)
-	{
 		$this->logger = $logger;
 	}
 
@@ -49,7 +42,7 @@ class SizeConverter implements \Psr\Log\LoggerAwareInterface
 	 */
 	public function convert($size = 5, $maxsize = 0, $fontsize = false, $usefontsize = true)
 	{
-		$size = trim(strtolower($size));
+		$size = trim(strtolower((string) $size));
 		$res = preg_match('/^(?P<size>[-0-9.,]+([eE]\-?[0-9]+)?)?(?P<unit>[%a-z-]+)?$/', $size, $parts);
 		if (!$res) {
 			// ignore definition
@@ -77,6 +70,7 @@ class SizeConverter implements \Psr\Log\LoggerAwareInterface
 				break;
 
 			case '%':
+			case '%%': // Issue2051
 				if ($fontsize && $usefontsize) {
 					$size *= $fontsize / 100;
 				} else {

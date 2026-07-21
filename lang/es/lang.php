@@ -12,4 +12,3 @@ $lang['notexist']              = 'La página solicitada no existe.';
 $lang['empty']                 = 'No tiene páginas seleccionadas aún.';
 $lang['tocheader']             = 'Tabla de Contenidos';
 $lang['export_ns']             = 'Exportar el espacio de nombres "%s:" al fichero%s.pdf';
-$lang['forbidden']             = 'No tiene acceso a estas páginas:%s.<br/><br/>Use la opción \'Saltar páginas prohibidas\' para crear su libro con las páginas disponibles.';

@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\test;
 
+use dokuwiki\MailUtils;
 use DokuWikiTest;
 
 /**
@@ -32,9 +33,9 @@ class GeneralTest extends DokuWikiTest
         $this->assertArrayHasKey('url', $info);
 
         $this->assertEquals('dw2pdf', $info['base']);
-        $this->assertRegExp('/^https?:\/\//', $info['url']);
-        $this->assertTrue(mail_isvalid($info['email']));
-        $this->assertRegExp('/^\d\d\d\d-\d\d-\d\d$/', $info['date']);
+        $this->assertMatchesRegularExpression('/^https?:\/\//', $info['url']);
+        $this->assertTrue(MailUtils::isValid($info['email']));
+        $this->assertMatchesRegularExpression('/^\d\d\d\d-\d\d-\d\d$/', $info['date']);
         $this->assertTrue(false !== strtotime($info['date']));
     }
 
