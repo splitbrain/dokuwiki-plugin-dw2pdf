@@ -67,3 +67,20 @@ Custom stylings can be provided in the following file of your dw2pdf-template fo
 You can use all the CSS that is understood by mpdf
 (See http://mpdf1.com/manual/index.php?tid=34)
 
+===== Fonts =====
+
+You can use custom fonts with your template by creating file ''fonts.php'' within your template folder. E.g.:
+
+<code>
+<?php
+return [
+    'frutiger' => [
+            'R' => 'Frutiger-Normal.ttf',
+            'I' => 'FrutigerObl-Normal.ttf',
+    ]
+];
+</code>
+
+Copy the font files to the ''fonts/'' subfolder within your template folder.
+
+You can use them on your template by using CSS style ''font-family: asap'', where "asap" is the name of the font on your ''fonts.php'' file.
