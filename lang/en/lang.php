@@ -10,3 +10,7 @@ $lang['export_ns']         = 'Export namespace "%s:" to file %s.pdf';
 $lang['forbidden']         = "You have no read access to the selected pages.";
 $lang['exportfailed']      = "The PDF could not be created.";
 $lang['missingbookcreator'] = 'The Bookcreator Plugin is not installed or is disabled';
+$lang['js']['export_pdf_modal'] = "Export to PDF";
+$lang['js']['template']    = 'Which template should be used for formatting the PDFs?';
+$lang['js']['cancel']      = 'Cancel';
+$lang['js']['export']      = 'Export';

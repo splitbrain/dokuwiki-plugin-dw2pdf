@@ -14,3 +14,7 @@ $lang['empty']                 = 'Você não selecionou nenhuma página.';
 $lang['tocheader']             = 'Índice';
 $lang['export_ns']             = 'Exportar domínio "%s:" para o arquivo %s.pdf';
 $lang['missingbookcreator']    = 'O plugin Bookcreator não está instalado ou está desativado';
+$lang['js']['export_pdf_modal'] = 'Exportar para PDF';
+$lang['js']['template']        = 'Qual modelo deve ser usado para formatar os PDFs?';
+$lang['js']['cancel']          = 'Cancelar';
+$lang['js']['export']          = 'Exportar';
