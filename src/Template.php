@@ -131,6 +131,7 @@ class Template
             '@UPDATE@' => dformat(filemtime(wikiFN($this->context['id'], $this->context['rev'] ?? ''))),
             '@PAGEURL@' => $url,
             '@QRCODE@' => $this->generateQRCode($url),
+            '@OLDREVISIONS@' => $this->changesToHTML($this->changesToArray($this->context['id'] ?? '')),
         ];
 
         // let other plugins define their own replacements
@@ -180,5 +181,42 @@ class Template
             $url,
             $this->qrScale
         );
+    }
+
+    /**
+     * Get revisions for a page
+     *
+     * @param string $id Page ID
+     * @return array
+     */
+    protected function changesToArray(string $id): array
+    {
+        if (empty($id)) return [];
+        require_once DOKU_INC . 'inc/changelog.php';
+        $pagelog = new \PageChangeLog($id);
+        return $pagelog->getRevisions(-1, 50); // Get at most 50 revisions
+    }
+
+    /**
+     * Format revisions as HTML table
+     *
+     * @param array $changes
+     * @return string
+     */
+    protected function changesToHTML(array $changes): string
+    {
+        if (empty($changes)) return '';
+        $html = '<table class="changelog"><tbody>';
+        $html .= '<tr><th>Date</th><th>Author</th><th>Summary</th></tr>';
+        foreach ($changes as $change) {
+            $html .= '<tr>';
+            $html .= '<td>' . dformat($change['date']) . '</td>';
+            $html .= '<td>' . hsc($change['user']) . '</td>';
+            $html .= '<td>' . hsc($change['sum']) . '</td>';
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table>';
+
+        return $html;
     }
 }
