@@ -291,7 +291,23 @@ class Writer
         $html = $this->template->getHTML('back');
         if (!$html) return;
 
-        $this->conditionalPageBreak();
+        if ($this->breakBeforeNext) {
+            $this->write('<pagebreak page-selector="last-page" />', 2, false, false);
+            $this->breakBeforeNext = false;
+        }
+
+        $header = $this->template->getHTML('header', 'last');
+        $footer = $this->template->getHTML('footer', 'last');
+
+        if ($header) {
+            $this->mpdf->SetHTMLHeader($header, 'O');
+            $this->mpdf->SetHTMLHeader($header, 'E');
+        }
+        if ($footer) {
+            $this->mpdf->SetHTMLFooter($footer, 'O');
+            $this->mpdf->SetHTMLFooter($footer, 'E');
+        }
+
         $this->write($html, HTMLParserMode::HTML_BODY, false, false);
     }
 
