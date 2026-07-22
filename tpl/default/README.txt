@@ -57,7 +57,7 @@ In the headers and footers the ID of the bookmanager page of the Bookcreator is 
   * ''@PAGEURL@'' -- URL to the article
   * ''@UPDATE@'' -- Time of the last update of the article
   * ''@QRCODE@'' -- QR code image pointing to the original page url (requires an online generator, see config setting)
-  * ''@OLDREVISIONS@'' -- A table with the changelog of the current page
+  * ''@OLDREVISIONS@'' or ''@OLDREVISIONS(10)@'' -- A table with the changelog of the current page, optional parameter specifies the limit (default 50)
 
 ===== Styles =====
 

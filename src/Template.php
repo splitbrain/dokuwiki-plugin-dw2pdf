@@ -131,7 +131,6 @@ class Template
             '@UPDATE@' => dformat(filemtime(wikiFN($this->context['id'], $this->context['rev'] ?? ''))),
             '@PAGEURL@' => $url,
             '@QRCODE@' => $this->generateQRCode($url),
-            '@OLDREVISIONS@' => $this->changesToHTML($this->changesToArray($this->context['id'] ?? '')),
         ];
 
         // let other plugins define their own replacements
@@ -162,6 +161,16 @@ class Template
             $html
         );
 
+        // @OLDREVISIONS[(<limit>)]@
+        $html = preg_replace_callback(
+            '/@OLDREVISIONS(?:\((\d+)\))?@/',
+            function ($match) {
+                $limit = isset($match[1]) && is_numeric($match[1]) ? (int)$match[1] : 50;
+                return $this->changesToHTML($this->changesToArray($this->context['id'] ?? '', $limit));
+            },
+            $html
+        );
+
         return $html;
     }
 
@@ -187,14 +196,15 @@ class Template
      * Get revisions for a page
      *
      * @param string $id Page ID
+     * @param int $limit Max number of revisions to return
      * @return array
      */
-    protected function changesToArray(string $id): array
+    protected function changesToArray(string $id, int $limit = 50): array
     {
         if (empty($id)) return [];
         require_once DOKU_INC . 'inc/changelog.php';
         $pagelog = new \PageChangeLog($id);
-        return $pagelog->getRevisions(-1, 50); // Get at most 50 revisions
+        return $pagelog->getRevisions(-1, $limit); // Get at most $limit revisions
     }
 
     /**
