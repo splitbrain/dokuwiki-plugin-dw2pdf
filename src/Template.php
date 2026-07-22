@@ -152,11 +152,11 @@ class Template
             '/@DATE\((.*?)(?:,\s*(.*?))?\)@/',
             function ($match) {
                 global $conf;
+                $date = ($match[1] === '@DATE@') ? time() : strtotime($match[1]);
+                
                 //no 2nd argument for default date format
-                if ($match[2] == null) {
-                    $match[2] = $conf['dformat'];
-                }
-                return strftime($match[2], strtotime($match[1]));
+                $format = empty($match[2]) ? $conf['dformat'] : $match[2];
+                return dformat($date, $format);
             },
             $html
         );
