@@ -83,4 +83,4 @@ return [
 
 Copy the font files to the ''fonts/'' subfolder within your template folder.
 
-You can use them on your template by using CSS style ''font-family: asap'', where "asap" is the name of the font on your ''fonts.php'' file.
+You can use them on your template by using CSS style ''font-family: frutiger'', where "frutiger" is the name of the font on your ''fonts.php'' file.
