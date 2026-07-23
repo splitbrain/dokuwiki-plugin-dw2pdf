@@ -202,9 +202,17 @@ class Template
     protected function changesToArray(string $id, int $limit = 50): array
     {
         if (empty($id)) return [];
-        require_once DOKU_INC . 'inc/changelog.php';
-        $pagelog = new \PageChangeLog($id);
-        return $pagelog->getRevisions(-1, $limit); // Get at most $limit revisions
+        $pagelog = new \dokuwiki\ChangeLog\PageChangeLog($id);
+        $revisions = $pagelog->getRevisions(-1, $limit); // Get at most $limit revisions
+        
+        $changes = [];
+        foreach ($revisions as $rev) {
+            $change = $pagelog->getRevisionInfo($rev);
+            if ($change !== false) {
+                $changes[] = $change;
+            }
+        }
+        return $changes;
     }
 
     /**
@@ -216,12 +224,27 @@ class Template
     protected function changesToHTML(array $changes): string
     {
         if (empty($changes)) return '';
+        
+        global $lang;
+        $date = $lang['media_sort_date'] ?? 'Date';
+        $userStr = $lang['media_sort_name'] ?? 'Name';
+        $summary = $lang['summary'] ?? 'Edit summary';
+
         $html = '<table class="changelog"><tbody>';
-        $html .= '<tr><th>Date</th><th>Author</th><th>Summary</th></tr>';
+        $html .= '<tr><th>' . hsc($date) . '</th><th>' . hsc($userStr) . '</th><th>' . hsc($summary) . '</th></tr>';
+        global $auth;
         foreach ($changes as $change) {
+            $user = $change['user'];
+            if ($auth && $user) {
+                $userData = $auth->getUserData($user);
+                if ($userData && !empty($userData['name'])) {
+                    $user = $userData['name'];
+                }
+            }
+
             $html .= '<tr>';
             $html .= '<td>' . dformat($change['date']) . '</td>';
-            $html .= '<td>' . hsc($change['user']) . '</td>';
+            $html .= '<td>' . hsc($user) . '</td>';
             $html .= '<td>' . hsc($change['sum']) . '</td>';
             $html .= '</tr>';
         }
