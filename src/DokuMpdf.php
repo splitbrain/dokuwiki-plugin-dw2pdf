@@ -32,6 +32,23 @@ class DokuMpdf extends Mpdf
         $initConfig = $config->getMPdfConfig();
         $initConfig['mode'] = $this->lang2mode($lang);
 
+        $tplfonts = DOKU_PLUGIN . 'dw2pdf/tpl/' . $config->getTemplateName() . '/fonts';
+        if (file_exists($tplfonts . '.php')) {
+            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+            $fontData = $initConfig['fontdata'] ?? $defaultFontConfig['fontdata'];
+
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $initConfig['fontDir'] ?? $defaultConfig['fontDir'];
+            
+            $fontDirs[] = $tplfonts;
+            
+            $fontDefs = array($fontData, include($tplfonts . '.php'));
+            $fontData = array_reduce($fontDefs, 'array_merge', array());
+            
+            $initConfig['fontDir'] = $fontDirs;
+            $initConfig['fontdata'] = $fontData;
+        }
+
         $http = new HttpClient();
 
         $container = new SimpleContainer([
