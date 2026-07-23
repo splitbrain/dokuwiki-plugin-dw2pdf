@@ -161,6 +161,16 @@ class Template
             $html
         );
 
+        // @OLDREVISIONS[(<limit>)]@
+        $html = preg_replace_callback(
+            '/@OLDREVISIONS(?:\((\d+)\))?@/',
+            function ($match) {
+                $limit = isset($match[1]) && is_numeric($match[1]) ? (int)$match[1] : 50;
+                return $this->changesToHTML($this->changesToArray($this->context['id'] ?? '', $limit));
+            },
+            $html
+        );
+
         return $html;
     }
 
@@ -180,5 +190,66 @@ class Template
             $url,
             $this->qrScale
         );
+    }
+
+    /**
+     * Get revisions for a page
+     *
+     * @param string $id Page ID
+     * @param int $limit Max number of revisions to return
+     * @return array
+     */
+    protected function changesToArray(string $id, int $limit = 50): array
+    {
+        if (empty($id)) return [];
+        $pagelog = new \dokuwiki\ChangeLog\PageChangeLog($id);
+        $revisions = $pagelog->getRevisions(-1, $limit); // Get at most $limit revisions
+        
+        $changes = [];
+        foreach ($revisions as $rev) {
+            $change = $pagelog->getRevisionInfo($rev);
+            if ($change !== false) {
+                $changes[] = $change;
+            }
+        }
+        return $changes;
+    }
+
+    /**
+     * Format revisions as HTML table
+     *
+     * @param array $changes
+     * @return string
+     */
+    protected function changesToHTML(array $changes): string
+    {
+        if (empty($changes)) return '';
+        
+        global $lang;
+        $date = $lang['media_sort_date'] ?? 'Date';
+        $userStr = $lang['media_sort_name'] ?? 'Name';
+        $summary = $lang['summary'] ?? 'Edit summary';
+
+        $html = '<table class="changelog"><tbody>';
+        $html .= '<tr><th>' . hsc($date) . '</th><th>' . hsc($userStr) . '</th><th>' . hsc($summary) . '</th></tr>';
+        global $auth;
+        foreach ($changes as $change) {
+            $user = $change['user'];
+            if ($auth && $user) {
+                $userData = $auth->getUserData($user);
+                if ($userData && !empty($userData['name'])) {
+                    $user = $userData['name'];
+                }
+            }
+
+            $html .= '<tr>';
+            $html .= '<td>' . dformat($change['date']) . '</td>';
+            $html .= '<td>' . hsc($user) . '</td>';
+            $html .= '<td>' . hsc($change['sum']) . '</td>';
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table>';
+
+        return $html;
     }
 }
