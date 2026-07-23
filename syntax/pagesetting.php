@@ -64,7 +64,7 @@ class syntax_plugin_dw2pdf_pagesetting extends SyntaxPlugin
      * @param Handler $handler The Doku_Handler object
      * @return  bool|array Return an array with all data you want to use in render, false don't add an instruction
      */
-    public function handle($match, $state, $pos, Handler $handler)
+    public function handle($match, $state, $pos, Doku_Handler $handler)
     {
         return [$match, $state, $pos];
     }
