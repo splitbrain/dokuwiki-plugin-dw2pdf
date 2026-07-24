@@ -24,6 +24,14 @@ class EndToEndTest extends \DokuWikiTest
     {
         parent::setUp();
         $_REQUEST = [];
+
+        // Disable the per-page render cache. The renderer is a singleton whose cross-page chapter
+        // counter and bookmark-level state advance in document_start(); a cache hit skips that method,
+        // so numbering desyncs depending on which pages were hits vs. misses. Between tests, cache hits
+        // would otherwise make numbered headers and bookmark levels depend on execution order and file
+        // mtimes.
+        global $conf;
+        $conf['cachetime'] = -1;
     }
 
 
