@@ -102,6 +102,30 @@ class MediaLinkResolverTest extends DokuWikiTest
     }
 
     /**
+     * External media must remain fetchable by mPDF when DokuWiki's local cache is disabled.
+     */
+    public function testResolveFallsBackToExternalUrlWhenCachingIsDisabled(): void
+    {
+        global $conf;
+
+        $fetchsize = $conf['fetchsize'];
+        $conf['fetchsize'] = 0;
+
+        try {
+            $external = 'https://owncloud.example.org/index.php/s/token/download'
+                . '?path=%2F&files=image.jpg&t=token&.jpg';
+            $input = DOKU_URL . 'lib/exe/fetch.php?media=' . rawurlencode($external);
+            $resolved = $this->resolver->resolve($input);
+        } finally {
+            $conf['fetchsize'] = $fetchsize;
+        }
+
+        $this->assertNotNull($resolved);
+        $this->assertSame($external, $resolved['path']);
+        $this->assertSame('image/jpeg', $resolved['mime']);
+    }
+
+    /**
      * Non-image payloads should never be returned to the PDF generator.
      */
     public function testResolveRejectsNonImages(): void

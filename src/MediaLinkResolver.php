@@ -30,7 +30,7 @@ class MediaLinkResolver
             if (!$ext) return null;
             $localFile = $this->localMediaFile($mediaID, $ext, $rev);
             if (!$localFile) return null;
-            if (str_starts_with($mime, 'image/')) {
+            if (str_starts_with($mime, 'image/') && !media_isexternal($localFile)) {
                 $localFile = $this->resizedMedia($localFile, $ext, $w, $h);
             }
         } else {
@@ -93,7 +93,8 @@ class MediaLinkResolver
      * This method will download external media files to the local cache if needed. ACLs are
      * checked here as well.
      *
-     * Returns null when the media file is not accessible.
+     * Falls back to the original external URL when local caching is disabled or fails.
+     * Returns null when an internal media file is not accessible.
      *
      * @param string $mediaID A media ID or external URL.
      * @param string $ext File extension (used for external media caching).
@@ -106,7 +107,7 @@ class MediaLinkResolver
 
         if (media_isexternal($mediaID)) {
             $local = media_get_from_URL($mediaID, $ext, $conf['cachetime']);
-            if (!$local) return null;
+            if (!$local) return $mediaID;
         } else {
             $mediaID = cleanID($mediaID);
             // check permissions (namespace only)

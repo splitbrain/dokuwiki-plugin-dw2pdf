@@ -12,7 +12,7 @@ class DokuAssetFetcher extends AssetFetcher
     public function fetchDataFromPath($path, $originalSrc = null)
     {
         $resolved = (new MediaLinkResolver())->resolve($path);
-        if ($resolved) $originalSrc = $resolved['path'];
+        if ($resolved) $path = $originalSrc = $resolved['path'];
         return parent::fetchDataFromPath($path, $originalSrc);
     }
 }
