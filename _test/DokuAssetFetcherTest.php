@@ -104,4 +104,20 @@ class DokuAssetFetcherTest extends DokuWikiTest
 
         $this->assertSame(file_get_contents($file), $data);
     }
+
+    /**
+     * Media this wiki serves is never requested back over HTTP when it cannot be resolved.
+     *
+     * @testWith [true]
+     *           [false]
+     */
+    public function testFetchDataFromPathRefusesUnresolvableMedia(bool $basepathIsLocal): void
+    {
+        $source = DOKU_URL . 'lib/exe/fetch.php?media=wiki:no-such-image.png';
+        $this->expectLogMessage('Media not available for PDF export');
+
+        $data = $this->getFetcher($basepathIsLocal)->fetchDataFromPath($source, $source);
+
+        $this->assertSame('', $data);
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
+use dokuwiki\Logger;
 use Mpdf\AssetFetcher;
 use Mpdf\File\LocalContentLoaderInterface;
 use Mpdf\Http\ClientInterface;
@@ -41,6 +42,9 @@ class DokuAssetFetcher extends AssetFetcher
      * depending on its basepathIsLocal flag. Leaving a URL in one of them would make mpdf
      * fetch the asset over HTTP again.
      *
+     * Media this wiki serves itself is never requested back over HTTP. Such a request is
+     * anonymous and cannot reach media the exporting user may read.
+     *
      * @param string $path Media reference or URL to load
      * @param string|null $originalSrc The unmodified source as given in the HTML
      * @return string The asset's binary data, empty when it could not be loaded
@@ -48,7 +52,21 @@ class DokuAssetFetcher extends AssetFetcher
     public function fetchDataFromPath($path, $originalSrc = null)
     {
         $resolved = $this->resolver->resolve($path);
-        if ($resolved) $path = $originalSrc = $resolved['path'];
-        return parent::fetchDataFromPath($path, $originalSrc);
+
+        if (!$resolved) {
+            if ($this->resolver->isMediaUrl($path)) {
+                Logger::error('Media not available for PDF export', $path);
+                return '';
+            }
+            return parent::fetchDataFromPath($path, $originalSrc);
+        }
+
+        $path = $originalSrc = $resolved['path'];
+        $data = parent::fetchDataFromPath($path, $originalSrc);
+        if ($data === '') {
+            Logger::error('Resolved media could not be read for PDF export', $path);
+        }
+
+        return $data;
     }
 }

@@ -57,8 +57,8 @@ class MediaLinkResolver
     /**
      * Check if the given file URL corresponds to a Dokuwiki media ID and extract it.
      *
-     * Handles rewritten media URLs  (/media/*) and fetch.php calls by building a regex
-     * from the result of calling ml() for a fake media ID.
+     * Accepts the media URLs this wiki produces as well as any other URL carrying a media
+     * parameter.
      *
      * Note that the returned media ID could still be an external URL!
      *
@@ -67,19 +67,40 @@ class MediaLinkResolver
      */
     protected function extractMediaID(string $file): ?string
     {
-        // build regex to parse URL back to media info (matches fetch.php calls)
-        $fetchRegex = preg_quote(ml('xxx123yyy', '', true, '&', true), '/');
-        $fetchRegex = str_replace('xxx123yyy', '([^&\?]*)', $fetchRegex);
-
         // extract the real media from a fetch.php URI and determine mime
         if (
-            preg_match("/^$fetchRegex/", $file, $matches) ||
+            preg_match('/^' . $this->mediaUrlRegex() . '/', $file, $matches) ||
             preg_match('/[&?]media=([^&?]*)/', $file, $matches)
         ) {
             return rawurldecode($matches[1]);
         }
 
         return null;
+    }
+
+    /**
+     * Check whether the given URL is one this wiki serves media from.
+     *
+     * @param string $file Original media reference or URL.
+     * @return bool
+     */
+    public function isMediaUrl(string $file): bool
+    {
+        return (bool)preg_match('/^' . $this->mediaUrlRegex() . '/', $file);
+    }
+
+    /**
+     * Build a regex matching the media URLs this wiki produces.
+     *
+     * Handles rewritten media URLs and fetch.php calls alike by inspecting what ml() returns
+     * for a fake media ID.
+     *
+     * @return string Regex without delimiters or anchors, capturing the media ID.
+     */
+    protected function mediaUrlRegex(): string
+    {
+        $regex = preg_quote(ml('xxx123yyy', '', true, '&', true), '/');
+        return str_replace('xxx123yyy', '([^&\?]*)', $regex);
     }
 
     /**

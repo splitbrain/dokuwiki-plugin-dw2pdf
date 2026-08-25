@@ -3,6 +3,7 @@
 namespace dokuwiki\plugin\dw2pdf\src;
 
 use dokuwiki\HTTP\DokuHTTPClient;
+use dokuwiki\Logger;
 use Mpdf\Http\ClientInterface;
 use Mpdf\PsrHttpMessageShim\Response;
 use Mpdf\PsrHttpMessageShim\Stream;
@@ -31,7 +32,10 @@ class HttpClient implements ClientInterface, LoggerAwareInterface
     }
 
     /**
-     * Send the HTTP request using Dokuwiki's HTTP client, falling back to media resolution when possible.
+     * Send the HTTP request using Dokuwiki's HTTP client.
+     *
+     * The export's download limit caps each response. A limit of zero refuses the request
+     * without contacting the host.
      *
      * @inheritDoc
      */
@@ -41,8 +45,15 @@ class HttpClient implements ClientInterface, LoggerAwareInterface
 
         $url = (string)$uri;
 
+        $maxSize = $this->config->getFetchSize();
+        if (!$maxSize) {
+            Logger::error('Remote asset not downloaded for PDF export', $url);
+            return (new Response())->withStatus(403);
+        }
+
         // standard Dokuwiki HTTP client for any remote content
         $client = new DokuHTTPClient();
+        $client->max_bodysize = $maxSize;
         $client->headers = $this->buildHeaders($request);
         $client->referer = $request->getHeaderLine('Referer');
         if ($agent = $request->getHeaderLine('User-Agent')) {
