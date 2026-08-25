@@ -9,6 +9,17 @@ namespace dokuwiki\plugin\dw2pdf\src;
  */
 class MediaLinkResolver
 {
+    /** @var Config The configuration of the current export */
+    protected Config $config;
+
+    /**
+     * @param Config $config The configuration of the current export
+     */
+    public function __construct(Config $config)
+    {
+        $this->config = $config;
+    }
+
     /**
      * Resolve a Dokuwiki media URL or local path to a cached file path.
      *
@@ -25,10 +36,10 @@ class MediaLinkResolver
     {
         $mediaID = $this->extractMediaID($file);
         if ($mediaID !== null) {
-            [$w, $h, $rev] = $this->extractMediaParams($file);
+            [$w, $h, $rev, $cache] = $this->extractMediaParams($file);
             [$ext, $mime] = mimetype($mediaID);
             if (!$ext) return null;
-            $localFile = $this->localMediaFile($mediaID, $ext, $rev);
+            $localFile = $this->localMediaFile($mediaID, $ext, $rev, $cache);
             if (!$localFile) return null;
             if (str_starts_with($mime, 'image/')) {
                 $localFile = $this->resizedMedia($localFile, $ext, $w, $h);
@@ -72,19 +83,24 @@ class MediaLinkResolver
     }
 
     /**
-     * Extract media parameters (width, height, revision) from the given file URL.
+     * Extract media parameters from the given file URL.
      *
-     * When a parameter is not found, its value will be 0.
+     * When a size or revision parameter is not found, its value will be 0. The cache mode
+     * defaults to caching endlessly.
      *
      * @param string $file Source string (fetch call)
-     * @return array{int,int,int} Array containing width, height, and revision.
+     * @return array{int,int,int,int} Array containing width, height, revision and cache mode.
      */
     protected function extractMediaParams(string $file): array
     {
+        // calc_cache() lives in a file Dokuwiki only loads for fetch.php
+        require_once(DOKU_INC . 'inc/fetch.functions.php');
+
         $width = $this->extractInt($file, 'w');
         $height = $this->extractInt($file, 'h');
         $rev = $this->extractInt($file, 'rev');
-        return [$width, $height, $rev];
+        $cache = calc_cache($this->extractStr($file, 'cache'));
+        return [$width, $height, $rev, $cache];
     }
 
     /**
@@ -98,14 +114,21 @@ class MediaLinkResolver
      * @param string $mediaID A media ID or external URL.
      * @param string $ext File extension (used for external media caching).
      * @param int $rev Revision number (0 for latest).
+     * @param int $cache Cache mode as returned by calc_cache().
      * @return string|null Absolute path to the local media file, or null when not accessible.
      */
-    protected function localMediaFile(string $mediaID, string $ext, int $rev): ?string
+    protected function localMediaFile(string $mediaID, string $ext, int $rev, int $cache): ?string
     {
         global $conf;
 
         if (media_isexternal($mediaID)) {
-            $local = media_get_from_URL($mediaID, $ext, $conf['cachetime']);
+            // an export has no browser to redirect to, so nocache media is fetched every time
+            if ($cache === 0) $cache = 1;
+            // the wiki's fetchsize governs fetch.php, so an export applies its own limit
+            $globalFetchsize = $conf['fetchsize'];
+            $conf['fetchsize'] = $this->config->getFetchSize();
+            $local = media_get_from_URL($mediaID, $ext, $cache);
+            $conf['fetchsize'] = $globalFetchsize;
             if (!$local) return null;
         } else {
             $mediaID = cleanID($mediaID);
@@ -155,6 +178,23 @@ class MediaLinkResolver
         }
 
         return 0;
+    }
+
+    /**
+     * Extract a string parameter from the given subject URL.
+     *
+     * @param string $subject Source string, usually the media URL.
+     * @param string $param Name of the parameter to extract.
+     * @return string Empty when the parameter is not present.
+     */
+    protected function extractStr(string $subject, string $param): string
+    {
+        $pattern = '/[?&]' . $param . '=([^&]*)/';
+        if (preg_match($pattern, $subject, $match)) {
+            return rawurldecode($match[1]);
+        }
+
+        return '';
     }
 
     /**

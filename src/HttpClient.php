@@ -19,6 +19,17 @@ class HttpClient implements ClientInterface, LoggerAwareInterface
 {
     use PsrLogAwareTrait;
 
+    /** @var Config The configuration of the current export */
+    protected Config $config;
+
+    /**
+     * @param Config $config The configuration of the current export
+     */
+    public function __construct(Config $config)
+    {
+        $this->config = $config;
+    }
+
     /**
      * Send the HTTP request using Dokuwiki's HTTP client, falling back to media resolution when possible.
      *

@@ -3,12 +3,37 @@
 namespace dokuwiki\plugin\dw2pdf\src;
 
 use Mpdf\AssetFetcher;
+use Mpdf\File\LocalContentLoaderInterface;
+use Mpdf\Http\ClientInterface;
+use Mpdf\Mpdf;
+use Psr\Log\LoggerInterface;
 
 /**
  * Wrapper for AssetFetcher which resolves DokuWiki media paths
  */
 class DokuAssetFetcher extends AssetFetcher
 {
+    /** @var MediaLinkResolver Translates media references into local files */
+    protected MediaLinkResolver $resolver;
+
+    /**
+     * @param Mpdf $mpdf The document the assets are loaded for
+     * @param LocalContentLoaderInterface $contentLoader Reads files from disk
+     * @param ClientInterface $http Client for remote requests
+     * @param LoggerInterface $logger Where mpdf reports asset problems
+     * @param Config $config The configuration of the current export
+     */
+    public function __construct(
+        Mpdf $mpdf,
+        LocalContentLoaderInterface $contentLoader,
+        ClientInterface $http,
+        LoggerInterface $logger,
+        Config $config
+    ) {
+        parent::__construct($mpdf, $contentLoader, $http, $logger);
+        $this->resolver = new MediaLinkResolver($config);
+    }
+
     /**
      * Load the given asset, preferring a local copy of Dokuwiki media over an HTTP request
      *
@@ -22,7 +47,7 @@ class DokuAssetFetcher extends AssetFetcher
      */
     public function fetchDataFromPath($path, $originalSrc = null)
     {
-        $resolved = (new MediaLinkResolver())->resolve($path);
+        $resolved = $this->resolver->resolve($path);
         if ($resolved) $path = $originalSrc = $resolved['path'];
         return parent::fetchDataFromPath($path, $originalSrc);
     }
