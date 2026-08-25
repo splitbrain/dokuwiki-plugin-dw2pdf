@@ -3,9 +3,7 @@
 namespace dokuwiki\plugin\dw2pdf\src;
 
 /**
- * Translates Dokuwiki-specific media URLs into local cached files.
- *
- * This consolidates the logic previously handled inside the custom ImageProcessor.
+ * Translates Dokuwiki media URLs into local file paths.
  */
 class MediaLinkResolver
 {
@@ -60,14 +58,13 @@ class MediaLinkResolver
      * Accepts the media URLs this wiki produces as well as any other URL carrying a media
      * parameter.
      *
-     * Note that the returned media ID could still be an external URL!
+     * The returned media ID may be an external URL.
      *
      * @param string $file
      * @return string|null The extracted media ID, or null if not found.
      */
     protected function extractMediaID(string $file): ?string
     {
-        // extract the real media from a fetch.php URI and determine mime
         if (
             preg_match('/^' . $this->mediaUrlRegex() . '/', $file, $matches) ||
             preg_match('/[&?]media=([^&?]*)/', $file, $matches)

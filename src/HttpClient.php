@@ -14,7 +14,7 @@ use Psr\Log\LoggerAwareInterface;
 /**
  * mPDF HTTP client adapter that routes requests through Dokuwiki's HTTP stack.
  *
- * Basically wraps a simple, naive PSR-7 implementation around DokuHTTPClient.
+ * Wraps DokuHTTPClient in the PSR-7 shim mpdf expects.
  */
 class HttpClient implements ClientInterface, LoggerAwareInterface
 {
