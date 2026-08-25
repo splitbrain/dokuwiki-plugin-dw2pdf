@@ -32,11 +32,17 @@ class DokuMpdf extends Mpdf
         $initConfig = $config->getMPdfConfig();
         $initConfig['mode'] = $this->lang2mode($lang);
 
-        $http = new HttpClient();
+        $http = new HttpClient($config);
 
         $container = new SimpleContainer([
             'httpClient' => $http,
-            'assetFetcher' => new DokuAssetFetcher($this, new MpdfContenLoader(), $http, new NullLogger())
+            'assetFetcher' => new DokuAssetFetcher(
+                $this,
+                new MpdfContenLoader(),
+                $http,
+                new NullLogger(),
+                $config
+            )
         ]);
 
         parent::__construct($initConfig, $container);

@@ -12,6 +12,7 @@ $conf['watermark']        = '';
 $conf['template']         = 'default';
 $conf['output']           = 'browser';
 $conf['usecache']         = 1;
+$conf['fetchsize']        = 2 * 1024 * 1024;
 $conf['usestyles']        = 'wrap,';
 $conf['qrcodescale']       = '1';
 $conf['showexportbutton'] = 1;
