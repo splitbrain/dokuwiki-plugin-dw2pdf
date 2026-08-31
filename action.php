@@ -25,6 +25,28 @@ use Mpdf\MpdfException;
 class action_plugin_dw2pdf extends ActionPlugin
 {
     /**
+     * action_plugin_dw2pdf constructor.
+     */
+    public function __construct()
+    {
+        global $JSINFO;
+
+        $this->loadConfig();
+
+        $JSINFO['plugins']['dw2pdf']['showexporttemplate'] = $this->getConf('showexporttemplate');
+
+        if ($this->getConf('showexporttemplate')) {
+            $templates = [$this->getConf('template')];
+            $dir = scandir(DOKU_PLUGIN . 'dw2pdf' . DIRECTORY_SEPARATOR . 'tpl');
+            foreach ($dir as $value) {
+                if (is_dir(DOKU_PLUGIN . 'dw2pdf' . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . $value) && !in_array($value, array(".", "..", $this->getConf('template')))) {
+                    $templates[] = $value;
+                }
+            }
+            $JSINFO['plugins']['dw2pdf']['templates'] = json_encode($templates);
+        }
+    }
+    /**
      * Register the events
      *
      * @param EventHandler $controller
