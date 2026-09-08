@@ -14,6 +14,61 @@ use dokuwiki\plugin\dw2pdf\src\HeadingResolver;
 class renderer_plugin_dw2pdf extends Doku_Renderer_xhtml
 {
     /**
+     * Cached state of the optional XBR renderer.
+     *
+     * @var bool|null
+     */
+    private $xbrEnabled;
+
+    /**
+     * Check whether the XBR renderer is installed and enabled.
+     *
+     * @return bool
+     */
+    private function isXbrEnabled()
+    {
+        if ($this->xbrEnabled === null) {
+            $this->xbrEnabled = plugin_load('renderer', 'xbr') !== null;
+        }
+
+        return $this->xbrEnabled;
+    }
+
+    /**
+     * Render ordinary text.
+     *
+     * Preserve source line breaks when the XBR renderer is enabled,
+     * matching DokuWiki's XHTML output.
+     *
+     * @param string $text
+     * @return void
+     */
+    public function cdata($text)
+    {
+        if (!$this->isXbrEnabled()) {
+            parent::cdata($text);
+            return;
+        }
+
+        $parts = preg_split('/\R/u', $text);
+
+        if ($parts === false) {
+            parent::cdata($text);
+            return;
+        }
+
+        $last = count($parts) - 1;
+
+        foreach ($parts as $index => $part) {
+            parent::cdata($part);
+
+            if ($index !== $last) {
+                parent::linebreak();
+            }
+        }
+    }
+
+    /**
      * Emit an anchor the writer can rewrite intra-PDF links to
      *
      * @inheritdoc
