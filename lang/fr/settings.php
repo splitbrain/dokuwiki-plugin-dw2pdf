@@ -3,8 +3,8 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
- * @author Olivier Humbert <trebmuh@tuxfamily.org>
  * @author Schplurtz le Déboulonné <Schplurtz@laposte.net>
+ * @author Olivier Humbert <trebmuh@tuxfamily.org>
  * @author Hérisson grognon <dodoperso@laposte.net>
  * @author NicolasFriedli <nicolas@theologique.ch>
  * @author Fabrice Dejaigher <fabrice@chtiland.com>
@@ -21,6 +21,7 @@ $lang['toclevels']             = 'Définit le plus haut niveau et la profondeur 
 $lang['headernumber']          = 'Ajouter la numérotation des titres';
 $lang['maxbookmarks']          = 'Combien de niveaux de section (titres) doivent être utilisés dans les marque-pages PDF ?
 <small>(0=aucun, 5=tous)</small>';
+$lang['watermark']             = 'Filigrane optionnel pour chaque page (p. ex. "CONFIDENTIEL")';
 $lang['template']              = 'Quel thème doit être utilisé pour présenter les PDF ?';
 $lang['output']                = 'Comment le PDF doit-il être présenté à l\'utilisateur ?';
 $lang['output_o_browser']      = 'Afficher dans le navigateur';
