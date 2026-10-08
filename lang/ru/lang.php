@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Alexander <ChanSee89@Mail.RU>
  * @author Aleksandr Selivanov <alexgearbox@yandex.ru>
  * @author FOTONTV <obraztsov568@gmail.com>
  * @author Yuriy Skalko <yuriy.skalko@gmail.com>
@@ -16,4 +17,6 @@ $lang['notexist']              = 'Запрошенная страница не �
 $lang['empty']                 = 'У вас ещё нет выделенных страниц.';
 $lang['tocheader']             = 'Содержание';
 $lang['export_ns']             = 'Экспортировать пространство имён «%s:» в файл %s.pdf';
+$lang['forbidden']             = 'У Вас нет прав на чтение выбранных страниц.';
+$lang['exportfailed']          = 'Не удалось создать PDF-файл';
 $lang['missingbookcreator']    = 'Плагин Bookcreator не установлен или отключён';

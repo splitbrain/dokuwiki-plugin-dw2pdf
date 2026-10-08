@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author Alexander <ChanSee89@Mail.RU>
  * @author Aleksandr Selivanov <alexgearbox@yandex.ru>
  * @author Yuriy Skalko <yuriy.skalko@gmail.com>
  * @author Vasilyy Balyasnyy <v.balyasnyy@gmail.com>
@@ -18,6 +19,7 @@ $lang['toc']                   = 'Добавить автоматически с
 $lang['toclevels']             = 'Определить верхний уровень и максимальное число уровней для включения в содержание. По умолчанию применяются настройки <a href="#config___toptoclevel">toptoclevel</a> и <a href="#config___maxtoclevel">maxtoclevel</a>. Формат: <code><i>&lt;top&gt;</i>-<i>&lt;max&gt;</i></code>';
 $lang['headernumber']          = 'Включить нумерованные заголовки';
 $lang['maxbookmarks']          = 'Сколько уровней вкладок должно быть использовано для закладок PDF? <small>(0=ничего, 5=все)</small>';
+$lang['watermark']             = 'Необязательная водяная надпись, отображаемая на каждой странице (например, "КОНФИДЕНЦИАЛЬНО")';
 $lang['template']              = 'Какой шаблон должен использоваться для форматирования PDF?';
 $lang['output']                = 'Как PDF должен быть представлен пользователю?';
 $lang['output_o_browser']      = 'показать в браузере';
