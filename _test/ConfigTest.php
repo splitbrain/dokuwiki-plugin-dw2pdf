@@ -50,6 +50,7 @@ class ConfigTest extends DokuWikiTest
         $this->assertNull($config->getSavedSelection(), 'default savedselection');
         $this->assertSame('', $config->getExportId(), 'default exportid');
         $this->assertTrue($config->useCache(), 'default usecache');
+        $this->assertSame(2 * 1024 * 1024, $config->getFetchSize(), 'default fetchsize');
 
         $this->assertSame('A4', $mpdfConfig['format'], 'default pagesize/orientation');
         $this->assertSame(11, $mpdfConfig['default_font_size'], 'default font-size');
@@ -86,6 +87,7 @@ class ConfigTest extends DokuWikiTest
             'template' => 'modern',
             'output' => 'inline',
             'usestyles' => 'wrap,foo ',
+            'fetchsize' => 1024,
             'watermark' => 'CONFIDENTIAL',
             'qrcodescale' => '2.5',
             'debug' => 1,
@@ -111,6 +113,7 @@ class ConfigTest extends DokuWikiTest
         $this->assertSame('modern', $config->getTemplateName(), 'from template');
         $this->assertSame('inline', $config->getOutputTarget(), 'from output');
         $this->assertSame(['wrap', 'foo'], $config->getStyledExtensions(), 'from usestyles');
+        $this->assertSame(1024, $config->getFetchSize(), 'from fetchsize');
         $this->assertSame('CONFIDENTIAL', $config->getWatermarkText(), 'from watermark');
         $this->assertTrue($mpdfConfig['showWatermarkText'], 'from watermark');
         $this->assertSame(2.5, $config->getQRScale(), 'from qrcodescale');

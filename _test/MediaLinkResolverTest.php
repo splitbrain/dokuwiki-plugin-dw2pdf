@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\test;
 
+use dokuwiki\plugin\dw2pdf\src\Config;
 use dokuwiki\plugin\dw2pdf\src\MediaLinkResolver;
 use DokuWikiTest;
 
@@ -18,7 +19,7 @@ class MediaLinkResolverTest extends DokuWikiTest
     public function setUp(): void
     {
         parent::setUp();
-        $this->resolver = new MediaLinkResolver();
+        $this->resolver = new MediaLinkResolver(new Config());
     }
 
     /**
@@ -80,16 +81,19 @@ class MediaLinkResolverTest extends DokuWikiTest
     }
 
     /**
+     * External media is downloaded even when the wiki does not allow fetch.php to do so.
+     *
      * @group internet
      */
     public function testResolveFetchesExternalMedia(): void
     {
         global $conf;
-        $conf['fetchsize'] = 512 * 1024; // 512 KB
+        $conf['fetchsize'] = 0;
+        $resolver = new MediaLinkResolver(new Config(['fetchsize' => 512 * 1024]));
 
         $external = 'https://php.net/images/php.gif';
         $input = DOKU_URL . 'lib/exe/fetch.php?media=' . rawurlencode($external);
-        $resolved = $this->resolver->resolve($input);
+        $resolved = $resolver->resolve($input);
 
         if ($resolved === null) {
             $this->markTestSkipped('External media fetching is not available in this environment.');
@@ -99,6 +103,85 @@ class MediaLinkResolverTest extends DokuWikiTest
         $this->assertFileExists($resolved['path']);
         $this->assertSame('image/gif', $resolved['mime']);
         $this->assertSame(2523, filesize($resolved['path']));
+    }
+
+    /**
+     * Downloading external media can be switched off in the plugin configuration.
+     */
+    public function testResolveSkipsExternalMediaWhenDownloadingIsDisabled(): void
+    {
+        $resolver = new MediaLinkResolver(new Config(['fetchsize' => 0]));
+
+        $external = 'https://php.net/images/php.gif';
+        $input = DOKU_URL . 'lib/exe/fetch.php?media=' . rawurlencode($external);
+
+        $this->assertNull($resolver->resolve($input));
+    }
+
+    /**
+     * Media marked nocache is still downloaded.
+     *
+     * @group internet
+     */
+    public function testResolveFetchesNocacheExternalMedia(): void
+    {
+        $resolver = new MediaLinkResolver(new Config(['fetchsize' => 512 * 1024]));
+
+        $external = 'https://php.net/images/php.gif';
+        $input = DOKU_URL . 'lib/exe/fetch.php?media=' . rawurlencode($external) . '&cache=nocache';
+        $resolved = $resolver->resolve($input);
+
+        if ($resolved === null) {
+            $this->markTestSkipped('External media fetching is not available in this environment.');
+        }
+
+        $this->assertSame(2523, filesize($resolved['path']));
+    }
+
+    /**
+     * Without a cache parameter an existing copy is used no matter how old it is.
+     */
+    public function testResolveKeepsCachedExternalMediaByDefault(): void
+    {
+        $external = 'http://127.0.0.1:1/unreachable.png';
+        $cacheFile = $this->seedOutdatedCache($external);
+
+        $resolver = new MediaLinkResolver(new Config(['fetchsize' => 1024 * 1024]));
+        $input = DOKU_URL . 'lib/exe/fetch.php?media=' . rawurlencode($external);
+
+        $resolved = $resolver->resolve($input);
+
+        $this->assertNotNull($resolved);
+        $this->assertSame($cacheFile, $resolved['path']);
+    }
+
+    /**
+     * Media marked recache expires, so an outdated copy is fetched again.
+     */
+    public function testResolveExpiresCachedExternalMediaOnRecache(): void
+    {
+        $external = 'http://127.0.0.1:1/unreachable.png';
+        $this->seedOutdatedCache($external);
+
+        $resolver = new MediaLinkResolver(new Config(['fetchsize' => 1024 * 1024]));
+        $input = DOKU_URL . 'lib/exe/fetch.php?media=' . rawurlencode($external) . '&cache=recache';
+
+        $this->assertNull($resolver->resolve($input));
+    }
+
+    /**
+     * Write a week old cache file for the given external media URL.
+     *
+     * @param string $url The external media URL.
+     * @return string Absolute path to the cache file.
+     */
+    protected function seedOutdatedCache(string $url): string
+    {
+        $cacheFile = getCacheName(strtolower($url), '.media.png');
+        io_saveFile($cacheFile, 'outdated bytes');
+        touch($cacheFile, time() - 7 * 86400);
+
+        return $cacheFile;
     }
 
     /**

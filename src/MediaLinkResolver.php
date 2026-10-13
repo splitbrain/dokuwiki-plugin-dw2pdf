@@ -3,12 +3,21 @@
 namespace dokuwiki\plugin\dw2pdf\src;
 
 /**
- * Translates Dokuwiki-specific media URLs into local cached files.
- *
- * This consolidates the logic previously handled inside the custom ImageProcessor.
+ * Translates Dokuwiki media URLs into local file paths.
  */
 class MediaLinkResolver
 {
+    /** @var Config The configuration of the current export */
+    protected Config $config;
+
+    /**
+     * @param Config $config The configuration of the current export
+     */
+    public function __construct(Config $config)
+    {
+        $this->config = $config;
+    }
+
     /**
      * Resolve a Dokuwiki media URL or local path to a cached file path.
      *
@@ -25,10 +34,10 @@ class MediaLinkResolver
     {
         $mediaID = $this->extractMediaID($file);
         if ($mediaID !== null) {
-            [$w, $h, $rev] = $this->extractMediaParams($file);
+            [$w, $h, $rev, $cache] = $this->extractMediaParams($file);
             [$ext, $mime] = mimetype($mediaID);
             if (!$ext) return null;
-            $localFile = $this->localMediaFile($mediaID, $ext, $rev);
+            $localFile = $this->localMediaFile($mediaID, $ext, $rev, $cache);
             if (!$localFile) return null;
             if (str_starts_with($mime, 'image/')) {
                 $localFile = $this->resizedMedia($localFile, $ext, $w, $h);
@@ -46,23 +55,18 @@ class MediaLinkResolver
     /**
      * Check if the given file URL corresponds to a Dokuwiki media ID and extract it.
      *
-     * Handles rewritten media URLs  (/media/*) and fetch.php calls by building a regex
-     * from the result of calling ml() for a fake media ID.
+     * Accepts the media URLs this wiki produces as well as any other URL carrying a media
+     * parameter.
      *
-     * Note that the returned media ID could still be an external URL!
+     * The returned media ID may be an external URL.
      *
      * @param string $file
      * @return string|null The extracted media ID, or null if not found.
      */
     protected function extractMediaID(string $file): ?string
     {
-        // build regex to parse URL back to media info (matches fetch.php calls)
-        $fetchRegex = preg_quote(ml('xxx123yyy', '', true, '&', true), '/');
-        $fetchRegex = str_replace('xxx123yyy', '([^&\?]*)', $fetchRegex);
-
-        // extract the real media from a fetch.php URI and determine mime
         if (
-            preg_match("/^$fetchRegex/", $file, $matches) ||
+            preg_match('/^' . $this->mediaUrlRegex() . '/', $file, $matches) ||
             preg_match('/[&?]media=([^&?]*)/', $file, $matches)
         ) {
             return rawurldecode($matches[1]);
@@ -72,19 +76,49 @@ class MediaLinkResolver
     }
 
     /**
-     * Extract media parameters (width, height, revision) from the given file URL.
+     * Check whether the given URL is one this wiki serves media from.
      *
-     * When a parameter is not found, its value will be 0.
+     * @param string $file Original media reference or URL.
+     * @return bool
+     */
+    public function isMediaUrl(string $file): bool
+    {
+        return (bool)preg_match('/^' . $this->mediaUrlRegex() . '/', $file);
+    }
+
+    /**
+     * Build a regex matching the media URLs this wiki produces.
+     *
+     * Handles rewritten media URLs and fetch.php calls alike by inspecting what ml() returns
+     * for a fake media ID.
+     *
+     * @return string Regex without delimiters or anchors, capturing the media ID.
+     */
+    protected function mediaUrlRegex(): string
+    {
+        $regex = preg_quote(ml('xxx123yyy', '', true, '&', true), '/');
+        return str_replace('xxx123yyy', '([^&\?]*)', $regex);
+    }
+
+    /**
+     * Extract media parameters from the given file URL.
+     *
+     * When a size or revision parameter is not found, its value will be 0. The cache mode
+     * defaults to caching endlessly.
      *
      * @param string $file Source string (fetch call)
-     * @return array{int,int,int} Array containing width, height, and revision.
+     * @return array{int,int,int,int} Array containing width, height, revision and cache mode.
      */
     protected function extractMediaParams(string $file): array
     {
+        // calc_cache() lives in a file Dokuwiki only loads for fetch.php
+        require_once(DOKU_INC . 'inc/fetch.functions.php');
+
         $width = $this->extractInt($file, 'w');
         $height = $this->extractInt($file, 'h');
         $rev = $this->extractInt($file, 'rev');
-        return [$width, $height, $rev];
+        $cache = calc_cache($this->extractStr($file, 'cache'));
+        return [$width, $height, $rev, $cache];
     }
 
     /**
@@ -98,14 +132,21 @@ class MediaLinkResolver
      * @param string $mediaID A media ID or external URL.
      * @param string $ext File extension (used for external media caching).
      * @param int $rev Revision number (0 for latest).
+     * @param int $cache Cache mode as returned by calc_cache().
      * @return string|null Absolute path to the local media file, or null when not accessible.
      */
-    protected function localMediaFile(string $mediaID, string $ext, int $rev): ?string
+    protected function localMediaFile(string $mediaID, string $ext, int $rev, int $cache): ?string
     {
         global $conf;
 
         if (media_isexternal($mediaID)) {
-            $local = media_get_from_URL($mediaID, $ext, $conf['cachetime']);
+            // an export has no browser to redirect to, so nocache media is fetched every time
+            if ($cache === 0) $cache = 1;
+            // the wiki's fetchsize governs fetch.php, so an export applies its own limit
+            $globalFetchsize = $conf['fetchsize'];
+            $conf['fetchsize'] = $this->config->getFetchSize();
+            $local = media_get_from_URL($mediaID, $ext, $cache);
+            $conf['fetchsize'] = $globalFetchsize;
             if (!$local) return null;
         } else {
             $mediaID = cleanID($mediaID);
@@ -155,6 +196,23 @@ class MediaLinkResolver
         }
 
         return 0;
+    }
+
+    /**
+     * Extract a string parameter from the given subject URL.
+     *
+     * @param string $subject Source string, usually the media URL.
+     * @param string $param Name of the parameter to extract.
+     * @return string Empty when the parameter is not present.
+     */
+    protected function extractStr(string $subject, string $param): string
+    {
+        $pattern = '/[?&]' . $param . '=([^&]*)/';
+        if (preg_match($pattern, $subject, $match)) {
+            return rawurldecode($match[1]);
+        }
+
+        return '';
     }
 
     /**

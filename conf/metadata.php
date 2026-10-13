@@ -12,6 +12,7 @@ $meta['watermark']        = array('string');
 $meta['template']         = array('dirchoice', '_dir' => DOKU_PLUGIN . 'dw2pdf/tpl/');
 $meta['output']           = array('multichoice', '_choices' => array('browser', 'file'));
 $meta['usecache']         = array('onoff');
+$meta['fetchsize']        = array('numeric');
 $meta['usestyles']        = array('string');
 $meta['qrcodescale']       = array('string', '_pattern' => '/^(|\d+(\.\d+)?)$/');
 $meta['showexportbutton'] = array('onoff');

@@ -35,6 +35,8 @@ class Config
     #[FromConfig]
     protected bool $usecache = true;
     #[FromConfig]
+    protected int $fetchSize = 2 * 1024 * 1024;
+    #[FromConfig]
     protected array $useStyles = [];
     #[FromConfig]
     protected float $qrCodeScale = 0.0;
@@ -194,6 +196,16 @@ class Config
     public function useCache(): bool
     {
         return $this->usecache;
+    }
+
+    /**
+     * Get the maximum number of bytes to download per remote file
+     *
+     * @return int
+     */
+    public function getFetchSize(): int
+    {
+        return $this->fetchSize;
     }
 
     /**
