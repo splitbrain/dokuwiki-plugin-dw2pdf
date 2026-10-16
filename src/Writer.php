@@ -252,6 +252,9 @@ class Writer
             'pagenumstyle' => '1'
         ]);
 
+        // <tocpagebreak> starts a new page by itself, so consume any pending break instead of
+        // emitting a second one - that would leave a blank page between the ToC and the first page.
+        $this->breakBeforeNext = false;
         $this->write('<tocpagebreak>', HTMLParserMode::HTML_BODY, false, false);
     }
 
