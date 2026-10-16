@@ -18,11 +18,13 @@ just the header.html is used.
   * ''header_odd.html'' -- Header for odd pages
   * ''header_even.html'' -- Header for even pages
   * ''header_first.html'' -- Header for the first page
+  * ''header_last.html'' -- Header for the last page
 
   * ''footer.html'' -- Footer for all pages
   * ''footer_odd.html'' -- Footer for odd pages
   * ''footer_even.html'' -- Footer for even pages
   * ''footer_first.html'' -- Footer for the first page
+  * ''footer_last.html'' -- Footer for the last page
 
   * ''citation.html'' -- Citationbox to be printed after each article
   * ''cover.html'' -- Added once before first page
