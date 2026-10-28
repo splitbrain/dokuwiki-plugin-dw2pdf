@@ -2,6 +2,7 @@
 
 namespace dokuwiki\plugin\dw2pdf\src;
 
+use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 
 /**
@@ -9,6 +10,11 @@ use Mpdf\MpdfException;
  */
 class PdfExportService
 {
+    /**
+     * Error levels for silenceMpdfWarnings(), the same that DokuWiki's ErrorHandler registers for.
+     */
+    private const HANDLED_ERRORS = E_WARNING | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR;
+
     /** @var Config */
     protected Config $config;
 
@@ -113,15 +119,17 @@ class PdfExportService
      */
     protected function buildDocument(string $cacheFile): void
     {
-        $writer = $this->renderDocument();
+        $this->silenceMpdfWarnings(function () use ($cacheFile) {
+            $writer = $this->renderDocument();
 
-        if ($this->config->isDebugEnabled()) {
-            header('Content-Type: text/html; charset=utf-8');
-            echo $writer->getDebugHTML();
-            exit();
-        }
+            if ($this->config->isDebugEnabled()) {
+                header('Content-Type: text/html; charset=utf-8');
+                echo $writer->getDebugHTML();
+                exit();
+            }
 
-        $writer->outputToFile($cacheFile);
+            $writer->outputToFile($cacheFile);
+        });
     }
 
     /**
@@ -137,7 +145,7 @@ class PdfExportService
             throw new \RuntimeException('Debug HTML is only available when debug mode is enabled');
         }
 
-        return $this->renderDocument()->getDebugHTML();
+        return $this->silenceMpdfWarnings(fn() => $this->renderDocument()->getDebugHTML());
     }
 
     /**
@@ -183,5 +191,42 @@ class PdfExportService
         $writer->back();
         $writer->endDocument();
         return $writer;
+    }
+
+    /**
+     * Run the given callback without logging mPDF's undefined array key warnings
+     *
+     * Wraps the call in a purposefully narrow error handler, so that the harmless and non-actionable warnings
+     * don't flood DokuWiki's error log. Every other error still reaches the previously registered handler.
+     *
+     * @param callable $callback The export step to run
+     * @return mixed The callback's return value
+     */
+    private function silenceMpdfWarnings(callable $callback): mixed
+    {
+        static $mpdfDir = null;
+        $mpdfDir ??= dirname(__DIR__) . '/vendor/mpdf/mpdf/';
+
+        $previous = null;
+        $previous = set_error_handler(
+            static function (int $errNo, string $errStr, string $errFile, int $errLine) use (&$previous, $mpdfDir) {
+                if (
+                    $errNo === E_WARNING
+                    && str_starts_with($errFile, $mpdfDir)
+                    && str_starts_with($errStr, 'Undefined array key')
+                ) {
+                    return true;
+                }
+                if ($previous === null) return false;
+                return $previous($errNo, $errStr, $errFile, $errLine);
+            },
+            self::HANDLED_ERRORS
+        );
+
+        try {
+            return $callback();
+        } finally {
+            restore_error_handler();
+        }
     }
 }

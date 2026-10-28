@@ -5,16 +5,10 @@ namespace dokuwiki\plugin\dw2pdf\src;
 use DOMDocument;
 use dokuwiki\ErrorHandler;
 use Mpdf\HTMLParserMode;
-use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 
 class Writer
 {
-    /**
-     * Error levels for silenceMpdfWarnings(), the same that DokuWiki's ErrorHandler registers for.
-     */
-    private const HANDLED_ERRORS = E_WARNING | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR;
-
     /** @var DokuMpdf Our MPDF instance */
     protected DokuMpdf $mpdf;
 
@@ -250,13 +244,13 @@ class Writer
      */
     public function toc(string $header): void
     {
-        $this->silenceMpdfWarnings(fn() => $this->mpdf->TOCpagebreakByArray([
+        $this->mpdf->TOCpagebreakByArray([
             'toc-preHTML' => '<h2>' . $header . '</h2>',
             'toc-bookmarkText' => $header,
             'links' => true,
             'outdent' => '1em',
             'pagenumstyle' => '1'
-        ]));
+        ]);
 
         $this->write('<tocpagebreak>', HTMLParserMode::HTML_BODY, false, false);
     }
@@ -396,11 +390,10 @@ class Writer
         if ($html === '') return false;
 
         $name = $section . '_' . $order;
-        // mPDF lays out the block to measure its height
         if ($section === 'header') {
-            $this->silenceMpdfWarnings(fn() => $this->mpdf->DefHTMLHeaderByName($name, $html));
+            $this->mpdf->DefHTMLHeaderByName($name, $html);
         } else {
-            $this->silenceMpdfWarnings(fn() => $this->mpdf->DefHTMLFooterByName($name, $html));
+            $this->mpdf->DefHTMLFooterByName($name, $html);
         }
         return true;
     }
@@ -450,44 +443,7 @@ class Writer
      */
     public function outputToFile(string $cacheFile): void
     {
-        $this->silenceMpdfWarnings(fn() => $this->mpdf->Output($cacheFile, 'F'));
-    }
-
-    /**
-     * Run the given callback without logging mPDF's undefined array key warnings
-     *
-     * Wraps the call in a purposefully narrow error handler, so that the harmless and non-actionable warnings
-     * don't flood DokuWiki's error log. Every other error still reaches the previously registered handler.
-     *
-     * @param callable $callback The mPDF call to run
-     * @return void
-     */
-    private function silenceMpdfWarnings(callable $callback): void
-    {
-        static $mpdfDir = null;
-        $mpdfDir ??= dirname((new \ReflectionClass(Mpdf::class))->getFileName()) . DIRECTORY_SEPARATOR;
-
-        $previous = null;
-        $previous = set_error_handler(
-            static function (int $errNo, string $errStr, string $errFile, int $errLine) use (&$previous, $mpdfDir) {
-                if (
-                    $errNo === E_WARNING
-                    && str_starts_with($errFile, $mpdfDir)
-                    && str_starts_with($errStr, 'Undefined array key')
-                ) {
-                    return true;
-                }
-                if ($previous === null) return false;
-                return $previous($errNo, $errStr, $errFile, $errLine);
-            },
-            self::HANDLED_ERRORS
-        );
-
-        try {
-            $callback();
-        } finally {
-            restore_error_handler();
-        }
+        $this->mpdf->Output($cacheFile, 'F');
     }
 
     /**
@@ -509,7 +465,7 @@ class Writer
     ) {
         if (!$this->debug) {
             try {
-                $this->silenceMpdfWarnings(fn() => $this->mpdf->WriteHTML($html, $mode, $init, $close));
+                $this->mpdf->WriteHTML($html, $mode, $init, $close);
             } catch (MpdfException $e) {
                 ErrorHandler::logException($e); // ensure the issue is logged
                 throw $e;

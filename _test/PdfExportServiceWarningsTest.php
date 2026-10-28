@@ -2,19 +2,23 @@
 
 namespace dokuwiki\plugin\dw2pdf\test;
 
+use dokuwiki\plugin\dw2pdf\src\BookCreatorLiveSelectionCollector;
+use dokuwiki\plugin\dw2pdf\src\Cache;
 use dokuwiki\plugin\dw2pdf\src\Config;
 use dokuwiki\plugin\dw2pdf\src\DokuMpdf;
+use dokuwiki\plugin\dw2pdf\src\PdfExportService;
 use dokuwiki\plugin\dw2pdf\src\Styles;
 use dokuwiki\plugin\dw2pdf\src\Template;
 use dokuwiki\plugin\dw2pdf\src\Writer;
 use DokuWikiTest;
 use Mpdf\HTMLParserMode;
+use Mpdf\Mpdf;
 
 /**
  * @group plugin_dw2pdf
  * @group plugins
  */
-class WriterWarningsTest extends DokuWikiTest
+class PdfExportServiceWarningsTest extends DokuWikiTest
 {
     /** @var string A list item outside of a list, mPDF reads list styles it never set for it */
     protected const ORPHAN_LI = '<div><li>orphan</li></div>';
@@ -45,7 +49,7 @@ class WriterWarningsTest extends DokuWikiTest
      */
     public function testOrphanListItemWarnsInMpdf(): void
     {
-        $mpdf = new DokuMpdf(new Config(), 'en');
+        $mpdf = new Mpdf((new Config())->getMPdfConfig());
         $mpdf->WriteHTML(self::ORPHAN_LI, HTMLParserMode::DEFAULT_MODE);
 
         $this->assertContains('Undefined array key "list_style_type"', $this->logged);
@@ -57,11 +61,14 @@ class WriterWarningsTest extends DokuWikiTest
     public function testWriteSilencesMpdfWarnings(): void
     {
         $writer = $this->getWriter();
-        self::callInaccessibleMethod($writer, 'write', [self::ORPHAN_LI, HTMLParserMode::DEFAULT_MODE]);
-
         $file = tempnam(sys_get_temp_dir(), 'dw2pdf');
         try {
-            $writer->outputToFile($file);
+            self::callInaccessibleMethod($this->getService(), 'silenceMpdfWarnings', [
+                static function () use ($writer, $file) {
+                    self::callInaccessibleMethod($writer, 'write', [self::ORPHAN_LI, HTMLParserMode::DEFAULT_MODE]);
+                    $writer->outputToFile($file);
+                }
+            ]);
             $this->assertStringStartsWith('%PDF-', file_get_contents($file));
         } finally {
             unlink($file);
@@ -75,7 +82,7 @@ class WriterWarningsTest extends DokuWikiTest
      */
     public function testUserWarningsOutsideMpdfArePassedOn(): void
     {
-        self::callInaccessibleMethod($this->getWriter(), 'silenceMpdfWarnings', [
+        self::callInaccessibleMethod($this->getService(), 'silenceMpdfWarnings', [
             static fn() => trigger_error('not from mpdf', E_USER_WARNING)
         ]);
 
@@ -87,7 +94,7 @@ class WriterWarningsTest extends DokuWikiTest
      */
     public function testPhpWarningsOutsideMpdfArePassedOn(): void
     {
-        self::callInaccessibleMethod($this->getWriter(), 'silenceMpdfWarnings', [
+        self::callInaccessibleMethod($this->getService(), 'silenceMpdfWarnings', [
             static function () {
                 $data = [];
                 return $data['missing'];
@@ -102,10 +109,22 @@ class WriterWarningsTest extends DokuWikiTest
      */
     public function testHandlerIsRestored(): void
     {
-        self::callInaccessibleMethod($this->getWriter(), 'silenceMpdfWarnings', [static fn() => null]);
+        self::callInaccessibleMethod($this->getService(), 'silenceMpdfWarnings', [static fn() => null]);
 
         trigger_error('after the callback', E_USER_WARNING);
         $this->assertSame(['after the callback'], $this->logged);
+    }
+
+    /**
+     * Create a service for an empty selection, enough to reach its error handling
+     *
+     * @return PdfExportService
+     */
+    protected function getService(): PdfExportService
+    {
+        $config = new Config(['liveselection' => json_encode([])]);
+        $collector = new BookCreatorLiveSelectionCollector($config);
+        return new PdfExportService($config, $collector, new Cache($config, $collector), 'Contents');
     }
 
     /**
