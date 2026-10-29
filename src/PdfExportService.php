@@ -145,7 +145,9 @@ class PdfExportService
             throw new \RuntimeException('Debug HTML is only available when debug mode is enabled');
         }
 
-        return $this->silenceMpdfWarnings(fn() => $this->renderDocument()->getDebugHTML());
+        return $this->silenceMpdfWarnings(
+            fn() => $this->renderDocument()->getDebugHTML()
+        );
     }
 
     /**
@@ -204,8 +206,7 @@ class PdfExportService
      */
     private function silenceMpdfWarnings(callable $callback): mixed
     {
-        static $mpdfDir = null;
-        $mpdfDir ??= dirname(__DIR__) . '/vendor/mpdf/mpdf/';
+        $mpdfDir = dirname(__DIR__) . '/vendor/mpdf/mpdf/';
 
         $previous = null;
         $previous = set_error_handler(
